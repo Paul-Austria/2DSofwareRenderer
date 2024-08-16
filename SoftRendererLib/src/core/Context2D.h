@@ -2,17 +2,22 @@
 #define CONTEXT2D_H
 
 #include <iostream>  // For std::cout
-
-
+#include "../data/Texture.h"
+#include "../data/Color.h"
 class Context2D
 {
-private:
-    /* data */
+
 public:
-    Context2D(/* args */);
-    ~Context2D();
+    Context2D() = default;
+    ~Context2D() = default;
+
+    void SetTargetTexture(Texture* targettexture);
+    void ClearTarget(Color color);
 
     static void Test() { std::cout << "hello world"; }
+
+private:
+    Texture* targetTexture;
 };
 
 

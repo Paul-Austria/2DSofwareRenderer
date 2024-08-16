@@ -1,9 +1,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <SoftRendererLib/src/include/SoftRenderer.h>
+#include <cstdlib>
+#include <ctime>
 
-#define WIDTH 1600
+// Constants
+#define WIDTH 800
 #define HEIGHT 400
 
 // Vertex Shader source code
@@ -43,77 +45,12 @@ unsigned int indices[] = {
     2, 3, 0
 };
 
-// 2D array data (e.g., a simple gradient)
-
-#include <cstdlib> // for rand() and RAND_MAX
-#include <ctime>   // for time()
-
-// Function to fill a 2D array with gradient RGB data
-void generateRandomTextureData(unsigned char* data, int width, int height) {
-    // Define the gradient colors (start and end colors)
-    const unsigned char startColor[3] = { 255, 0, 0 }; // Red
-    const unsigned char endColor[3] = { 0, 0, 255 };   // Blue
-
-    // Compute the gradient step
-    float step = 1.0f / (width - 1);
-
-    // Fill the array with gradient RGB values
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            float t = x * step; // interpolation factor between 0 and 1
-
-            // Linear interpolation between startColor and endColor
-            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
-            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
-            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
-
-            // Set the pixel color
-            int index = 3 * (y * width + x);
-            data[index] = r;     // R
-            data[index + 1] = g; // G
-            data[index + 2] = b; // B
-        }
-    }
-}
-
-void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time) {
-    // Define the gradient colors (start and end colors) that change with time
-    unsigned char startColor[3] = {
-        static_cast<unsigned char>(128 + 127 * std::sin(time)), // R component
-        static_cast<unsigned char>(128 + 127 * std::cos(time)), // G component
-        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f)) // B component
-    };
-    unsigned char endColor[3] = {
-        static_cast<unsigned char>(128 + 127 * std::cos(time + 1.57f)), // R component
-        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f)), // G component
-        static_cast<unsigned char>(128 + 127 * std::cos(time)) // B component
-    };
-
-    // Compute the gradient step
-    float step = 1.0f / (width - 1);
-
-    // Fill the array with gradient RGB values
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            float t = x * step; // interpolation factor between 0 and 1
-
-            // Linear interpolation between startColor and endColor
-            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
-            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
-            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
-
-            // Set the pixel color
-            int index = 3 * (y * width + x);
-            data[index] = r;     // R
-            data[index + 1] = g; // G
-            data[index + 2] = b; // B
-        }
-    }
-}
-
+// Function prototypes
+void generateRandomTextureData(unsigned char* data, int width, int height);
+void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time);
+void TestingFunction(unsigned char* data);
 
 int main() {
-    Context2D::Test();
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -137,18 +74,17 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW
-    glewExperimental = GL_TRUE; // Needed for core profile
+    glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
 
-    // Create and compile the vertex shader
+    // Create and compile shaders
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
 
-    // Check for compilation errors
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -158,12 +94,10 @@ int main() {
         return -1;
     }
 
-    // Create and compile the fragment shader
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
 
-    // Check for compilation errors
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
@@ -171,13 +105,12 @@ int main() {
         return -1;
     }
 
-    // Link shaders into a shader program
+    // Link shaders into a program
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Check for linking errors
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
@@ -185,11 +118,11 @@ int main() {
         return -1;
     }
 
-    // Clean up shaders as they are no longer needed after linking
+    // Clean up shaders after linking
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // Generate and bind a Vertex Array Object and a Vertex Buffer Object
+    // Setup vertex data, buffers, and configure vertex attributes
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -208,68 +141,106 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Generate and bind a texture
+    // Generate and configure texture
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Allocate memory for texture data
+    // Allocate memory for texture data and generate initial texture
     unsigned char* imageData = new unsigned char[3 * WIDTH * HEIGHT];
-
-    // Fill the array with random RGB data
     generateRandomTextureData(imageData, WIDTH, HEIGHT);
 
-    // Load image data into texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-
-    float time = 0;
     // Main loop
     while (!glfwWindowShouldClose(window)) {
-
-        time += 0.01f;
-
-        // Generate updated texture data
-        generateAnimatedGradientTextureData(imageData, WIDTH, HEIGHT, time);
-
-        // Update the texture with new data
+        // Generate and update texture data
+        TestingFunction(imageData);
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
-
-
-        // Render here
+        // Render
         glClear(GL_COLOR_BUFFER_BIT);
-
-        // Use shader program and bind texture
         glUseProgram(shaderProgram);
         glBindTexture(GL_TEXTURE_2D, texture);
-
-        // Render the quad
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // Swap front and back buffers
+        // Swap buffers and poll events
         glfwSwapBuffers(window);
-
-        // Poll for and process events
         glfwPollEvents();
     }
 
-    // Clean up
+    // Cleanup
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteTextures(1, &texture);
+    delete[] imageData;
 
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+// Function to fill a 2D array with random RGB data
+void generateRandomTextureData(unsigned char* data, int width, int height) {
+    const unsigned char startColor[3] = { 255, 0, 0 }; // Red
+    const unsigned char endColor[3] = { 0, 0, 255 };   // Blue
+    float step = 1.0f / (width - 1);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            float t = x * step;
+            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
+            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
+            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
+            int index = 3 * (y * width + x);
+            data[index] = r;
+            data[index + 1] = g;
+            data[index + 2] = b;
+        }
+    }
+}
+
+// Function to fill a 2D array with animated gradient RGB data
+void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time) {
+    unsigned char startColor[3] = {
+        static_cast<unsigned char>(128 + 127 * std::sin(time)),
+        static_cast<unsigned char>(128 + 127 * std::cos(time)),
+        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f))
+    };
+    unsigned char endColor[3] = {
+        static_cast<unsigned char>(128 + 127 * std::cos(time + 1.57f)),
+        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f)),
+        static_cast<unsigned char>(128 + 127 * std::cos(time))
+    };
+
+    float step = 1.0f / (width - 1);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            float t = x * step;
+            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
+            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
+            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
+            int index = 3 * (y * width + x);
+            data[index] = r;
+            data[index + 1] = g;
+            data[index + 2] = b;
+        }
+    }
+}
+
+// Function used for testing, updates the texture data
+void TestingFunction(unsigned char* data) {
+    static float time = 0;
+    time += 0.01f;
+    generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
 }

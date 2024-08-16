@@ -1,9 +1,10 @@
 #include "Context2D.h"
-// Implement any methods if needed
-Context2D::Context2D(/* args */) {
-    // Constructor implementation
+
+void Context2D::SetTargetTexture(Texture *targettexture)
+{
+    this->targetTexture = targettexture;
 }
 
-Context2D::~Context2D() {
-    // Destructor implementation
+void Context2D::ClearTarget(Color color)
+{
 }
