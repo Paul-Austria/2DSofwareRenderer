@@ -2,7 +2,7 @@
 #define TEXTURE_H
 
 #include <cstdint>
-#include "PixelFormat.h"
+#include "PixelFormat/PixelFormat.h"
 
 class Texture
 {

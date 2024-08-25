@@ -4,12 +4,13 @@
 #include <iostream>  // For std::cout
 #include "../data/Texture.h"
 #include "../data/Color.h"
-class Context2D
+
+class RenderContext2D
 {
 
 public:
-    Context2D() = default;
-    ~Context2D() = default;
+    RenderContext2D() = default;
+    ~RenderContext2D() = default;
 
     void SetTargetTexture(Texture* targettexture);
     void ClearTarget(Color color);
@@ -17,7 +18,7 @@ public:
     static void Test() { std::cout << "hello world"; }
 
 private:
-    Texture* targetTexture;
+    Texture* targetTexture = nullptr;
 };
 
 

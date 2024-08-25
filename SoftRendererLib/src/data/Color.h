@@ -1,7 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include "PixelFormat.h"
+#include "PixelFormat/PixelFormat.h"
 #include <cstdint>
 #include <cstring>
 

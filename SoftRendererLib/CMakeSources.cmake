@@ -1,11 +1,12 @@
 set(SOURCES
     src/include/SoftRenderer.h
     
-    src/data/PixelFormat.h
-    src/data/PixelFormatInfo.h
-    
+    src/data/PixelFormat/PixelFormat.h
+    src/data/PixelFormat/PixelFormatInfo.h
+    src/data/PixelFormat/PixelConverter.cpp
+
     src/data/Texture.cpp
     src/data/Color.cpp
 
-    src/core/Context2D.cpp
+    src/core/RenderContext2D.cpp
 )
