@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <SoftRendererLib/src/include/SoftRenderer.h>
 
 // Constants
 #define WIDTH 800
@@ -50,6 +51,8 @@ void generateRandomTextureData(unsigned char* data, int width, int height);
 void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time);
 void TestingFunction(unsigned char* data);
 
+RenderContext2D context;
+Texture* TargetTexture = nullptr;
 int main() {
     // Initialize GLFW
     if (!glfwInit()) {
@@ -153,7 +156,10 @@ int main() {
 
     // Allocate memory for texture data and generate initial texture
     unsigned char* imageData = new unsigned char[3 * WIDTH * HEIGHT];
-    generateRandomTextureData(imageData, WIDTH, HEIGHT);
+    TargetTexture = new Texture(WIDTH, HEIGHT, imageData, PixelFormat::RGB24);
+    context.SetTargetTexture(TargetTexture);
+
+  //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -183,6 +189,7 @@ int main() {
     glDeleteBuffers(1, &EBO);
     glDeleteTextures(1, &texture);
     delete[] imageData;
+    delete TargetTexture;
 
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -238,9 +245,16 @@ void generateAnimatedGradientTextureData(unsigned char* data, int width, int hei
     }
 }
 
+
 // Function used for testing, updates the texture data
 void TestingFunction(unsigned char* data) {
     static float time = 0;
     time += 0.01f;
-    generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
+
+    context.ClearTarget(Color(0, 255,0));
+
+    context.DrawRect(Color(0,0,255), 50, 50, 300, 30);
+ //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
+
+
 }

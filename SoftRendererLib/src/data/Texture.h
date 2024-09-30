@@ -7,8 +7,8 @@
 class Texture
 {
 public:
-    Texture(uint32_t width, uint32_t height, PixelFormat format);
-    Texture(uint32_t width, uint32_t height, uint8_t* data, PixelFormat format);
+    Texture(uint16_t width, uint16_t height, PixelFormat format);
+    Texture(uint16_t width, uint16_t height, uint8_t* data, PixelFormat format);
     ~Texture();
 
     /// @brief Get Pointer of Texture
@@ -21,14 +21,14 @@ public:
     PixelFormat GetFormat();
 
     
-    uint32_t GetWidth();
-    uint32_t GetHeight();
+    uint16_t GetWidth();
+    uint16_t GetHeight();
     
 private:
     uint8_t* data;
     PixelFormat format;
     bool storedLocally = false;
-    uint32_t width, height;
+    uint16_t width, height;
 };
 
 
