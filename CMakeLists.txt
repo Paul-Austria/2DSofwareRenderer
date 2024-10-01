@@ -33,3 +33,6 @@ target_include_directories(OpenGLWrapper PRIVATE
     ${CMAKE_SOURCE_DIR}/SoftRendererLib
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/OpenGLWrapper/data
+     DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)

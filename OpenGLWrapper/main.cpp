@@ -5,6 +5,10 @@
 #include <ctime>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "lib/stb_image.h"
+
+
 // Constants
 #define WIDTH 800
 #define HEIGHT 400
@@ -33,12 +37,13 @@ const char* fragmentShaderSource = R"(
 )";
 
 // Vertex data for a full-screen quad
+// Original texture coordinates for a full-screen quad
 float vertices[] = {
-    // positions      // texture coords
-    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
-     1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
-     1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
-    -1.0f,  1.0f, 0.0f,  0.0f, 1.0f
+    // positions      // texture coords (flipped)
+    -1.0f, -1.0f, 0.0f,  0.0f, 1.0f,  // Bottom-left corner
+     1.0f, -1.0f, 0.0f,  1.0f, 1.0f,  // Bottom-right corner
+     1.0f,  1.0f, 0.0f,  1.0f, 0.0f,  // Top-right corner
+    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f   // Top-left corner
 };
 
 unsigned int indices[] = {
@@ -46,11 +51,14 @@ unsigned int indices[] = {
     2, 3, 0
 };
 
+int imgwidth,imgheight,nrChannels;
+uint8_t *data = nullptr;
+
 // Function prototypes
 void generateRandomTextureData(unsigned char* data, int width, int height);
 void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time);
-void TestingFunction(unsigned char* data);
-
+void TestingFunction();
+void SetupFunc();
 RenderContext2D context;
 Texture* TargetTexture = nullptr;
 int main() {
@@ -160,6 +168,7 @@ int main() {
     context.SetTargetTexture(TargetTexture);
 
   //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
+    SetupFunc();
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -167,7 +176,7 @@ int main() {
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Generate and update texture data
-        TestingFunction(imageData);
+        TestingFunction();
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
@@ -196,64 +205,65 @@ int main() {
     return 0;
 }
 
-// Function to fill a 2D array with random RGB data
-void generateRandomTextureData(unsigned char* data, int width, int height) {
-    const unsigned char startColor[3] = { 255, 0, 0 }; // Red
-    const unsigned char endColor[3] = { 0, 0, 255 };   // Blue
-    float step = 1.0f / (width - 1);
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            float t = x * step;
-            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
-            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
-            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
-            int index = 3 * (y * width + x);
-            data[index] = r;
-            data[index + 1] = g;
-            data[index + 2] = b;
+
+
+void CreateTestImage(uint8_t*& data, uint16_t width, uint16_t height) {
+    const int bytesPerPixel = 3;  // RGB format, 3 bytes per pixel
+    const int imageSize = width * height * bytesPerPixel; // Total size of the image data
+
+    // Allocate memory for the image
+    data = new uint8_t[imageSize];
+
+    // Loop through each pixel and assign RGB values
+    for (uint16_t y = 0; y < height; ++y) {
+        for (uint16_t x = 0; x < width; ++x) {
+            int pixelIndex = (y * width + x) * bytesPerPixel;
+
+            // Create a simple pattern
+            if ((x + y) % 2 == 0) {
+                // Set this pixel to red (255, 0, 0)
+                data[pixelIndex] = 255;     // Red
+                data[pixelIndex + 1] = 0;   // Green
+                data[pixelIndex + 2] = 0;   // Blue
+            } else {
+                // Set this pixel to blue (0, 0, 255)
+                data[pixelIndex] = 0;       // Red
+                data[pixelIndex + 1] = 0;   // Green
+                data[pixelIndex + 2] = 255; // Blue
+            }
         }
     }
 }
 
-// Function to fill a 2D array with animated gradient RGB data
-void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time) {
-    unsigned char startColor[3] = {
-        static_cast<unsigned char>(128 + 127 * std::sin(time)),
-        static_cast<unsigned char>(128 + 127 * std::cos(time)),
-        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f))
-    };
-    unsigned char endColor[3] = {
-        static_cast<unsigned char>(128 + 127 * std::cos(time + 1.57f)),
-        static_cast<unsigned char>(128 + 127 * std::sin(time + 3.14f)),
-        static_cast<unsigned char>(128 + 127 * std::cos(time))
-    };
-
-    float step = 1.0f / (width - 1);
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            float t = x * step;
-            unsigned char r = static_cast<unsigned char>(startColor[0] * (1 - t) + endColor[0] * t);
-            unsigned char g = static_cast<unsigned char>(startColor[1] * (1 - t) + endColor[1] * t);
-            unsigned char b = static_cast<unsigned char>(startColor[2] * (1 - t) + endColor[2] * t);
-            int index = 3 * (y * width + x);
-            data[index] = r;
-            data[index + 1] = g;
-            data[index + 2] = b;
-        }
-    }
+void SetupFunc(){
+    
+    data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3); 
 }
+
 
 
 // Function used for testing, updates the texture data
-void TestingFunction(unsigned char* data) {
+void TestingFunction() {
     static float time = 0;
     time += 0.01f;
 
-    context.ClearTarget(Color(0, 255,0));
+    context.ClearTarget(Color(150, 150,150));
 
-    context.DrawRect(Color(0,0,255), 50, 50, 300, 30);
+    context.DrawRect(Color(0,40,150), 0, 0, 300, 40);
+    context.DrawRect(Color(0,160,150), 60, 100, 300, 40);
+
+    if(data != nullptr)
+    {
+        uint8_t vert[] = {
+        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
+        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
+        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
+        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
+        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150};
+     //   context.DrawArray(vert, 40, 40, 5, 5, PixelFormat::RGB24);
+        context.DrawArray(data, 40, 40, imgwidth, imgheight, PixelFormat::RGB24);
+    }
  //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
 
 
