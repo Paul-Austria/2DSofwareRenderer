@@ -7,6 +7,10 @@ void RenderContext2D::SetTargetTexture(Texture *targettexture)
     this->targetTexture = targettexture;
 }
 
+void RenderContext2D::SetBlendMode(BlendMode mode){
+    this->mode = mode;
+}
+
 void RenderContext2D::ClearTarget(Color color)
 {
     if(targetTexture != nullptr)
@@ -46,6 +50,65 @@ void RenderContext2D::ClearTarget(Color color)
     }
 }
 
+void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height, float angle)
+{
+    if (targetTexture == nullptr)
+        return;
+
+    PixelFormat format = targetTexture->GetFormat();
+    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+    
+    // Get pointer to the texture data
+    uint8_t* textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+    
+    // Allocate memory for storing the converted pixel color
+    uint8_t* pixelData = new uint8_t[info.bytesPerPixel];
+
+    // Convert the input color to the format of the texture
+    color.ConvertTo(format, pixelData);
+
+    // Precompute sine and cosine of the rotation angle
+    float cosAngle = cos(angle);
+    float sinAngle = sin(angle);
+
+    // Center of the rectangle
+    float centerX = x + length / 2.0f;
+    float centerY = y + height / 2.0f;
+
+    // Loop over every pixel in the texture space
+    for (uint16_t i = 0; i < textureWidth; i++)
+    {
+        for (uint16_t j = 0; j < textureHeight; j++)
+        {
+            // Calculate the coordinates relative to the rectangle center
+            float localX = i - centerX;
+            float localY = j - centerY;
+
+            // Apply reverse rotation (unrotate the pixel)
+            float originalX = localX * cosAngle + localY * sinAngle;
+            float originalY = -localX * sinAngle + localY * cosAngle;
+
+            // Shift the coordinates back to the original rectangle's space
+            float rectX = originalX + length / 2.0f;
+            float rectY = originalY + height / 2.0f;
+
+            // Check if the pixel falls within the original rectangle bounds
+            if (rectX >= 0 && rectX < length && rectY >= 0 && rectY < height)
+            {
+                // Calculate the offset in the texture data based on the pixel position
+                size_t offset = (j * textureWidth + i) * info.bytesPerPixel;
+
+                // Copy the converted color data into the texture at the correct position
+                memcpy(&textureData[offset], pixelData, info.bytesPerPixel);
+            }
+        }
+    }
+
+    // Free allocated memory for pixel data
+    delete[] pixelData;
+}
 
 
 void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)

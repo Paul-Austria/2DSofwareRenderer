@@ -252,16 +252,9 @@ void TestingFunction() {
 
     context.DrawRect(Color(0,40,150), 0, 0, 300, 40);
     context.DrawRect(Color(0,160,150), 60, 100, 300, 40);
-
+    context.DrawRect(Color(250,60,50), 60, 150, 300, 40, 45.0f * time * (3.1415f / 180.0f));
     if(data != nullptr)
     {
-        uint8_t vert[] = {
-        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
-        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
-        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
-        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150,
-        250,40,0, 40,40,150,  40,40,150,  40,40,150,  40,40,150};
-     //   context.DrawArray(vert, 40, 40, 5, 5, PixelFormat::RGB24);
         context.DrawArray(data, 40, 40, imgwidth, imgheight, PixelFormat::RGB24);
     }
  //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
