@@ -8,13 +8,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "lib/stb_image.h"
 
-
 // Constants
 #define WIDTH 800
 #define HEIGHT 400
 
 // Vertex Shader source code
-const char* vertexShaderSource = R"(
+const char *vertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec3 aPos;
     layout (location = 1) in vec2 aTexCoord;
@@ -26,7 +25,7 @@ const char* vertexShaderSource = R"(
 )";
 
 // Fragment Shader source code
-const char* fragmentShaderSource = R"(
+const char *fragmentShaderSource = R"(
     #version 330 core
     in vec2 TexCoord;
     out vec4 FragColor;
@@ -40,30 +39,31 @@ const char* fragmentShaderSource = R"(
 // Original texture coordinates for a full-screen quad
 float vertices[] = {
     // positions      // texture coords (flipped)
-    -1.0f, -1.0f, 0.0f,  0.0f, 1.0f,  // Bottom-left corner
-     1.0f, -1.0f, 0.0f,  1.0f, 1.0f,  // Bottom-right corner
-     1.0f,  1.0f, 0.0f,  1.0f, 0.0f,  // Top-right corner
-    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f   // Top-left corner
+    -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, // Bottom-left corner
+    1.0f, -1.0f, 0.0f, 1.0f, 1.0f,  // Bottom-right corner
+    1.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // Top-right corner
+    -1.0f, 1.0f, 0.0f, 0.0f, 0.0f   // Top-left corner
 };
 
 unsigned int indices[] = {
     0, 1, 2,
-    2, 3, 0
-};
+    2, 3, 0};
 
-int imgwidth,imgheight,nrChannels;
+int imgwidth, imgheight, nrChannels;
 uint8_t *data = nullptr;
 
 // Function prototypes
-void generateRandomTextureData(unsigned char* data, int width, int height);
-void generateAnimatedGradientTextureData(unsigned char* data, int width, int height, float time);
+void generateRandomTextureData(unsigned char *data, int width, int height);
+void generateAnimatedGradientTextureData(unsigned char *data, int width, int height, float time);
 void TestingFunction();
 void SetupFunc();
 RenderContext2D context;
-Texture* TargetTexture = nullptr;
-int main() {
+Texture *TargetTexture = nullptr;
+int main()
+{
     // Initialize GLFW
-    if (!glfwInit()) {
+    if (!glfwInit())
+    {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
@@ -74,8 +74,9 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Window", nullptr, nullptr);
-    if (!window) {
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Window", nullptr, nullptr);
+    if (!window)
+    {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -86,7 +87,8 @@ int main() {
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK) {
+    if (glewInit() != GLEW_OK)
+    {
         std::cerr << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
@@ -99,7 +101,8 @@ int main() {
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
         std::cerr << "Vertex Shader Compilation Failed: " << infoLog << std::endl;
         return -1;
@@ -110,7 +113,8 @@ int main() {
     glCompileShader(fragmentShader);
 
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
         std::cerr << "Fragment Shader Compilation Failed: " << infoLog << std::endl;
         return -1;
@@ -123,7 +127,8 @@ int main() {
     glLinkProgram(shaderProgram);
 
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
         std::cerr << "Shader Program Linking Failed: " << infoLog << std::endl;
         return -1;
@@ -147,9 +152,9 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // Generate and configure texture
@@ -163,18 +168,23 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Allocate memory for texture data and generate initial texture
-    unsigned char* imageData = new unsigned char[3 * WIDTH * HEIGHT];
+    unsigned char *imageData = new unsigned char[3 * WIDTH * HEIGHT];
     TargetTexture = new Texture(WIDTH, HEIGHT, imageData, PixelFormat::RGB24);
     context.SetTargetTexture(TargetTexture);
 
-  //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
+    //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
     SetupFunc();
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
+    // Variables for FPS counting
+    double previousTime = 0.0;
+    int frameCount = 0;
+
+    while (!glfwWindowShouldClose(window))
+    {
         // Generate and update texture data
         TestingFunction();
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -190,6 +200,22 @@ int main() {
         // Swap buffers and poll events
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // FPS calculation
+        double currentTime = glfwGetTime();
+        frameCount++;
+
+        // Check if a second has passed
+        if (currentTime - previousTime >= 1.0)
+        {
+            double fps = frameCount / (currentTime - previousTime);
+            double timePerFrame = 1000.0 / fps; // Convert to milliseconds
+            std::cout << "FPS: " << fps << " | Time per frame: " << timePerFrame << " ms" << std::endl;
+
+            // Reset counters
+            previousTime = currentTime;
+            frameCount = 0;
+        }
     }
 
     // Cleanup
@@ -205,28 +231,31 @@ int main() {
     return 0;
 }
 
-
-
-
-void CreateTestImage(uint8_t*& data, uint16_t width, uint16_t height) {
-    const int bytesPerPixel = 3;  // RGB format, 3 bytes per pixel
+void CreateTestImage(uint8_t *&data, uint16_t width, uint16_t height)
+{
+    const int bytesPerPixel = 3;                          // RGB format, 3 bytes per pixel
     const int imageSize = width * height * bytesPerPixel; // Total size of the image data
 
     // Allocate memory for the image
     data = new uint8_t[imageSize];
 
     // Loop through each pixel and assign RGB values
-    for (uint16_t y = 0; y < height; ++y) {
-        for (uint16_t x = 0; x < width; ++x) {
+    for (uint16_t y = 0; y < height; ++y)
+    {
+        for (uint16_t x = 0; x < width; ++x)
+        {
             int pixelIndex = (y * width + x) * bytesPerPixel;
 
             // Create a simple pattern
-            if ((x + y) % 2 == 0) {
+            if ((x + y) % 2 == 0)
+            {
                 // Set this pixel to red (255, 0, 0)
-                data[pixelIndex] = 255;     // Red
-                data[pixelIndex + 1] = 0;   // Green
-                data[pixelIndex + 2] = 0;   // Blue
-            } else {
+                data[pixelIndex] = 255;   // Red
+                data[pixelIndex + 1] = 0; // Green
+                data[pixelIndex + 2] = 0; // Blue
+            }
+            else
+            {
                 // Set this pixel to blue (0, 0, 255)
                 data[pixelIndex] = 0;       // Red
                 data[pixelIndex + 1] = 0;   // Green
@@ -236,28 +265,28 @@ void CreateTestImage(uint8_t*& data, uint16_t width, uint16_t height) {
     }
 }
 
-void SetupFunc(){
-    
-    data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3); 
+void SetupFunc()
+{
+
+    data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
 }
 
-
-
 // Function used for testing, updates the texture data
-void TestingFunction() {
+void TestingFunction()
+{
     static float time = 0;
     time += 0.01f;
 
-    context.ClearTarget(Color(150, 150,150));
+    context.ClearTarget(Color(150, 150, 150));
 
-    context.DrawRect(Color(0,40,150), 0, 0, 300, 40);
-    context.DrawRect(Color(0,160,150), 60, 100, 300, 40);
-    context.DrawRect(Color(250,60,50), 60, 150, 300, 40, 45.0f * time * (3.1415f / 180.0f));
-    if(data != nullptr)
+    context.DrawRect(Color(0, 40, 150), 0, 0, 300, 40);
+    context.DrawRect(Color(0, 160, 150), 60, 100, 300, 40);
+    context.DrawRect(Color(250, 60, 50), 60, 150, 300, 40, 45.0f * time * (3.1415f / 180.0f));
+    if (data != nullptr)
     {
         context.DrawArray(data, 40, 40, imgwidth, imgheight, PixelFormat::RGB24);
+        context.DrawArray(data, 100, 100, imgwidth, imgheight, PixelFormat::RGB24, 2.0f, 2.0f, 45.0f * time);
+
     }
- //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
-
-
+    //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
 }

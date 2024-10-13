@@ -1,6 +1,10 @@
 #include "RenderContext2D.h"
 #include "../data/PixelFormat/PixelConverter.h"
 #include "../data/PixelFormat/PixelFormatInfo.h"
+#include <cmath>
+#include <stdio.h>
+
+# define M_PI           3.14159265358979323846  /* pi */
 
 void RenderContext2D::SetTargetTexture(Texture *targettexture)
 {
@@ -185,12 +189,121 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
             textureData[targetPixelIndex] = data[sourcePixelIndex];     // Red
             textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
             textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
-
-            uint8_t d1 =  data[sourcePixelIndex];  
-            uint8_t d2 =  data[sourcePixelIndex + 1];  
-            uint8_t d3 =  data[sourcePixelIndex + 2];  
-            uint8_t d4 = 44;
         }
     }
 }
 
+void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees)
+{
+    if (targetTexture == nullptr)
+        return;
+
+    // Convert degrees to radians
+    float angle = angleDegrees * M_PI / 180.0f;
+
+    // Get target texture properties
+    uint8_t* textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+
+    // Calculate the center of the source image
+    float centerX = width / 2.0f;
+    float centerY = height / 2.0f;
+
+    // Precompute sine and cosine of the angle for rotation
+    float cosAngle = cos(angle);
+    float sinAngle = sin(angle);
+
+    // Loop over each pixel in the target texture
+    for (uint16_t i = 0; i < textureWidth; i++)
+    {
+        for (uint16_t j = 0; j < textureHeight; j++)
+        {
+            // Calculate the position relative to the center of the destination
+            float destX = i - (x + width / 2.0f);
+            float destY = j - (y + height / 2.0f);
+
+            // Calculate the corresponding source pixel coordinates
+            float scaledX = destX / scaleX;
+            float scaledY = destY / scaleY;
+
+            // Apply rotation to the scaled coordinates
+            float srcX = scaledX * cosAngle - scaledY * sinAngle + centerX;
+            float srcY = scaledX * sinAngle + scaledY * cosAngle + centerY;
+
+            // Check if the source coordinates fall within the bounds of the source image
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height)
+            {
+                // Source pixel index from `data` (assuming 3 bytes per pixel for RGB)
+                uint32_t sourcePixelIndex = ((int)srcY * width + (int)srcX) * 3; // Assuming RGB24 (3 bytes per pixel)
+
+                // Target pixel index in the texture data
+                uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
+
+                // Ensure the source pixel index is within bounds
+                if (sourcePixelIndex < width * height * 3) {
+                    // Copy RGB data from source to target
+                    textureData[targetPixelIndex] = data[sourcePixelIndex];          // Red
+                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1];  // Green
+                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2];  // Blue
+                }
+            }
+        }
+    }
+}
+
+
+void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY)
+{
+    if (targetTexture == nullptr)
+        return;
+
+    // Convert degrees to radians
+    float angle = angleDegrees * M_PI / 180.0f;
+
+    // Get target texture properties
+    uint8_t* textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+
+    // Precompute sine and cosine of the angle for rotation
+    float cosAngle = cos(angle);
+    float sinAngle = sin(angle);
+
+    // Loop over each pixel in the target texture
+    for (uint16_t i = 0; i < textureWidth; i++)
+    {
+        for (uint16_t j = 0; j < textureHeight; j++)
+        {
+            // Calculate the position relative to the pivot point of the destination
+            float destX = i - (x + pivotX); // Change this to use pivotX
+            float destY = j - (y + pivotY); // Change this to use pivotY
+
+            // Calculate the corresponding source pixel coordinates
+            float scaledX = destX / scaleX;
+            float scaledY = destY / scaleY;
+
+            // Apply rotation to the scaled coordinates
+            float srcX = scaledX * cosAngle - scaledY * sinAngle + (width / 2.0f) + pivotX; // Adjust for pivotX
+            float srcY = scaledX * sinAngle + scaledY * cosAngle + (height / 2.0f) + pivotY; // Adjust for pivotY
+
+            // Check if the source coordinates fall within the bounds of the source image
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height)
+            {
+                // Source pixel index from `data` (assuming 3 bytes per pixel for RGB)
+                uint32_t sourcePixelIndex = ((int)srcY * width + (int)srcX) * 3; // Assuming RGB24 (3 bytes per pixel)
+
+                // Target pixel index in the texture data
+                uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
+
+                // Ensure the source pixel index is within bounds
+                if (sourcePixelIndex < width * height * 3) {
+                    // Copy RGB data from source to target
+                    textureData[targetPixelIndex] = data[sourcePixelIndex];          // Red
+                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1];  // Green
+                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2];  // Blue
+                }
+            }
+        }
+    }
+}
