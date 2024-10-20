@@ -3,6 +3,11 @@ project(SoftRendererLib VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
+
+# custom options
+option(SIMD_OPTIMZED "SIMD OPTIMIZED" ON)
+
+
 # Include the sources from subdirectories
 add_subdirectory(src)
 
@@ -21,3 +26,4 @@ target_include_directories(SoftRendererLib PUBLIC
 )
 
 set_target_properties(SoftRendererLib PROPERTIES LINKER_LANGUAGE CXX)
+
