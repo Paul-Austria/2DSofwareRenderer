@@ -4,31 +4,35 @@
 #include <cmath>
 #include <stdio.h>
 
-# define M_PI           3.14159265358979323846  /* pi */
+
+using namespace Renderer2D;
+
+#define M_PI 3.14159265358979323846 /* pi */
 
 void RenderContext2D::SetTargetTexture(Texture *targettexture)
 {
     this->targetTexture = targettexture;
 }
 
-void RenderContext2D::SetBlendMode(BlendMode mode){
+void RenderContext2D::SetBlendMode(BlendMode mode)
+{
     this->mode = mode;
 }
 
 void RenderContext2D::ClearTarget(Color color)
 {
-    if(targetTexture != nullptr)
+    if (targetTexture != nullptr)
     {
         PixelFormat format = targetTexture->GetFormat();
         PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
         // Get pointer to the texture data
-        uint8_t* textureData = targetTexture->GetData();
+        uint8_t *textureData = targetTexture->GetData();
         uint16_t width = targetTexture->GetWidth();
         uint16_t height = targetTexture->GetHeight();
 
         // Allocate memory to store the converted color data
-        uint8_t* pixelData = new uint8_t[info.bytesPerPixel];
+        uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
 
         // Convert the input color to the target pixel format
         color.ConvertTo(format, pixelData);
@@ -61,14 +65,14 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
     PixelFormat format = targetTexture->GetFormat();
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
-    
+
     // Get pointer to the texture data
-    uint8_t* textureData = targetTexture->GetData();
+    uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
-    
+
     // Allocate memory for storing the converted pixel color
-    uint8_t* pixelData = new uint8_t[info.bytesPerPixel];
+    uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
 
     // Convert the input color to the format of the texture
     color.ConvertTo(format, pixelData);
@@ -114,7 +118,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     delete[] pixelData;
 }
 
-
 void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)
 {
     if (targetTexture == nullptr)
@@ -122,14 +125,14 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
     PixelFormat format = targetTexture->GetFormat();
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
-    
+
     // Get pointer to the texture data
-    uint8_t* textureData = targetTexture->GetData();
+    uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
-    
+
     // Allocate memory for storing the converted pixel color
-    uint8_t* pixelData = new uint8_t[info.bytesPerPixel];
+    uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
 
     // Convert the input color to the format of the texture
     color.ConvertTo(format, pixelData);
@@ -150,20 +153,18 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
             }
         }
     }
-    
 
     // Free allocated memory for pixel data
     delete[] pixelData;
 }
 
-
-void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat)
+void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat)
 {
     if (targetTexture == nullptr)
         return;
 
     // Get target texture properties
-    uint8_t* textureData = targetTexture->GetData();
+    uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
 
@@ -186,14 +187,14 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
             uint32_t targetPixelIndex = ((y + posY) * textureWidth + (x + posX)) * 3;
 
             // Copy RGB data from source to target
-            textureData[targetPixelIndex] = data[sourcePixelIndex];     // Red
+            textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
             textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
             textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
         }
     }
 }
 
-void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees)
+void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees)
 {
     if (targetTexture == nullptr)
         return;
@@ -202,7 +203,7 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
     float angle = angleDegrees * M_PI / 180.0f;
 
     // Get target texture properties
-    uint8_t* textureData = targetTexture->GetData();
+    uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
 
@@ -241,19 +242,19 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
                 uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
 
                 // Ensure the source pixel index is within bounds
-                if (sourcePixelIndex < width * height * 3) {
+                if (sourcePixelIndex < width * height * 3)
+                {
                     // Copy RGB data from source to target
-                    textureData[targetPixelIndex] = data[sourcePixelIndex];          // Red
-                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1];  // Green
-                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2];  // Blue
+                    textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
+                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
+                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
                 }
             }
         }
     }
 }
 
-
-void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY)
+void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY)
 {
     if (targetTexture == nullptr)
         return;
@@ -262,7 +263,7 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
     float angle = angleDegrees * M_PI / 180.0f;
 
     // Get target texture properties
-    uint8_t* textureData = targetTexture->GetData();
+    uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
 
@@ -284,7 +285,7 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
             float scaledY = destY / scaleY;
 
             // Apply rotation to the scaled coordinates
-            float srcX = scaledX * cosAngle - scaledY * sinAngle + (width / 2.0f) + pivotX; // Adjust for pivotX
+            float srcX = scaledX * cosAngle - scaledY * sinAngle + (width / 2.0f) + pivotX;  // Adjust for pivotX
             float srcY = scaledX * sinAngle + scaledY * cosAngle + (height / 2.0f) + pivotY; // Adjust for pivotY
 
             // Check if the source coordinates fall within the bounds of the source image
@@ -297,13 +298,25 @@ void RenderContext2D::DrawArray(uint8_t* data, uint16_t x, uint16_t y, uint16_t 
                 uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
 
                 // Ensure the source pixel index is within bounds
-                if (sourcePixelIndex < width * height * 3) {
+                if (sourcePixelIndex < width * height * 3)
+                {
                     // Copy RGB data from source to target
-                    textureData[targetPixelIndex] = data[sourcePixelIndex];          // Red
-                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1];  // Green
-                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2];  // Blue
+                    textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
+                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
+                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
                 }
             }
         }
     }
+}
+
+void RenderContext2D::EnableClipping(bool clipping){
+    this->enableClipping = clipping;
+}
+void RenderContext2D::SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY)
+{
+    this->startX = startX;
+    this->startY = startY;
+    this->endX = endX;
+    this->endY = endY;
 }

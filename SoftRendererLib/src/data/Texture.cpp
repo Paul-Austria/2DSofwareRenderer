@@ -1,5 +1,7 @@
 #include "Texture.h"
 #include "PixelFormat/PixelFormatInfo.h"
+using namespace Renderer2D;
+
 Texture::Texture(uint16_t width, uint16_t height, PixelFormat format) : width(width), height(height), format(format)
 {
     storedLocally = true;

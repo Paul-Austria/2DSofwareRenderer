@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstring>
 
+namespace Renderer2D{
+
 class Color {
 public:
     // Constructors for different formats
@@ -25,5 +27,7 @@ private:
     PixelFormat format;  // The current format of the color data
     uint8_t data[4];     // Color data storage (max 4 bytes for RGBA32/BGRA32)
 };
+
+}
 
 #endif // COLOR_H

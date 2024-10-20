@@ -2,6 +2,8 @@
 #include "PixelFormat/PixelFormatInfo.h"
 #include "PixelFormat/PixelConverter.h"
 
+using namespace Renderer2D;
+
 Color::Color(uint8_t r, uint8_t g, uint8_t b)
 {
     data[0] = r;

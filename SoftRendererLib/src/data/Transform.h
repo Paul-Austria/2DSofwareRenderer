@@ -1,21 +1,26 @@
 #include <cstdint>
-struct Scale
-{
-    float X,Y = 1;
-};
 
-class Transform
+namespace Renderer2D
 {
-public:
-    Transform(float rotation);
-    Transform(Scale scale);
-    Transform(float rotation, Scale scale);
-    ~Transform() = default;
+    struct Scale
+    {
+        float X, Y = 1;
+    };
 
-    
-    float GetRotation();
-    Scale GetScale();
-private:
-    float rotation = 0;
-    Scale scale;
-};
+    class Transform
+    {
+    public:
+        Transform(float rotation);
+        Transform(Scale scale);
+        Transform(float rotation, Scale scale);
+        ~Transform() = default;
+
+        float GetRotation();
+        Scale GetScale();
+
+    private:
+        float rotation = 0;
+        Scale scale;
+    };
+
+}

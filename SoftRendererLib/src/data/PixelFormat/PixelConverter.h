@@ -5,6 +5,9 @@
 #include <cstring>
 #include <stdexcept>
 
+namespace Renderer2D
+{
+
 class PixelConverter
 {
 public:
@@ -77,5 +80,7 @@ private:
         // Add more static conversions here if needed
     };
 };
+
+}
 
 #endif // !PIXELFORMATHANDLER_H

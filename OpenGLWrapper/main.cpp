@@ -12,6 +12,8 @@
 #define WIDTH 800
 #define HEIGHT 400
 
+using namespace Renderer2D;
+
 // Vertex Shader source code
 const char *vertexShaderSource = R"(
     #version 330 core

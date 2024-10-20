@@ -4,6 +4,8 @@
 #include <cstdint>
 #include "PixelFormat/PixelFormat.h"
 
+namespace Renderer2D{
+
 class Texture
 {
 public:
@@ -31,5 +33,6 @@ private:
     uint16_t width, height;
 };
 
+}
 
 #endif
