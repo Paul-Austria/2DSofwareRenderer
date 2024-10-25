@@ -86,6 +86,7 @@ int main()
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(0); // Disable V-Sync
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -281,14 +282,16 @@ void TestingFunction()
 
     context.ClearTarget(Color(150, 150, 150));
 
+    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 4000);
     context.DrawRect(Color(0, 40, 150), 0, 0, 300, 40);
+    context.DrawRect(Color(0, 40, 150), 0, 0, 300, 40);
+
     context.DrawRect(Color(0, 160, 150), 60, 100, 300, 40);
     context.DrawRect(Color(250, 60, 50), 60, 150, 300, 40, 45.0f * time * (3.1415f / 180.0f));
     if (data != nullptr)
     {
         context.DrawArray(data, 40, 40, imgwidth, imgheight, PixelFormat::RGB24);
         context.DrawArray(data, 100, 100, imgwidth, imgheight, PixelFormat::RGB24, 2.0f, 2.0f, 45.0f * time);
-
     }
     //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
 }

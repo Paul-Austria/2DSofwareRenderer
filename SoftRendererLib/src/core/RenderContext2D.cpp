@@ -2,8 +2,8 @@
 #include "../data/PixelFormat/PixelConverter.h"
 #include "../data/PixelFormat/PixelFormatInfo.h"
 #include <cmath>
+#include <algorithm>
 #include <stdio.h>
-
 
 using namespace Renderer2D;
 
@@ -21,40 +21,95 @@ void RenderContext2D::SetBlendMode(BlendMode mode)
 
 void RenderContext2D::ClearTarget(Color color)
 {
-    if (targetTexture != nullptr)
+    if (targetTexture == nullptr)
     {
-        PixelFormat format = targetTexture->GetFormat();
-        PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+        return; // Early exit if no target texture
+    }
 
-        // Get pointer to the texture data
-        uint8_t *textureData = targetTexture->GetData();
-        uint16_t width = targetTexture->GetWidth();
-        uint16_t height = targetTexture->GetHeight();
+    PixelFormat format = targetTexture->GetFormat();
+    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
-        // Allocate memory to store the converted color data
-        uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
+    // Get pointer to the texture data
+    uint8_t *textureData = targetTexture->GetData();
+    uint16_t width = targetTexture->GetWidth();
+    uint16_t height = targetTexture->GetHeight();
 
-        // Convert the input color to the target pixel format
-        color.ConvertTo(format, pixelData);
+    // Use a stack-allocated array for pixel data
+    uint8_t pixelData[4]; // Assuming maximum bytes per pixel is 4 (RGBA)
+    color.ConvertTo(format, pixelData);
 
-        // Iterate through all pixels and set them to the converted color
-        for (uint16_t y = 0; y < height; ++y)
+    // Calculate the total number of pixels
+    size_t totalPixels = width * height;
+
+    // Clear the texture by filling it with the converted color
+    for (size_t i = 0; i < totalPixels; ++i)
+    {
+        // Calculate the position in the texture data array
+        size_t pixelIndex = i * info.bytesPerPixel;
+        std::memcpy(&textureData[pixelIndex], pixelData, info.bytesPerPixel);
+    }
+}
+
+void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)
+{
+    if (!targetTexture)
+        return;
+
+    PixelFormat format = targetTexture->GetFormat();
+    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+
+    // Access the texture data and dimensions
+    uint8_t *textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+
+    // Convert the color to the format of the texture
+    std::vector<uint8_t> pixelData(info.bytesPerPixel);
+    color.ConvertTo(format, pixelData.data());
+
+    // Set clipping boundaries (with respect to the rectangle's position)
+    uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
+    uint16_t clipStartY = enableClipping ? std::max(y, startY) : y;
+    uint16_t clipEndX = enableClipping ? std::min(static_cast<int>(x + length), static_cast<int>(endX)) : x + length;
+    uint16_t clipEndY = enableClipping ? std::min(static_cast<int>(y + height), static_cast<int>(endY)) : y + height;
+
+    // Restrict drawing within the texture bounds
+    clipEndX = std::min(clipEndX, textureWidth);
+    clipEndY = std::min(clipEndY, textureHeight);
+
+    // If nothing to draw, return
+    if (clipStartX >= clipEndX || clipStartY >= clipEndY)
+        return;
+
+    // Calculate the number of bytes in a row
+    size_t bytesPerRow = (clipEndX - clipStartX) * info.bytesPerPixel;
+
+    // Prepare a full row of pixel data (the color to be drawn)
+    std::vector<uint8_t> rowPixelData(bytesPerRow);
+    for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
+    {
+        std::memcpy(&rowPixelData[byteIndex], pixelData.data(), info.bytesPerPixel);
+    }
+
+    switch (mode)
+    {
+    case BlendMode::NOBLEND:
+    {
+        // Fast, unblended rectangle drawing within the specified bounds
+        uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+
+        for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            for (uint16_t x = 0; x < width; ++x)
-            {
-                // Calculate the position in the texture data array
-                uint32_t pixelIndex = (y * width + x) * info.bytesPerPixel;
+            // Calculate the destination for the current row
+            uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
 
-                // Copy the pixel data to the texture data
-                for (uint32_t byte = 0; byte < info.bytesPerPixel; ++byte)
-                {
-                    textureData[pixelIndex + byte] = pixelData[byte];
-                }
-            }
+            // Use memcpy to copy the whole row of pixels at once
+            std::memcpy(rowDest, rowPixelData.data(), bytesPerRow);
         }
-
-        // Free allocated memory for pixel data
-        delete[] pixelData;
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -104,46 +159,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
             // Check if the pixel falls within the original rectangle bounds
             if (rectX >= 0 && rectX < length && rectY >= 0 && rectY < height)
-            {
-                // Calculate the offset in the texture data based on the pixel position
-                size_t offset = (j * textureWidth + i) * info.bytesPerPixel;
-
-                // Copy the converted color data into the texture at the correct position
-                memcpy(&textureData[offset], pixelData, info.bytesPerPixel);
-            }
-        }
-    }
-
-    // Free allocated memory for pixel data
-    delete[] pixelData;
-}
-
-void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)
-{
-    if (targetTexture == nullptr)
-        return;
-
-    PixelFormat format = targetTexture->GetFormat();
-    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
-
-    // Get pointer to the texture data
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
-
-    // Allocate memory for storing the converted pixel color
-    uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
-
-    // Convert the input color to the format of the texture
-    color.ConvertTo(format, pixelData);
-
-    // Loop over the rectangle area
-    for (size_t i = x; i < x + length; i++)
-    {
-        for (size_t j = y; j < y + height; j++)
-        {
-            // Ensure the pixel position is within the texture bounds
-            if (i < textureWidth && j < textureHeight)
             {
                 // Calculate the offset in the texture data based on the pixel position
                 size_t offset = (j * textureWidth + i) * info.bytesPerPixel;
@@ -310,7 +325,8 @@ void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t 
     }
 }
 
-void RenderContext2D::EnableClipping(bool clipping){
+void RenderContext2D::EnableClipping(bool clipping)
+{
     this->enableClipping = clipping;
 }
 void RenderContext2D::SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY)
