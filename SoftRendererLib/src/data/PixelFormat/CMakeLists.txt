@@ -1,8 +1,8 @@
 # Add source files from PixelFormat folder
 set(SOURCES
     ${SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/PixelFormat.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/PixelFormatInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PixelConverter.cpp
+
 )
 
 
@@ -15,7 +15,6 @@ else()
 
 set(SOURCES
     ${SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/PixelConverter.cpp
 )
 
 endif()

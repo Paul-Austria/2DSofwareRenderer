@@ -5,15 +5,16 @@
 #include "../data/Texture.h"
 #include "../data/Color.h"
 #include "../data/BlendMode.h"
+#include <functional>
 
 namespace Renderer2D
 {
-
+    using BlendFunction = std::function<Color(const Color &src, const Color &dst)>;
     class RenderContext2D
     {
 
     public:
-        RenderContext2D() = default;
+        RenderContext2D();
         ~RenderContext2D() = default;
 
         void SetTargetTexture(Texture *targettexture);
@@ -26,14 +27,20 @@ namespace Renderer2D
         void DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angle);
         void DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY);
 
-
         void EnableClipping(bool clipping);
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
+        // Typedef for the custom blend function
+
+        void SetCustomBlendFunction(BlendFunction func)
+        {
+            blendFunction = func;
+        }
 
     private:
         Texture *targetTexture = nullptr;
         BlendMode mode = BlendMode::NOBLEND;
-
+        SelectedBlendMode blendmode = SelectedBlendMode::SIMPLE;
+        BlendFunction blendFunction;
         // clipping area
         uint16_t startX, startY, endX, endY;
         bool enableClipping;

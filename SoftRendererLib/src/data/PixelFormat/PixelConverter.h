@@ -26,28 +26,36 @@ namespace Renderer2D
         };
 
         // Optimized conversion functions
-        static void RGB24ToRGBA32(const uint8_t* src, uint8_t* dst, size_t count);
-        static void RGBA32ToRGB24(const uint8_t* src, uint8_t* dst, size_t count);
-        static void BGR24ToRGBA32(const uint8_t* src, uint8_t* dst, size_t count);
-        static void BGRA32ToRGB24(const uint8_t* src, uint8_t* dst, size_t count);
-        static void Grayscale8ToRGBA32(const uint8_t* src, uint8_t* dst, size_t count);
-        static void Grayscale8ToRGB24(const uint8_t* src, uint8_t* dst, size_t count);
-        static void RGBA32ToGrayscale8(const uint8_t* src, uint8_t* dst, size_t count);
+        static void RGB24ToARGB8888(const uint8_t* src, uint8_t* dst, size_t count);
+        static void ARGB8888ToRGB24(const uint8_t* src, uint8_t* dst, size_t count);
+        static void RGB565ToARGB8888(const uint8_t* src, uint8_t* dst, size_t count);
+        static void ARGB8888ToRGB565(const uint8_t* src, uint8_t* dst, size_t count);
+        static void RGBA1555ToARGB8888(const uint8_t* src, uint8_t* dst, size_t count);
+        static void ARGB8888ToRGBA1555(const uint8_t* src, uint8_t* dst, size_t count);
+        static void RGBA4444ToARGB8888(const uint8_t* src, uint8_t* dst, size_t count);
+        static void ARGB8888ToRGBA4444(const uint8_t* src, uint8_t* dst, size_t count);
+        static void Grayscale8ToARGB8888(const uint8_t* src, uint8_t* dst, size_t count);
+        static void ARGB8888ToGrayscale8(const uint8_t* src, uint8_t* dst, size_t count);
         static void RGB24ToGrayscale8(const uint8_t* src, uint8_t* dst, size_t count);
+        static void RGB565ToGrayscale8(const uint8_t* src, uint8_t* dst, size_t count);
 
         // Conversion mappings
         static constexpr Conversion defaultConversions[] = {
-            {PixelFormat::RGB24, PixelFormat::RGBA32, RGB24ToRGBA32},
-            {PixelFormat::RGBA32, PixelFormat::RGB24, RGBA32ToRGB24},
-            {PixelFormat::BGR24, PixelFormat::RGBA32, BGR24ToRGBA32},
-            {PixelFormat::BGRA32, PixelFormat::RGB24, BGRA32ToRGB24},
-            {PixelFormat::GRAYSCALE8, PixelFormat::RGBA32, Grayscale8ToRGBA32},
-            {PixelFormat::GRAYSCALE8, PixelFormat::RGB24, Grayscale8ToRGB24},
-            {PixelFormat::RGBA32, PixelFormat::GRAYSCALE8, RGBA32ToGrayscale8},
-            {PixelFormat::RGB24, PixelFormat::GRAYSCALE8, RGB24ToGrayscale8}
+            {PixelFormat::RGB24, PixelFormat::ARGB8888, RGB24ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::RGB24, ARGB8888ToRGB24},
+            {PixelFormat::RGB565, PixelFormat::ARGB8888, RGB565ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::RGB565, ARGB8888ToRGB565},
+            {PixelFormat::RGBA1555, PixelFormat::ARGB8888, RGBA1555ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::RGBA1555, ARGB8888ToRGBA1555},
+            {PixelFormat::RGBA4444, PixelFormat::ARGB8888, RGBA4444ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::RGBA4444, ARGB8888ToRGBA4444},
+            {PixelFormat::GRAYSCALE8, PixelFormat::ARGB8888, Grayscale8ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::GRAYSCALE8, ARGB8888ToGrayscale8},
+            {PixelFormat::RGB24, PixelFormat::GRAYSCALE8, RGB24ToGrayscale8},
+            {PixelFormat::RGB565, PixelFormat::GRAYSCALE8, RGB565ToGrayscale8}
             // Add more conversions as necessary
         };
     };
 }
 
-#endif // PIXELCONVERTERNEW_H
+#endif // PIXELCONVERTER_H

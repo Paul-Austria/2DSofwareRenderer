@@ -6,21 +6,30 @@ using namespace Renderer2D;
 
 Color::Color(uint8_t r, uint8_t g, uint8_t b)
 {
-    data[0] = r;
-    data[1] = g;
-    data[2] = b;
-
-    format = PixelFormat::RGB24;
+    data[1] = r;
+    data[2] = g;
+    data[3] = b;
+    data[0] = 255;
+    format = PixelFormat::ARGB8888;
     
 }
 
+PixelFormat Color::GetFormat(){
+    return format;
+}
+
+uint8_t Color::GetAlpha(){
+    return data[0];
+}
+
+
 Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-    data[0] = r;
-    data[1] = g;
-    data[2] = b;
-    data[3] = a;
-    format = PixelFormat::RGBA32;
+    data[0] = a;
+    data[1] = r;
+    data[2] = g;
+    data[3] = b;
+    format = PixelFormat::ARGB8888;
 }
 
 Color::Color(uint8_t grayscale)
@@ -29,7 +38,7 @@ Color::Color(uint8_t grayscale)
     data[1] = grayscale;
     data[2] = grayscale;
     data[3] = grayscale;
-    format = PixelFormat::GRAYSCALE8;
+    format = PixelFormat::ARGB8888;
 
 }
 

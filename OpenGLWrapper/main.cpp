@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
+#include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "lib/stb_image.h"
@@ -268,10 +269,13 @@ void CreateTestImage(uint8_t *&data, uint16_t width, uint16_t height)
     }
 }
 
+
+
 void SetupFunc()
 {
 
     data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
+    context.SetBlendMode(BlendMode::NOBLEND);
 }
 
 // Function used for testing, updates the texture data
@@ -282,16 +286,9 @@ void TestingFunction()
 
     context.ClearTarget(Color(150, 150, 150));
 
-    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 4000);
-    context.DrawRect(Color(0, 40, 150), 0, 0, 300, 40);
-    context.DrawRect(Color(0, 40, 150), 0, 0, 300, 40);
+    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
+    context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
+    context.DrawRect(Color(200, 0, 0,10), 120, 0, 300, 90);
 
-    context.DrawRect(Color(0, 160, 150), 60, 100, 300, 40);
-    context.DrawRect(Color(250, 60, 50), 60, 150, 300, 40, 45.0f * time * (3.1415f / 180.0f));
-    if (data != nullptr)
-    {
-        context.DrawArray(data, 40, 40, imgwidth, imgheight, PixelFormat::RGB24);
-        context.DrawArray(data, 100, 100, imgwidth, imgheight, PixelFormat::RGB24, 2.0f, 2.0f, 45.0f * time);
-    }
-    //   generateAnimatedGradientTextureData(data, WIDTH, HEIGHT, time);
+    context.DrawRect(Color(200, 100, 0,150), 0, 0, 100, 300);
 }

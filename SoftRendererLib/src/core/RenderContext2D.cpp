@@ -7,8 +7,12 @@
 
 using namespace Renderer2D;
 
-#define M_PI 3.14159265358979323846 /* pi */
+#define M_PI 3.14159265358979323846f /* pi */
 
+RenderContext2D::RenderContext2D()
+{
+    SetCustomBlendFunction(BlendSimple);
+}
 void RenderContext2D::SetTargetTexture(Texture *targettexture)
 {
     this->targetTexture = targettexture;
@@ -63,10 +67,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
 
-    // Convert the color to the format of the texture
-    std::vector<uint8_t> pixelData(info.bytesPerPixel);
-    color.ConvertTo(format, pixelData.data());
-
     // Set clipping boundaries (with respect to the rectangle's position)
     uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
     uint16_t clipStartY = enableClipping ? std::max(y, startY) : y;
@@ -84,19 +84,32 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     // Calculate the number of bytes in a row
     size_t bytesPerRow = (clipEndX - clipStartX) * info.bytesPerPixel;
 
-    // Prepare a full row of pixel data (the color to be drawn)
-    std::vector<uint8_t> rowPixelData(bytesPerRow);
-    for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
-    {
-        std::memcpy(&rowPixelData[byteIndex], pixelData.data(), info.bytesPerPixel);
-    }
+    BlendMode subBlend = mode;
+    if (color.GetAlpha() == 255)
+        subBlend = BlendMode::NOBLEND;
 
-    switch (mode)
+    switch (subBlend)
     {
     case BlendMode::NOBLEND:
     {
         // Fast, unblended rectangle drawing within the specified bounds
         uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+
+        // Convert the color to the format of the texture for NOBLEND (no need for alpha)
+        std::vector<uint8_t> pixelData(info.bytesPerPixel);
+        color.ConvertTo(format, pixelData.data());
+
+        // Prepare a full row of pixel data (the color to be drawn)
+        std::vector<uint8_t> rowPixelData(bytesPerRow);
+        // Create the single pixel data
+        std::vector<uint8_t> singlePixelData(info.bytesPerPixel);
+        std::memcpy(singlePixelData.data(), pixelData.data(), info.bytesPerPixel);
+
+        // Fill the entire row by repeating the single pixel data
+        for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
+        {
+            std::copy(singlePixelData.begin(), singlePixelData.end(), rowPixelData.begin() + byteIndex);
+        }
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
@@ -105,6 +118,26 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
             // Use memcpy to copy the whole row of pixels at once
             std::memcpy(rowDest, rowPixelData.data(), bytesPerRow);
+        }
+        break;
+    }
+    case BlendMode::BLEND:
+    {
+        if (blendFunction)
+        {
+            // Get the source row
+            uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+
+            // Instead of creating a new buffer for every pixel, reuse a single buffer for conversion
+            std::vector<uint8_t> convertedPixel(info.bytesPerPixel);
+
+            for (uint16_t j = clipStartY; j < clipEndY; ++j)
+            {
+                uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
+                size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
+
+                BlendSimpleSIMD(color, rowDest, format, rowLength);
+            }
         }
         break;
     }
