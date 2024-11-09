@@ -4,7 +4,7 @@
 #include <iostream> // For std::cout
 #include "../data/Texture.h"
 #include "../data/Color.h"
-#include "../data/BlendMode.h"
+#include "../data/BlendMode/BlendMode.h"
 #include <functional>
 
 namespace Renderer2D
@@ -23,24 +23,18 @@ namespace Renderer2D
 
         void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height);
         void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height, float angle);
-        void DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat);
-        void DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angle);
-        void DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY);
+        void DrawTexture(Texture& texture, uint16_t x, uint16_t y);
 
         void EnableClipping(bool clipping);
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
         // Typedef for the custom blend function
 
-        void SetCustomBlendFunction(BlendFunction func)
-        {
-            blendFunction = func;
-        }
+
 
     private:
         Texture *targetTexture = nullptr;
         BlendMode mode = BlendMode::NOBLEND;
         SelectedBlendMode blendmode = SelectedBlendMode::SIMPLE;
-        BlendFunction blendFunction;
         // clipping area
         uint16_t startX, startY, endX, endY;
         bool enableClipping;

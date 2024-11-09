@@ -7,6 +7,8 @@ enum class PixelFormat
 {
     RGB24,         // 8 bits per channel: R, G, B or RGB888
     ARGB8888,
+    RGBA8888,
+
     RGBA1555,      // 16 bits: 5 bits R, 5 bits G, 5 bits B, 1 bit A
     GRAYSCALE8,    // 8 bits grayscale
 

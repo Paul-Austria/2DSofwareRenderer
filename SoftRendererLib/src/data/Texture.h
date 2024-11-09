@@ -9,6 +9,7 @@ namespace Renderer2D{
 class Texture
 {
 public:
+    Texture() = default;
     Texture(uint16_t width, uint16_t height, PixelFormat format);
     Texture(uint16_t width, uint16_t height, uint8_t* data, PixelFormat format);
     ~Texture();

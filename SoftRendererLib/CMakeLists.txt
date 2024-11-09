@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 # custom options
-option(SIMD_OPTIMZED "SIMD OPTIMIZED" OFF)
+option(SIMD_OPTIMIZED "SIMD OPTIMIZED" OFF)
 
 
 # Include the sources from subdirectories

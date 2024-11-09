@@ -54,6 +54,7 @@ unsigned int indices[] = {
 
 int imgwidth, imgheight, nrChannels;
 uint8_t *data = nullptr;
+uint8_t *data2 = nullptr;
 
 // Function prototypes
 void generateRandomTextureData(unsigned char *data, int width, int height);
@@ -271,11 +272,17 @@ void CreateTestImage(uint8_t *&data, uint16_t width, uint16_t height)
 
 
 
+Texture text;
+Texture text2;
+
 void SetupFunc()
 {
 
     data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
-    context.SetBlendMode(BlendMode::NOBLEND);
+    text = Texture(imgwidth,imgheight,data, PixelFormat::RGB24);
+    data2 = stbi_load("data/Candera.png", &imgwidth, &imgheight, &nrChannels, 4);
+    text2 = Texture(imgwidth,imgheight,data2, PixelFormat::RGBA8888);
+    context.SetBlendMode(BlendMode::BLEND);
 }
 
 // Function used for testing, updates the texture data
@@ -285,10 +292,12 @@ void TestingFunction()
     time += 0.01f;
 
     context.ClearTarget(Color(150, 150, 150));
+    context.DrawTexture(text, 40,40);
+    context.DrawTexture(text2, 150,150);
 
     context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-    context.DrawRect(Color(200, 0, 0,10), 120, 0, 300, 90);
+    context.DrawRect(Color(200, 0, 0,150), 120, 0, 300, 90);
 
     context.DrawRect(Color(200, 100, 0,150), 0, 0, 100, 300);
 }

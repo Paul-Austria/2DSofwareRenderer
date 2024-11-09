@@ -4,6 +4,8 @@
 #include <cmath>
 #include <algorithm>
 #include <stdio.h>
+#include "../util/MemHandler.h"
+#include "../data/BlendMode/BlendFunctions.h"
 
 using namespace Renderer2D;
 
@@ -11,7 +13,6 @@ using namespace Renderer2D;
 
 RenderContext2D::RenderContext2D()
 {
-    SetCustomBlendFunction(BlendSimple);
 }
 void RenderContext2D::SetTargetTexture(Texture *targettexture)
 {
@@ -103,7 +104,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
         std::vector<uint8_t> rowPixelData(bytesPerRow);
         // Create the single pixel data
         std::vector<uint8_t> singlePixelData(info.bytesPerPixel);
-        std::memcpy(singlePixelData.data(), pixelData.data(), info.bytesPerPixel);
+        MemHandler::MemCopy(singlePixelData.data(), pixelData.data(), info.bytesPerPixel);
 
         // Fill the entire row by repeating the single pixel data
         for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
@@ -117,27 +118,24 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
             uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
 
             // Use memcpy to copy the whole row of pixels at once
-            std::memcpy(rowDest, rowPixelData.data(), bytesPerRow);
+            MemHandler::MemCopy(rowDest, rowPixelData.data(), bytesPerRow);
         }
         break;
     }
     case BlendMode::BLEND:
     {
-        if (blendFunction)
+        // Get the source row
+        uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+
+        // Instead of creating a new buffer for every pixel, reuse a single buffer for conversion
+        std::vector<uint8_t> convertedPixel(info.bytesPerPixel);
+
+        for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Get the source row
-            uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+            uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
+            size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
 
-            // Instead of creating a new buffer for every pixel, reuse a single buffer for conversion
-            std::vector<uint8_t> convertedPixel(info.bytesPerPixel);
-
-            for (uint16_t j = clipStartY; j < clipEndY; ++j)
-            {
-                uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
-                size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
-
-                BlendSimpleSIMD(color, rowDest, format, rowLength);
-            }
+            BlendFunctions::BlendSimpleSolidColor(color, rowDest, format, rowLength);
         }
         break;
     }
@@ -146,215 +144,102 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     }
 }
 
-void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height, float angle)
+void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 {
-    if (targetTexture == nullptr)
+    if (!targetTexture)
         return;
 
-    PixelFormat format = targetTexture->GetFormat();
-    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+    // Get target texture information
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
 
-    // Get pointer to the texture data
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
+    // Get source texture information
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
 
-    // Allocate memory for storing the converted pixel color
-    uint8_t *pixelData = new uint8_t[info.bytesPerPixel];
+    // Set clipping boundaries within the source and target textures
+    uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
+    uint16_t clipStartY = enableClipping ? std::max(y, startY) : y;
+    uint16_t clipEndX = enableClipping ? std::min(static_cast<int>(x + sourceWidth), static_cast<int>(endX)) : x + sourceWidth;
+    uint16_t clipEndY = enableClipping ? std::min(static_cast<int>(y + sourceHeight), static_cast<int>(endY)) : y + sourceHeight;
 
-    // Convert the input color to the format of the texture
-    color.ConvertTo(format, pixelData);
+    // Restrict drawing to the target texture’s bounds
+    clipEndX = std::min(clipEndX, targetWidth);
+    clipEndY = std::min(clipEndY, targetHeight);
 
-    // Precompute sine and cosine of the rotation angle
-    float cosAngle = cos(angle);
-    float sinAngle = sin(angle);
+    // Check if there is anything to draw
+    if (clipStartX >= clipEndX || clipStartY >= clipEndY)
+        return;
 
-    // Center of the rectangle
-    float centerX = x + length / 2.0f;
-    float centerY = y + height / 2.0f;
+    // Get the blending mode to use
+    BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
 
-    // Loop over every pixel in the texture space
-    for (uint16_t i = 0; i < textureWidth; i++)
+    // Conversion function for source to target format if necessary
+    PixelConverter::ConvertFunc convertFunc = nullptr;
+    if (sourceFormat != targetFormat)
     {
-        for (uint16_t j = 0; j < textureHeight; j++)
+        convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+        if (!convertFunc)
         {
-            // Calculate the coordinates relative to the rectangle center
-            float localX = i - centerX;
-            float localY = j - centerY;
-
-            // Apply reverse rotation (unrotate the pixel)
-            float originalX = localX * cosAngle + localY * sinAngle;
-            float originalY = -localX * sinAngle + localY * cosAngle;
-
-            // Shift the coordinates back to the original rectangle's space
-            float rectX = originalX + length / 2.0f;
-            float rectY = originalY + height / 2.0f;
-
-            // Check if the pixel falls within the original rectangle bounds
-            if (rectX >= 0 && rectX < length && rectY >= 0 && rectY < height)
-            {
-                // Calculate the offset in the texture data based on the pixel position
-                size_t offset = (j * textureWidth + i) * info.bytesPerPixel;
-
-                // Copy the converted color data into the texture at the correct position
-                memcpy(&textureData[offset], pixelData, info.bytesPerPixel);
-            }
+            return;
         }
     }
 
-    // Free allocated memory for pixel data
-    delete[] pixelData;
-}
-
-void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat)
-{
-    if (targetTexture == nullptr)
-        return;
-
-    // Get target texture properties
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
-
-    // Clip the drawing area to avoid going out of bounds
-    uint16_t clippedWidth = std::min(width, (uint16_t)(textureWidth - x));
-    uint16_t clippedHeight = std::min(height, (uint16_t)(textureHeight - y));
-
-    // Ensure the width and height are not negative
-    if (clippedWidth <= 0 || clippedHeight <= 0)
-        return;
-
-    // Assuming source and target formats are the same
-    for (uint16_t posY = 0; posY < clippedHeight; ++posY)
+    switch (subBlend)
     {
-        for (uint16_t posX = 0; posX < clippedWidth; ++posX)
-        {
-            // Source pixel index from `data` (assuming 3 bytes per pixel for RGB)
-            uint32_t sourcePixelIndex = (posY * width + posX) * 3; // Assuming RGB24 (3 bytes per pixel)
-            // Target pixel index in the texture data
-            uint32_t targetPixelIndex = ((y + posY) * textureWidth + (x + posX)) * 3;
-
-            // Copy RGB data from source to target
-            textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
-            textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
-            textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
-        }
-    }
-}
-
-void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees)
-{
-    if (targetTexture == nullptr)
-        return;
-
-    // Convert degrees to radians
-    float angle = angleDegrees * M_PI / 180.0f;
-
-    // Get target texture properties
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
-
-    // Calculate the center of the source image
-    float centerX = width / 2.0f;
-    float centerY = height / 2.0f;
-
-    // Precompute sine and cosine of the angle for rotation
-    float cosAngle = cos(angle);
-    float sinAngle = sin(angle);
-
-    // Loop over each pixel in the target texture
-    for (uint16_t i = 0; i < textureWidth; i++)
+    case BlendMode::NOBLEND:
     {
-        for (uint16_t j = 0; j < textureHeight; j++)
+        std::vector<uint8_t> convertedRow((clipEndX - clipStartX) * targetInfo.bytesPerPixel);
+        for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Calculate the position relative to the center of the destination
-            float destX = i - (x + width / 2.0f);
-            float destY = j - (y + height / 2.0f);
+            uint8_t *targetRow = targetData + (j * targetWidth + clipStartX) * targetInfo.bytesPerPixel;
+            const uint8_t *sourceRow = sourceData + ((j - y) * sourceWidth + (clipStartX - x)) * sourceInfo.bytesPerPixel;
 
-            // Calculate the corresponding source pixel coordinates
-            float scaledX = destX / scaleX;
-            float scaledY = destY / scaleY;
-
-            // Apply rotation to the scaled coordinates
-            float srcX = scaledX * cosAngle - scaledY * sinAngle + centerX;
-            float srcY = scaledX * sinAngle + scaledY * cosAngle + centerY;
-
-            // Check if the source coordinates fall within the bounds of the source image
-            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height)
+            if (convertFunc)
             {
-                // Source pixel index from `data` (assuming 3 bytes per pixel for RGB)
-                uint32_t sourcePixelIndex = ((int)srcY * width + (int)srcX) * 3; // Assuming RGB24 (3 bytes per pixel)
-
-                // Target pixel index in the texture data
-                uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
-
-                // Ensure the source pixel index is within bounds
-                if (sourcePixelIndex < width * height * 3)
-                {
-                    // Copy RGB data from source to target
-                    textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
-                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
-                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
-                }
+                // Convert each pixel in the row from source to target format and copy directly
+                convertFunc(sourceRow, convertedRow.data(), clipEndX - clipStartX);
+                MemHandler::MemCopy(targetRow, convertedRow.data(), convertedRow.size());
+            }
+            else
+            {
+                // Direct copy if formats match
+                MemHandler::MemCopy(targetRow, sourceRow, (clipEndX - clipStartX) * targetInfo.bytesPerPixel);
             }
         }
+        break;
     }
-}
 
-void RenderContext2D::DrawArray(uint8_t *data, uint16_t x, uint16_t y, uint16_t width, uint16_t height, PixelFormat sourceFormat, float scaleX, float scaleY, float angleDegrees, float pivotX, float pivotY)
-{
-    if (targetTexture == nullptr)
-        return;
-
-    // Convert degrees to radians
-    float angle = angleDegrees * M_PI / 180.0f;
-
-    // Get target texture properties
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
-
-    // Precompute sine and cosine of the angle for rotation
-    float cosAngle = cos(angle);
-    float sinAngle = sin(angle);
-
-    // Loop over each pixel in the target texture
-    for (uint16_t i = 0; i < textureWidth; i++)
+    case BlendMode::BLEND:
     {
-        for (uint16_t j = 0; j < textureHeight; j++)
+        const uint8_t *srcPixelBase = sourceData;
+        uint8_t *dstPixelBase = targetData;
+
+        // Directly calculate row strides for source and target
+        size_t targetRowStride = targetWidth * targetInfo.bytesPerPixel;
+        size_t sourceRowStride = sourceWidth * sourceInfo.bytesPerPixel;
+
+        for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Calculate the position relative to the pivot point of the destination
-            float destX = i - (x + pivotX); // Change this to use pivotX
-            float destY = j - (y + pivotY); // Change this to use pivotY
+            // Calculate the start of the row for both source and target
+            uint8_t *targetRow = dstPixelBase + (j * targetWidth + clipStartX) * targetInfo.bytesPerPixel;
+            const uint8_t *sourceRow = srcPixelBase + ((j - y) * sourceWidth + (clipStartX - x)) * sourceInfo.bytesPerPixel;
 
-            // Calculate the corresponding source pixel coordinates
-            float scaledX = destX / scaleX;
-            float scaledY = destY / scaleY;
-
-            // Apply rotation to the scaled coordinates
-            float srcX = scaledX * cosAngle - scaledY * sinAngle + (width / 2.0f) + pivotX;  // Adjust for pivotX
-            float srcY = scaledX * sinAngle + scaledY * cosAngle + (height / 2.0f) + pivotY; // Adjust for pivotY
-
-            // Check if the source coordinates fall within the bounds of the source image
-            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height)
-            {
-                // Source pixel index from `data` (assuming 3 bytes per pixel for RGB)
-                uint32_t sourcePixelIndex = ((int)srcY * width + (int)srcX) * 3; // Assuming RGB24 (3 bytes per pixel)
-
-                // Target pixel index in the texture data
-                uint32_t targetPixelIndex = (j * textureWidth + i) * 3;
-
-                // Ensure the source pixel index is within bounds
-                if (sourcePixelIndex < width * height * 3)
-                {
-                    // Copy RGB data from source to target
-                    textureData[targetPixelIndex] = data[sourcePixelIndex];         // Red
-                    textureData[targetPixelIndex + 1] = data[sourcePixelIndex + 1]; // Green
-                    textureData[targetPixelIndex + 2] = data[sourcePixelIndex + 2]; // Blue
-                }
-            }
+            // Blend the entire row at once
+            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo);
         }
+
+        break;
+    }
+
+    default:
+        break;
     }
 }
 
