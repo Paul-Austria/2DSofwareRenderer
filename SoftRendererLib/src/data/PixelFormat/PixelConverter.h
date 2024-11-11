@@ -57,6 +57,8 @@ namespace Renderer2D
             {PixelFormat::ARGB8888, PixelFormat::RGB565, ARGB8888ToRGB565},
             {PixelFormat::RGBA1555, PixelFormat::ARGB8888, RGBA1555ToARGB8888},
             {PixelFormat::ARGB8888, PixelFormat::RGBA1555, ARGB8888ToRGBA1555},
+            {PixelFormat::ARGB8888, PixelFormat::RGBA8888, ARGB8888ToRGBA8888},
+            {PixelFormat::RGBA8888, PixelFormat::ARGB8888, RGBA8888ToARGB8888},
             {PixelFormat::RGBA4444, PixelFormat::ARGB8888, RGBA4444ToARGB8888},
             {PixelFormat::ARGB8888, PixelFormat::RGBA4444, ARGB8888ToRGBA4444},
             {PixelFormat::GRAYSCALE8, PixelFormat::ARGB8888, Grayscale8ToARGB8888},

@@ -51,7 +51,7 @@ void RenderContext2D::ClearTarget(Color color)
     {
         // Calculate the position in the texture data array
         size_t pixelIndex = i * info.bytesPerPixel;
-        std::memcpy(&textureData[pixelIndex], pixelData, info.bytesPerPixel);
+        MemHandler::MemCopy(&textureData[pixelIndex], pixelData, info.bytesPerPixel);
     }
 }
 
