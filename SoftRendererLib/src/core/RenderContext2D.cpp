@@ -9,7 +9,10 @@
 
 using namespace Renderer2D;
 
-#define M_PI 3.14159265358979323846f /* pi */
+#define M_PI 3.14159265358979323846f
+
+#define MAXBYTESPERPIXEL 16
+#define MAXROWLENGTH 2048
 
 RenderContext2D::RenderContext2D()
 {
@@ -63,7 +66,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     PixelFormat format = targetTexture->GetFormat();
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
-    // Access the texture data and dimensions
     uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
@@ -92,24 +94,20 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     switch (subBlend)
     {
     case BlendMode::NOBLEND:
-    {
-        // Fast, unblended rectangle drawing within the specified bounds
+    { // Fast, unblended rectangle drawing within the specified bounds
         uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
 
-        // Convert the color to the format of the texture for NOBLEND (no need for alpha)
-        std::vector<uint8_t> pixelData(info.bytesPerPixel);
-        color.ConvertTo(format, pixelData.data());
+        uint8_t pixelData[MAXBYTESPERPIXEL];
+        color.ConvertTo(format, pixelData);
 
-        // Prepare a full row of pixel data (the color to be drawn)
-        std::vector<uint8_t> rowPixelData(bytesPerRow);
-        // Create the single pixel data
-        std::vector<uint8_t> singlePixelData(info.bytesPerPixel);
-        MemHandler::MemCopy(singlePixelData.data(), pixelData.data(), info.bytesPerPixel);
+        uint8_t singlePixelData[MAXBYTESPERPIXEL];
+        MemHandler::MemCopy(singlePixelData, pixelData, info.bytesPerPixel);
 
-        // Fill the entire row by repeating the single pixel data
+        uint8_t rowPixelData[MAXROWLENGTH * MAXBYTESPERPIXEL];
+
         for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
         {
-            std::copy(singlePixelData.begin(), singlePixelData.end(), rowPixelData.begin() + byteIndex);
+            MemHandler::MemCopy(rowPixelData + byteIndex, singlePixelData, info.bytesPerPixel);
         }
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
@@ -118,7 +116,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
             uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
 
             // Use memcpy to copy the whole row of pixels at once
-            MemHandler::MemCopy(rowDest, rowPixelData.data(), bytesPerRow);
+            MemHandler::MemCopy(rowDest, rowPixelData, bytesPerRow);
         }
         break;
     }
@@ -126,9 +124,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     {
         // Get the source row
         uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
-
-        // Instead of creating a new buffer for every pixel, reuse a single buffer for conversion
-        std::vector<uint8_t> convertedPixel(info.bytesPerPixel);
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
@@ -194,7 +189,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
                 return;
             }
         }
-        std::vector<uint8_t> convertedRow((clipEndX - clipStartX) * targetInfo.bytesPerPixel);
+        
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *targetRow = targetData + (j * targetWidth + clipStartX) * targetInfo.bytesPerPixel;
@@ -203,8 +198,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
             if (convertFunc)
             {
                 // Convert each pixel in the row from source to target format and copy directly
-                convertFunc(sourceRow, convertedRow.data(), clipEndX - clipStartX);
-                MemHandler::MemCopy(targetRow, convertedRow.data(), convertedRow.size());
+                convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
             }
             else
             {
