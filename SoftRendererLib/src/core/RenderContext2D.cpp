@@ -180,21 +180,20 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     // Get the blending mode to use
     BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
 
-    // Conversion function for source to target format if necessary
-    PixelConverter::ConvertFunc convertFunc = nullptr;
-    if (sourceFormat != targetFormat)
-    {
-        convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
-        if (!convertFunc)
-        {
-            return;
-        }
-    }
-
     switch (subBlend)
     {
     case BlendMode::NOBLEND:
     {
+        // Conversion function for source to target format if necessary
+        PixelConverter::ConvertFunc convertFunc = nullptr;
+        if (sourceFormat != targetFormat)
+        {
+            convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+            if (!convertFunc)
+            {
+                return;
+            }
+        }
         std::vector<uint8_t> convertedRow((clipEndX - clipStartX) * targetInfo.bytesPerPixel);
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {

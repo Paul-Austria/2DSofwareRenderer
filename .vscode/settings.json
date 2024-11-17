@@ -64,6 +64,7 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "fstream": "cpp"
     }
 }

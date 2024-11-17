@@ -87,16 +87,11 @@ void BlendFunctions::BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstDa
 
 void BlendFunctions::BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t rowLength, const PixelFormatInfo &targetInfo, const PixelFormatInfo &sourceInfo)
 {
-    // Temporary buffers for source and destination colors
-    Color srcColor, dstColor;
-
     // Conversion functions for target and source formats
     PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
     PixelConverter::ConvertFunc convertFuncTarget = PixelConverter::GetConversionFunction(targetInfo.format, PixelFormat::ARGB8888);
-
     PixelConverter::ConvertFunc convertFuncBack = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
-    uint8_t data[4];
     // Loop over each pixel in the row
     for (size_t i = 0; i < rowLength; ++i)
     {
@@ -104,23 +99,29 @@ void BlendFunctions::BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t row
         const uint8_t *srcDataPointer = srcRow + i * sourceInfo.bytesPerPixel;
 
         // Convert the source pixel to ARGB8888 format
+        Color srcColor;
         convertFunc(srcDataPointer, srcColor.data, 1);
 
-        // Convert the destination pixel to ARGB8888 format
-        convertFuncTarget(dstDataPointer, dstColor.data, 1);
-
-        // Perform the blend (simple alpha blending in this case)
-        float alpha = srcColor.data[0] / 255.0f;
-        if (alpha != 0)
-        {
-
-            dstColor.data[1] = static_cast<uint8_t>(srcColor.data[1] * alpha + dstColor.data[1] * (1 - alpha));
-            dstColor.data[2] = static_cast<uint8_t>(srcColor.data[2] * alpha + dstColor.data[2] * (1 - alpha));
-            dstColor.data[3] = static_cast<uint8_t>(srcColor.data[3] * alpha + dstColor.data[3] * (1 - alpha));
-            dstColor.data[0] = std::max(srcColor.data[0], dstColor.data[0]);
+        // Get the source alpha once for the current pixel
+        uint8_t srcAlpha = srcColor.data[0];
+        if (srcAlpha == 0) {
+            continue;  // No need to blend if the source alpha is 0
         }
 
-        // Create the blended color
+        // Convert the destination pixel to ARGB8888 format
+        Color dstColor;
+        convertFuncTarget(dstDataPointer, dstColor.data, 1);
+
+        // Invert the source alpha once
+        uint8_t invAlpha = 255 - srcAlpha;
+
+        // Perform the blend using the alpha values directly, optimizing for all channels at once
+        for (int c = 1; c <= 3; ++c) {
+            dstColor.data[c] = (srcColor.data[c] * srcAlpha + dstColor.data[c] * invAlpha) >> 8;
+        }
+
+        // The maximum of the source and destination alpha is used
+        dstColor.data[0] = std::max(srcAlpha, dstColor.data[0]);
 
         // Convert the blended color back to the target format and store it in the destination row
         convertFuncBack(dstColor.data, dstDataPointer, 1);
