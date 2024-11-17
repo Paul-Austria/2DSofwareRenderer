@@ -13,13 +13,38 @@ void PixelConverter::RGB24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t co
     }
 }
 
-void PixelConverter::ARGB8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t count)
-{
-    for (size_t i = 0; i < count; ++i)
-    {
-        dst[i * 3 + 0] = src[i * 4 + 1]; // R
-        dst[i * 3 + 1] = src[i * 4 + 2]; // G
-        dst[i * 3 + 2] = src[i * 4 + 3]; // B
+void PixelConverter::ARGB8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t count) {
+    size_t i = 0;
+    for (; i + 3 <= count; i += 4) {
+        // Process 4 pixels at once
+        const uint8_t *src_0 = src + 4 * i;
+        const uint8_t *src_1 = src + 4 * (i + 1);
+        const uint8_t *src_2 = src + 4 * (i + 2);
+        const uint8_t *src_3 = src + 4 * (i + 3);
+
+        // Copy RGB values directly, ignoring the alpha (first byte in ARGB8888)
+        dst[3 * i]     = src_0[1];  // R (Pixel 0)
+        dst[3 * i + 1] = src_0[2];  // G (Pixel 0)
+        dst[3 * i + 2] = src_0[3];  // B (Pixel 0)
+
+        dst[3 * (i + 1)]     = src_1[1];  // R (Pixel 1)
+        dst[3 * (i + 1) + 1] = src_1[2];  // G (Pixel 1)
+        dst[3 * (i + 1) + 2] = src_1[3];  // B (Pixel 1)
+
+        dst[3 * (i + 2)]     = src_2[1];  // R (Pixel 2)
+        dst[3 * (i + 2) + 1] = src_2[2];  // G (Pixel 2)
+        dst[3 * (i + 2) + 2] = src_2[3];  // B (Pixel 2)
+
+        dst[3 * (i + 3)]     = src_3[1];  // R (Pixel 3)
+        dst[3 * (i + 3) + 1] = src_3[2];  // G (Pixel 3)
+        dst[3 * (i + 3) + 2] = src_3[3];  // B (Pixel 3)
+    }
+
+    // Handle any remaining pixels if count isn't a multiple of 4
+    for (; i < count; ++i) {
+        dst[3 * i]     = src[4 * i + 1];  // R
+        dst[3 * i + 1] = src[4 * i + 2];  // G
+        dst[3 * i + 2] = src[4 * i + 3];  // B
     }
 }
 
@@ -45,6 +70,56 @@ void PixelConverter::RGB565ToARGB8888(const uint8_t *src, uint8_t *dst, size_t c
         dst[i * 4 + 0] = 255; // A
     }
 }
+
+void PixelConverter::RGB565ToRGB24(const uint8_t *src, uint8_t *dst, size_t count) {
+    size_t i = 0;
+    for (; i + 3 <= count; i += 4) {
+        // Process 4 pixels at once
+        uint16_t rgb565_0 = (src[2 * i] << 8) | src[2 * i + 1];
+        uint16_t rgb565_1 = (src[2 * (i + 1)] << 8) | src[2 * (i + 1) + 1];
+        uint16_t rgb565_2 = (src[2 * (i + 2)] << 8) | src[2 * (i + 2) + 1];
+        uint16_t rgb565_3 = (src[2 * (i + 3)] << 8) | src[2 * (i + 3) + 1];
+
+        // Extract and scale components for the first 4 pixels
+        uint8_t r0 = (rgb565_0 >> 11) & 0x1F, g0 = (rgb565_0 >> 5) & 0x3F, b0 = rgb565_0 & 0x1F;
+        uint8_t r1 = (rgb565_1 >> 11) & 0x1F, g1 = (rgb565_1 >> 5) & 0x3F, b1 = rgb565_1 & 0x1F;
+        uint8_t r2 = (rgb565_2 >> 11) & 0x1F, g2 = (rgb565_2 >> 5) & 0x3F, b2 = rgb565_2 & 0x1F;
+        uint8_t r3 = (rgb565_3 >> 11) & 0x1F, g3 = (rgb565_3 >> 5) & 0x3F, b3 = rgb565_3 & 0x1F;
+
+        // Scale the components (5-bit red, 6-bit green, 5-bit blue) to 8-bit
+        dst[3 * i]     = (r0 << 3) | (r0 >> 2);  // Red (Pixel 0)
+        dst[3 * i + 1] = (g0 << 2) | (g0 >> 4);  // Green (Pixel 0)
+        dst[3 * i + 2] = (b0 << 3) | (b0 >> 2);  // Blue (Pixel 0)
+
+        dst[3 * (i + 1)]     = (r1 << 3) | (r1 >> 2);  // Red (Pixel 1)
+        dst[3 * (i + 1) + 1] = (g1 << 2) | (g1 >> 4);  // Green (Pixel 1)
+        dst[3 * (i + 1) + 2] = (b1 << 3) | (b1 >> 2);  // Blue (Pixel 1)
+
+        dst[3 * (i + 2)]     = (r2 << 3) | (r2 >> 2);  // Red (Pixel 2)
+        dst[3 * (i + 2) + 1] = (g2 << 2) | (g2 >> 4);  // Green (Pixel 2)
+        dst[3 * (i + 2) + 2] = (b2 << 3) | (b2 >> 2);  // Blue (Pixel 2)
+
+        dst[3 * (i + 3)]     = (r3 << 3) | (r3 >> 2);  // Red (Pixel 3)
+        dst[3 * (i + 3) + 1] = (g3 << 2) | (g3 >> 4);  // Green (Pixel 3)
+        dst[3 * (i + 3) + 2] = (b3 << 3) | (b3 >> 2);  // Blue (Pixel 3)
+    }
+
+    // Handle any remaining pixels if count isn't a multiple of 4
+    for (; i < count; ++i) {
+        uint16_t rgb565 = (src[2 * i] << 8) | src[2 * i + 1];
+
+        uint32_t r = (rgb565 >> 11) & 0x1F;
+        uint32_t g = (rgb565 >> 5) & 0x3F;
+        uint32_t b = rgb565 & 0x1F;
+
+        dst[3 * i]     = static_cast<uint8_t>((r << 3) | (r >> 2));
+        dst[3 * i + 1] = static_cast<uint8_t>((g << 2) | (g >> 4));
+        dst[3 * i + 2] = static_cast<uint8_t>((b << 3) | (b >> 2));
+    }
+}
+
+
+
 
 void PixelConverter::ARGB8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count)
 {

@@ -41,7 +41,7 @@ namespace Renderer2D
         static void RGB565ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA8888ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void ARGB8888ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
-
+        static void RGB565ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB565ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
@@ -66,6 +66,7 @@ namespace Renderer2D
             {PixelFormat::RGB24, PixelFormat::GRAYSCALE8, RGB24ToGrayscale8},
             {PixelFormat::RGB565, PixelFormat::GRAYSCALE8, RGB565ToGrayscale8},
             {PixelFormat::RGB24, PixelFormat::RGBA8888, RGB24ToRGBA8888},
+            {PixelFormat::RGB565, PixelFormat::RGB24, RGB565ToRGB24},
             {PixelFormat::RGB565, PixelFormat::RGBA8888, RGB565ToRGBA8888},
             {PixelFormat::RGBA1555, PixelFormat::RGBA8888, RGBA1555ToRGBA8888},
             {PixelFormat::RGBA4444, PixelFormat::RGBA8888, RGBA4444ToRGBA8888},

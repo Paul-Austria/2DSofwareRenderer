@@ -5,7 +5,7 @@
 #include <ctime>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 #include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
-
+#include <fstream> // For file I/O
 #define STB_IMAGE_IMPLEMENTATION
 #include "lib/stb_image.h"
 
@@ -231,41 +231,6 @@ int main()
     glfwTerminate();
     return 0;
 }
-
-void CreateTestImage(uint8_t *&data, uint16_t width, uint16_t height)
-{
-    const int bytesPerPixel = 3;                          // RGB format, 3 bytes per pixel
-    const int imageSize = width * height * bytesPerPixel; // Total size of the image data
-
-    // Allocate memory for the image
-    data = new uint8_t[imageSize];
-
-    // Loop through each pixel and assign RGB values
-    for (uint16_t y = 0; y < height; ++y)
-    {
-        for (uint16_t x = 0; x < width; ++x)
-        {
-            int pixelIndex = (y * width + x) * bytesPerPixel;
-
-            // Create a simple pattern
-            if ((x + y) % 2 == 0)
-            {
-                // Set this pixel to red (255, 0, 0)
-                data[pixelIndex] = 255;   // Red
-                data[pixelIndex + 1] = 0; // Green
-                data[pixelIndex + 2] = 0; // Blue
-            }
-            else
-            {
-                // Set this pixel to blue (0, 0, 255)
-                data[pixelIndex] = 0;       // Red
-                data[pixelIndex + 1] = 0;   // Green
-                data[pixelIndex + 2] = 255; // Blue
-            }
-        }
-    }
-}
-
 Texture text;
 Texture text2;
 Texture text3;
@@ -273,6 +238,11 @@ int imgwidth, imgheight, nrChannels;
 uint8_t *data = nullptr;
 uint8_t *data2 = nullptr;
 uint8_t *data3 = nullptr;
+Texture text4;
+uint8_t *data4 = nullptr;
+int imgwidth4 = 234;  // Set to the width of your binary file's image
+int imgheight4 = 243; // Set to the height of your binary file's image
+
 void SetupFunc()
 {
 
@@ -282,6 +252,30 @@ void SetupFunc()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888);
+
+    // Load the binary file
+    std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
+    if (file)
+    {
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        data4 = new uint8_t[size];
+        if (file.read(reinterpret_cast<char *>(data4), size))
+        {
+            // Successfully read binary data
+            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565);
+        }
+        else
+        {
+            std::cerr << "Failed to read testrgb565.bin" << std::endl;
+        }
+        file.close();
+    }
+    else
+    {
+        std::cerr << "Failed to open testrgb565.bin" << std::endl;
+    }
 
     context.SetBlendMode(BlendMode::BLEND);
 }
@@ -295,6 +289,7 @@ void TestingFunction()
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
     context.ClearTarget(Color(150, 150, 150));
+    context.DrawTexture(text4, 400, 130);
     context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
     context.DrawTexture(text, 40, 40);
     context.DrawTexture(text2, 150, 150);
