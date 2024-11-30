@@ -4,7 +4,7 @@
 #include "PixelFormat.h"
 #include <cstring>
 #include <stdexcept>
-
+#include <cstdint>
 namespace Renderer2D
 {
     class PixelConverter
@@ -26,13 +26,12 @@ namespace Renderer2D
             ConvertFunc func;
         };
 
-        // Optimized conversion functions
         static void RGB24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void ARGB8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB565ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void ARGB8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count);
-        static void RGBA1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
-        static void ARGB8888ToRGBA1555(const uint8_t *src, uint8_t *dst, size_t count);
+        static void ARGB1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
+        static void ARGB8888ToARGB1555(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA4444ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void ARGB8888ToRGBA4444(const uint8_t *src, uint8_t *dst, size_t count);
         static void Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
@@ -44,7 +43,7 @@ namespace Renderer2D
         static void RGB565ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB565ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
-        static void RGBA1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
+        static void ARGB1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA4444ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void Grayscale8ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
@@ -55,8 +54,8 @@ namespace Renderer2D
             {PixelFormat::ARGB8888, PixelFormat::RGB24, ARGB8888ToRGB24},
             {PixelFormat::RGB565, PixelFormat::ARGB8888, RGB565ToARGB8888},
             {PixelFormat::ARGB8888, PixelFormat::RGB565, ARGB8888ToRGB565},
-            {PixelFormat::RGBA1555, PixelFormat::ARGB8888, RGBA1555ToARGB8888},
-            {PixelFormat::ARGB8888, PixelFormat::RGBA1555, ARGB8888ToRGBA1555},
+            {PixelFormat::ARGB1555, PixelFormat::ARGB8888, ARGB1555ToARGB8888},
+            {PixelFormat::ARGB8888, PixelFormat::ARGB1555, ARGB8888ToARGB1555},
             {PixelFormat::ARGB8888, PixelFormat::RGBA8888, ARGB8888ToRGBA8888},
             {PixelFormat::RGBA8888, PixelFormat::ARGB8888, RGBA8888ToARGB8888},
             {PixelFormat::RGBA4444, PixelFormat::ARGB8888, RGBA4444ToARGB8888},
@@ -68,7 +67,7 @@ namespace Renderer2D
             {PixelFormat::RGB24, PixelFormat::RGBA8888, RGB24ToRGBA8888},
             {PixelFormat::RGB565, PixelFormat::RGB24, RGB565ToRGB24},
             {PixelFormat::RGB565, PixelFormat::RGBA8888, RGB565ToRGBA8888},
-            {PixelFormat::RGBA1555, PixelFormat::RGBA8888, RGBA1555ToRGBA8888},
+            {PixelFormat::ARGB1555, PixelFormat::RGBA8888, ARGB1555ToRGBA8888},
             {PixelFormat::RGBA4444, PixelFormat::RGBA8888, RGBA4444ToRGBA8888},
             {PixelFormat::GRAYSCALE8, PixelFormat::RGBA8888, Grayscale8ToRGBA8888},
             {PixelFormat::RGBA8888, PixelFormat::RGB24, RGBA8888ToRGB24}

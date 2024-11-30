@@ -1,11 +1,12 @@
 #ifndef CONTEXT2D_H
 #define CONTEXT2D_H
 
-#include <iostream> // For std::cout
+#include <iostream> 
 #include "../data/Texture.h"
 #include "../data/Color.h"
 #include "../data/BlendMode/BlendMode.h"
 #include <functional>
+#include <cstdint>
 
 namespace Renderer2D
 {
@@ -37,7 +38,7 @@ namespace Renderer2D
         SelectedBlendMode blendmode = SelectedBlendMode::SIMPLE;
         // clipping area
         uint16_t startX, startY, endX, endY;
-        bool enableClipping;
+        bool enableClipping = false;
     };
 }
 #endif

@@ -13,9 +13,9 @@ namespace Renderer2D
     {
     private:
     public:
-        static void BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstData, PixelFormat format, size_t pixelCount);
+        static void BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstData, PixelFormat format, size_t pixelCount, SelectedBlendMode selectedBlendMode = SelectedBlendMode::SIMPLE);
 
-        static void BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t rowLength, const PixelFormatInfo &targetInfo, const PixelFormatInfo &sourceInfo);
+        static void BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t rowLength, const PixelFormatInfo &targetInfo, const PixelFormatInfo &sourceInfo, SelectedBlendMode selectedBlendMode = SelectedBlendMode::SIMPLE);
         
     };
 

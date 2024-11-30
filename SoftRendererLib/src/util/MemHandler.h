@@ -2,6 +2,8 @@
 #define MEM_HANDLER_H
 
 #include <memory>
+#include <cstring>
+
 namespace Renderer2D
 {
     class MemHandler

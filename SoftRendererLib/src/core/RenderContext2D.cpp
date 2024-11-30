@@ -57,7 +57,6 @@ void RenderContext2D::ClearTarget(Color color)
         MemHandler::MemCopy(&textureData[pixelIndex], pixelData, info.bytesPerPixel);
     }
 }
-
 void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)
 {
     if (!targetTexture)
@@ -69,6 +68,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
+    uint32_t pitch = targetTexture->GetPitch();  // Get the pitch (bytes per row)
 
     // Set clipping boundaries (with respect to the rectangle's position)
     uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
@@ -94,8 +94,9 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     switch (subBlend)
     {
     case BlendMode::NOBLEND:
-    { // Fast, unblended rectangle drawing within the specified bounds
-        uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+    { 
+        // Fast, unblended rectangle drawing within the specified bounds
+        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
 
         uint8_t pixelData[MAXBYTESPERPIXEL];
         color.ConvertTo(format, pixelData);
@@ -112,8 +113,8 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Calculate the destination for the current row
-            uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
+            // Calculate the destination for the current row using pitch
+            uint8_t *rowDest = dest + (j - clipStartY) * pitch;
 
             // Use memcpy to copy the whole row of pixels at once
             MemHandler::MemCopy(rowDest, rowPixelData, bytesPerRow);
@@ -123,11 +124,11 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     case BlendMode::BLEND:
     {
         // Get the source row
-        uint8_t *dest = textureData + (clipStartY * textureWidth + clipStartX) * info.bytesPerPixel;
+        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            uint8_t *rowDest = dest + j * textureWidth * info.bytesPerPixel;
+            uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
 
             BlendFunctions::BlendSimpleSolidColor(color, rowDest, format, rowLength);
@@ -138,6 +139,8 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
         break;
     }
 }
+
+
 
 void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 {
@@ -150,6 +153,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     uint8_t *targetData = targetTexture->GetData();
     uint16_t targetWidth = targetTexture->GetWidth();
     uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch(); // Row stride for target texture
 
     // Get source texture information
     PixelFormat sourceFormat = texture.GetFormat();
@@ -157,6 +161,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     uint8_t *sourceData = texture.GetData();
     uint16_t sourceWidth = texture.GetWidth();
     uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch(); // Row stride for source texture
 
     // Set clipping boundaries within the source and target textures
     uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
@@ -172,7 +177,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     if (clipStartX >= clipEndX || clipStartY >= clipEndY)
         return;
 
-    // Get the blending mode to use
+    // Determine blending mode
     BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
 
     switch (subBlend)
@@ -185,15 +190,13 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
         {
             convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
             if (!convertFunc)
-            {
-                return;
-            }
+                return; // Conversion not supported
         }
-        
+
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            uint8_t *targetRow = targetData + (j * targetWidth + clipStartX) * targetInfo.bytesPerPixel;
-            const uint8_t *sourceRow = sourceData + ((j - y) * sourceWidth + (clipStartX - x)) * sourceInfo.bytesPerPixel;
+            uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
+            const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
             if (convertFunc)
             {
@@ -211,23 +214,14 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 
     case BlendMode::BLEND:
     {
-        const uint8_t *srcPixelBase = sourceData;
-        uint8_t *dstPixelBase = targetData;
-
-        // Directly calculate row strides for source and target
-        size_t targetRowStride = targetWidth * targetInfo.bytesPerPixel;
-        size_t sourceRowStride = sourceWidth * sourceInfo.bytesPerPixel;
-
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Calculate the start of the row for both source and target
-            uint8_t *targetRow = dstPixelBase + (j * targetWidth + clipStartX) * targetInfo.bytesPerPixel;
-            const uint8_t *sourceRow = srcPixelBase + ((j - y) * sourceWidth + (clipStartX - x)) * sourceInfo.bytesPerPixel;
+            uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
+            const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
-            // Blend the entire row at once
+            // Blend the entire row
             BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo);
         }
-
         break;
     }
 
@@ -235,6 +229,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
         break;
     }
 }
+
 
 void RenderContext2D::EnableClipping(bool clipping)
 {

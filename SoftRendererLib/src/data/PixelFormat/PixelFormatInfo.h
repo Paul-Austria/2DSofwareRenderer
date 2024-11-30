@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include "../Color.h"
-
+#include <cstdint>
 namespace Renderer2D
 {
 
@@ -163,7 +163,7 @@ namespace Renderer2D
                 {PixelFormat::RGB24, {PixelFormat::RGB24, 3, 3, false, "RGB24", 0xFF, 0, 0xFF, 8, 0xFF, 16}},
                 {PixelFormat::ARGB8888, {PixelFormat::ARGB8888, 4, 4, true, "ARGB8888", 0xFF, 16, 0xFF, 8, 0xFF, 0, 0xFF, 24}},
                 {PixelFormat::RGBA8888, {PixelFormat::RGBA8888, 4, 4, true, "RGBA8888", 0xFF, 24, 0xFF, 16, 0xFF, 8, 0xFF, 0}},
-                {PixelFormat::RGBA1555, {PixelFormat::RGBA1555, 2, 4, true, "RGBA1555", 0x7C00, 10, 0x03E0, 5, 0x001F, 0, 0x8000, 15}},
+                {PixelFormat::ARGB1555, {PixelFormat::ARGB1555, 2, 4, true, "RGBA1555", 0x7C00, 10, 0x03E0, 5, 0x001F, 0, 0x8000, 15}},
                 {PixelFormat::GRAYSCALE8, {PixelFormat::GRAYSCALE8, 1, 1, false, "Grayscale8", 0xFF, 0, 0x00, 0, 0x00, 0}},
                 {PixelFormat::RGB565, {PixelFormat::RGB565, 2, 3, false, "RGB565", 0xF800, 11, 0x07E0, 5, 0x001F, 0}},
                 {PixelFormat::RGBA4444, {PixelFormat::RGBA4444, 2, 4, true, "RGBA4444", 0xF000, 12, 0x0F00, 8, 0x00F0, 4, 0x000F, 0}}};

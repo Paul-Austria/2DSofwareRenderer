@@ -9,7 +9,7 @@ enum class PixelFormat
     ARGB8888,
     RGBA8888,
 
-    RGBA1555,      // 16 bits: 5 bits R, 5 bits G, 5 bits B, 1 bit A
+    ARGB1555,      // 16 bits: 5 bits R, 5 bits G, 5 bits B, 1 bit A
     GRAYSCALE8,    // 8 bits grayscale
 
     RGB565,        // 16 bits: 5 bits R, 6 bits G, 5 bits B

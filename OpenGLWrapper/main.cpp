@@ -170,7 +170,7 @@ int main()
 
     // Allocate memory for texture data and generate initial texture
     unsigned char *imageData = new unsigned char[3 * WIDTH * HEIGHT];
-    TargetTexture = new Texture(WIDTH, HEIGHT, imageData, PixelFormat::RGB24);
+    TargetTexture = new Texture(WIDTH, HEIGHT, imageData,PixelFormat::RGB24,3*WIDTH);
     context.SetTargetTexture(TargetTexture);
 
     //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
@@ -247,11 +247,11 @@ void SetupFunc()
 {
 
     data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
-    text = Texture(imgwidth, imgheight, data, PixelFormat::RGB24);
+    text = Texture(imgwidth, imgheight, data,PixelFormat::RGB24, 0);
     data2 = stbi_load("data/Candera.png", &imgwidth, &imgheight, &nrChannels, 4);
-    text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888);
+    text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888,0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
-    text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888);
+    text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888,0);
 
     // Load the binary file
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
@@ -264,7 +264,7 @@ void SetupFunc()
         if (file.read(reinterpret_cast<char *>(data4), size))
         {
             // Successfully read binary data
-            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565);
+            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565,0);
         }
         else
         {

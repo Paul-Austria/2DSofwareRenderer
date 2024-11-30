@@ -7,33 +7,35 @@
 #include <cmath>
 
 using namespace Renderer2D;
-void BlendFunctions::BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstData, PixelFormat format, size_t pixelCount)
+void BlendFunctions::BlendSimpleSolidColor(const Color &srcColor,
+                                         uint8_t *dstData,
+                                         PixelFormat format,
+                                         size_t pixelCount,
+                                         SelectedBlendMode selectedBlendMode)
 {
     if (srcColor.data[0] == 0)
         return; // No blending needed if source alpha is 0
 
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
-    // Precompute alpha values
-    float alpha = srcColor.data[0] / 255.0f;
-    float invAlpha = 1.0f - alpha;
-
+    // Get conversion functions
     PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(format, PixelFormat::ARGB8888);
     PixelConverter::ConvertFunc convertFuncBack = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, format);
     if (!convertFunc || !convertFuncBack)
         return;
 
-    // Buffer for batch processing
-    constexpr size_t batchSize = 16; // Number of pixels to process per batch
-    constexpr size_t colorSize = 4;  // Size of ARGB8888 (4 bytes per color)
-    uint8_t srcBatch[batchSize * colorSize]; // Buffer for source color in ARGB8888
-    uint8_t dstBatch[batchSize * colorSize]; // Buffer for destination pixels in ARGB8888
+    // Extract source alpha and compute inverse alpha
+    uint8_t srcAlpha = srcColor.data[0];
+    uint8_t invAlpha = 255 - srcAlpha;
 
-    // Precompute source color in ARGB8888 for batch
-    for (size_t i = 0; i < batchSize; ++i)
-    {
-        std::memcpy(srcBatch + i * colorSize, srcColor.data, colorSize);
-    }
+    // Prepare source color in ARGB8888 for blending
+    alignas(16) uint8_t srcARGB8888[4];
+    std::memcpy(srcARGB8888, srcColor.data, 4); // Copy ARGB8888 data from srcColor
+
+    // Buffer for batch processing
+    constexpr size_t batchSize = 16;         // Number of pixels to process per batch
+    constexpr size_t colorSize = 4;          // Size of ARGB8888 (4 bytes per color)
+    alignas(16) uint8_t dstBatch[batchSize * colorSize]; // Buffer for destination pixels in ARGB8888
 
     // Process in batches
     size_t fullBatches = pixelCount / batchSize;
@@ -50,12 +52,15 @@ void BlendFunctions::BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstDa
         for (size_t i = 0; i < batchSize; ++i)
         {
             uint8_t *dstPixel = dstBatch + i * colorSize;
-            const uint8_t *srcPixel = srcBatch + i * colorSize;
 
-            dstPixel[1] = static_cast<uint8_t>(srcPixel[1] * alpha + dstPixel[1] * invAlpha); // Red
-            dstPixel[2] = static_cast<uint8_t>(srcPixel[2] * alpha + dstPixel[2] * invAlpha); // Green
-            dstPixel[3] = static_cast<uint8_t>(srcPixel[3] * alpha + dstPixel[3] * invAlpha); // Blue
-            dstPixel[0] = std::max(srcPixel[0], dstPixel[0]); // Alpha
+            // Blend RGB channels using integer arithmetic
+            for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
+            {
+                dstPixel[c] = (srcARGB8888[c] * srcAlpha + dstPixel[c] * invAlpha) >> 8;
+            }
+
+            // Update alpha channel (max of source and destination alpha)
+            dstPixel[0] = std::max(srcARGB8888[0], dstPixel[0]);
         }
 
         // Convert back to the destination format
@@ -72,58 +77,63 @@ void BlendFunctions::BlendSimpleSolidColor(const Color &srcColor, uint8_t *dstDa
         for (size_t i = 0; i < remainder; ++i)
         {
             uint8_t *dstPixel = dstBatch + i * colorSize;
-            const uint8_t *srcPixel = srcBatch + i * colorSize;
 
-            dstPixel[1] = static_cast<uint8_t>(srcPixel[1] * alpha + dstPixel[1] * invAlpha); // Red
-            dstPixel[2] = static_cast<uint8_t>(srcPixel[2] * alpha + dstPixel[2] * invAlpha); // Green
-            dstPixel[3] = static_cast<uint8_t>(srcPixel[3] * alpha + dstPixel[3] * invAlpha); // Blue
-            dstPixel[0] = std::max(srcPixel[0], dstPixel[0]); // Alpha
+            // Blend RGB channels using integer arithmetic
+            for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
+            {
+                dstPixel[c] = (srcARGB8888[c] * srcAlpha + dstPixel[c] * invAlpha) >> 8;
+            }
+
+            // Update alpha channel (max of source and destination alpha)
+            dstPixel[0] = std::max(srcARGB8888[0], dstPixel[0]);
         }
 
         convertFuncBack(dstBatch, dstData + baseIndex, remainder);
     }
 }
 
-
-void BlendFunctions::BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t rowLength, const PixelFormatInfo &targetInfo, const PixelFormatInfo &sourceInfo)
+void BlendFunctions::BlendRow(uint8_t *dstRow, 
+const uint8_t *srcRow, 
+size_t rowLength,
+const PixelFormatInfo &targetInfo, 
+const PixelFormatInfo &sourceInfo,
+SelectedBlendMode selectedBlendMode)
 {
-    // Conversion functions for target and source formats
-    PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
-    PixelConverter::ConvertFunc convertFuncTarget = PixelConverter::GetConversionFunction(targetInfo.format, PixelFormat::ARGB8888);
-    PixelConverter::ConvertFunc convertFuncBack = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
+    // Get conversion functions once
+    auto convertToARGB8888 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
+    auto convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
-    // Loop over each pixel in the row
+    // Temporary storage for conversion
+    alignas(16) uint8_t srcARGB8888[4];
+    alignas(16) uint8_t dstARGB8888[4];
+
     for (size_t i = 0; i < rowLength; ++i)
     {
-        uint8_t *dstDataPointer = dstRow + i * targetInfo.bytesPerPixel;
-        const uint8_t *srcDataPointer = srcRow + i * sourceInfo.bytesPerPixel;
+        const uint8_t *srcPixel = srcRow + i * sourceInfo.bytesPerPixel;
+        uint8_t *dstPixel = dstRow + i * targetInfo.bytesPerPixel;
 
-        // Convert the source pixel to ARGB8888 format
-        Color srcColor;
-        convertFunc(srcDataPointer, srcColor.data, 1);
+        // Convert source to ARGB8888
+        convertToARGB8888(srcPixel, srcARGB8888, 1);
+        uint8_t srcAlpha = srcARGB8888[0];
 
-        // Get the source alpha once for the current pixel
-        uint8_t srcAlpha = srcColor.data[0];
-        if (srcAlpha == 0) {
-            continue;  // No need to blend if the source alpha is 0
+        if (srcAlpha == 0)
+        {
+            continue; 
         }
 
-        // Convert the destination pixel to ARGB8888 format
-        Color dstColor;
-        convertFuncTarget(dstDataPointer, dstColor.data, 1);
-
-        // Invert the source alpha once
+        convertToARGB8888(dstPixel, dstARGB8888, 1);
         uint8_t invAlpha = 255 - srcAlpha;
 
-        // Perform the blend using the alpha values directly, optimizing for all channels at once
-        for (int c = 1; c <= 3; ++c) {
-            dstColor.data[c] = (srcColor.data[c] * srcAlpha + dstColor.data[c] * invAlpha) >> 8;
+        for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
+        {
+            dstARGB8888[c] = (srcARGB8888[c] * srcAlpha + dstARGB8888[c] * invAlpha) >> 8;
         }
 
-        // The maximum of the source and destination alpha is used
-        dstColor.data[0] = std::max(srcAlpha, dstColor.data[0]);
+        // Use the maximum alpha
+        dstARGB8888[0] = std::max(srcAlpha, dstARGB8888[0]);
 
-        // Convert the blended color back to the target format and store it in the destination row
-        convertFuncBack(dstColor.data, dstDataPointer, 1);
+        // Convert blended pixel back to target format
+        convertFromARGB8888(dstARGB8888, dstPixel, 1);
     }
 }
+

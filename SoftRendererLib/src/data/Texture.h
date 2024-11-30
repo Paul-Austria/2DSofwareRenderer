@@ -10,8 +10,8 @@ class Texture
 {
 public:
     Texture() = default;
-    Texture(uint16_t width, uint16_t height, PixelFormat format);
-    Texture(uint16_t width, uint16_t height, uint8_t* data, PixelFormat format);
+    Texture(uint16_t width, uint16_t height, PixelFormat format, uint16_t pitch = 0);
+    Texture(uint16_t width, uint16_t height, uint8_t* data,PixelFormat format, uint16_t pitch = 0);
     ~Texture();
 
     /// @brief Get Pointer of Texture
@@ -24,6 +24,7 @@ public:
     PixelFormat GetFormat();
 
     
+    uint16_t GetPitch();
     uint16_t GetWidth();
     uint16_t GetHeight();
     
@@ -32,6 +33,7 @@ private:
     PixelFormat format;
     bool storedLocally = false;
     uint16_t width, height;
+    uint16_t pitch = 0;
 };
 
 }

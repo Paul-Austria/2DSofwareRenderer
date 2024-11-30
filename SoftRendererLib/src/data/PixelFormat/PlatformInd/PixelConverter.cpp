@@ -132,7 +132,7 @@ void PixelConverter::ARGB8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t c
     }
 }
 
-void PixelConverter::RGBA1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
+void PixelConverter::ARGB1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)
     {
@@ -167,7 +167,7 @@ void PixelConverter::RGB565ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t c
     }
 }
 
-void PixelConverter::RGBA1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
+void PixelConverter::ARGB1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)
     {
@@ -202,7 +202,7 @@ void PixelConverter::Grayscale8ToRGBA8888(const uint8_t *src, uint8_t *dst, size
     }
 }
 
-void PixelConverter::ARGB8888ToRGBA1555(const uint8_t *src, uint8_t *dst, size_t count)
+void PixelConverter::ARGB8888ToARGB1555(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)
     {
