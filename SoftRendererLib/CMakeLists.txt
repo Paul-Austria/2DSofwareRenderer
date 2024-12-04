@@ -30,7 +30,6 @@ target_include_directories(SoftRendererLib PUBLIC
 if(CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_options(SoftRendererLib PRIVATE 
         -O3                      # Enable full optimization
-        -march=native            # Optimize for the host architecture
         -funroll-loops           # Unroll loops for better performance
     )
 elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)

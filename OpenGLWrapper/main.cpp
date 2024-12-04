@@ -5,7 +5,7 @@
 #include <ctime>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 #include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
-#include <fstream> // For file I/O
+#include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "lib/stb_image.h"
 
@@ -240,8 +240,8 @@ uint8_t *data2 = nullptr;
 uint8_t *data3 = nullptr;
 Texture text4;
 uint8_t *data4 = nullptr;
-int imgwidth4 = 234;  // Set to the width of your binary file's image
-int imgheight4 = 243; // Set to the height of your binary file's image
+int imgwidth4 = 234;  
+int imgheight4 = 243; 
 
 void SetupFunc()
 {

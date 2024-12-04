@@ -43,7 +43,7 @@ void RenderContext2D::ClearTarget(Color color)
     uint16_t height = targetTexture->GetHeight();
 
     // Use a stack-allocated array for pixel data
-    uint8_t pixelData[4]; // Assuming maximum bytes per pixel is 4 (RGBA)
+    uint8_t pixelData[4]; 
     color.ConvertTo(format, pixelData);
 
     // Calculate the total number of pixels

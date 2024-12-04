@@ -6,6 +6,8 @@ namespace Renderer2D{
 enum class PixelFormat
 {
     RGB24,         // 8 bits per channel: R, G, B or RGB888
+    BGR24,
+    
     ARGB8888,
     RGBA8888,
 
@@ -13,6 +15,8 @@ enum class PixelFormat
     GRAYSCALE8,    // 8 bits grayscale
 
     RGB565,        // 16 bits: 5 bits R, 6 bits G, 5 bits B
+    
+
     RGBA4444,
 };
 

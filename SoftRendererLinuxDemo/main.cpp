@@ -12,6 +12,12 @@
 #include <thread>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 #include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
+#include <chrono>
+
+#define STB_IMAGE_IMPLEMENTATION
+
+#include "lib/stb_image.h"
+#include <fstream>
 
 using namespace Renderer2D;
 
@@ -72,24 +78,14 @@ uint8_t *create_framebuffer(int drm_fd, uint32_t width, uint32_t height, uint32_
     return pixels;
 }
 
-void drawRect(uint8_t *pixels, int pitch, int x, int y, int width, int height, uint8_t r, uint8_t g, uint8_t b)
+double getCurrentTime()
 {
-    for (int row = 0; row < height; ++row)
-    {
-        // Calculate the starting address of the current row
-        uint8_t *row_start = pixels + ((y + row) * pitch) + (x * 3);
-
-        for (int col = 0; col < width; ++col)
-        {
-            // Calculate the address of the current pixel
-            uint8_t *pixel = row_start + (col * 3);
-
-            // Set the pixel color (RGB24)
-            pixel[0] = b; // Blue
-            pixel[1] = g; // Green
-            pixel[2] = r; // Red
-        }
-    }
+    // Get the current time since epoch in seconds as a floating-point value
+    using Clock = std::chrono::steady_clock; // Use steady_clock for consistent timing
+    static auto startTime = Clock::now();    // Store the starting time point
+    auto currentTime = Clock::now();         // Get the current time point
+    auto duration = std::chrono::duration<double>(currentTime - startTime);
+    return duration.count();                 // Return time in seconds
 }
 
 int main()
@@ -147,18 +143,70 @@ int main()
     // Set initial CRTC
     CHECK_ERR(drmModeSetCrtc(drm_fd, crtc->crtc_id, fb_id[current], 0, 0, &connector_id, 1, &mode) < 0, "Failed to set CRTC");
 
+    Texture text;
+    Texture text2;
+    Texture text3;
+    int imgwidth, imgheight, nrChannels;
+    uint8_t *data = nullptr;
+    uint8_t *data2 = nullptr;
+    uint8_t *data3 = nullptr;
+    Texture text4;
+    uint8_t *data4 = nullptr;
+    int imgwidth4 = 234;
+    int imgheight4 = 243;
+
+    data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
+    text = Texture(imgwidth, imgheight, data, PixelFormat::RGB24, 0);
+    data2 = stbi_load("data/Candera.png", &imgwidth, &imgheight, &nrChannels, 4);
+    text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
+    data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
+    text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
+
+    // Load the binary file
+    std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
+    if (file)
+    {
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        data4 = new uint8_t[size];
+        if (file.read(reinterpret_cast<char *>(data4), size))
+        {
+            // Successfully read binary data
+            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565, 0);
+        }
+        else
+        {
+            std::cerr << "Failed to read testrgb565.bin" << std::endl;
+        }
+        file.close();
+    }
+    else
+    {
+        std::cerr << "Failed to open testrgb565.bin" << std::endl;
+    }
+
+    context.SetBlendMode(BlendMode::BLEND);
+    double previousTime = 0.0;
+    int frameCount = 0;
     while (running)
     {
         // Render to the back buffer
         int next = 1 - current;
 
         // Use the framebuffer directly as the texture
-        Texture texture = Texture(width, height, framebuffer[next], pitch[next], PixelFormat::RGB24);
+        Texture texture = Texture(width, height, framebuffer[next], PixelFormat::BGR24, pitch[next]);
         context.SetTargetTexture(&texture);
-        context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-
         // Clear and draw using RenderContext2D
-        context.ClearTarget(Color(255, 0, 0)); // Clear with red
+        context.SetClipping(80, 30, 170, 290);
+        context.EnableClipping(false);
+        context.ClearTarget(Color(150, 150, 150));
+        context.DrawTexture(text4, 400, 130);
+        context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
+        context.DrawTexture(text, 40, 40);
+        context.DrawTexture(text2, 150, 150);
+        context.DrawTexture(text3, 50, 90);
+
         context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
         context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
         context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
@@ -172,6 +220,21 @@ int main()
 
         // Switch buffers
         current = next;
+
+        double currentTime = getCurrentTime();
+        frameCount++;
+
+        // Check if a second has passed
+        if (currentTime - previousTime >= 1.0)
+        {
+            double fps = frameCount / (currentTime - previousTime);
+            double timePerFrame = 1000.0 / fps; // Convert to milliseconds
+            std::cout << "FPS: " << fps << " | Time per frame: " << timePerFrame << " ms" << std::endl;
+
+            // Reset counters
+            previousTime = currentTime;
+            frameCount = 0;
+        }
     }
 
     // Cleanup
