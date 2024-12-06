@@ -43,7 +43,7 @@ void RenderContext2D::ClearTarget(Color color)
     uint16_t height = targetTexture->GetHeight();
 
     // Use a stack-allocated array for pixel data
-    uint8_t pixelData[4]; 
+    uint8_t pixelData[4];
     color.ConvertTo(format, pixelData);
 
     // Calculate the total number of pixels
@@ -68,7 +68,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
-    uint32_t pitch = targetTexture->GetPitch();  // Get the pitch (bytes per row)
+    uint32_t pitch = targetTexture->GetPitch(); // Get the pitch (bytes per row)
 
     // Set clipping boundaries (with respect to the rectangle's position)
     uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
@@ -90,13 +90,12 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     BlendMode subBlend = mode;
     if (color.GetAlpha() == 255)
         subBlend = BlendMode::NOBLEND;
+        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
 
     switch (subBlend)
     {
     case BlendMode::NOBLEND:
-    { 
-        // Fast, unblended rectangle drawing within the specified bounds
-        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
+    {
 
         uint8_t pixelData[MAXBYTESPERPIXEL];
         color.ConvertTo(format, pixelData);
@@ -123,15 +122,22 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     }
     case BlendMode::BLEND:
     {
-        // Get the source row
-        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
+
+        uint8_t singlePixelData[MAXBYTESPERPIXEL];
+
+        uint8_t rowPixelData[MAXROWLENGTH * MAXBYTESPERPIXEL];
+
+        for (size_t byteIndex = 0; byteIndex < (clipEndX - clipStartX)*4; byteIndex += 4)
+        {
+            MemHandler::MemCopy(rowPixelData + byteIndex, color.data, 4);
+        }
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
-
-            BlendFunctions::BlendSimpleSolidColor(color, rowDest, format, rowLength);
+            PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
+            BlendFunctions::BlendRow(rowDest,rowPixelData, rowLength,info, infosrcColor);
         }
         break;
     }
@@ -139,8 +145,6 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
         break;
     }
 }
-
-
 
 void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 {
@@ -229,7 +233,6 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
         break;
     }
 }
-
 
 void RenderContext2D::EnableClipping(bool clipping)
 {

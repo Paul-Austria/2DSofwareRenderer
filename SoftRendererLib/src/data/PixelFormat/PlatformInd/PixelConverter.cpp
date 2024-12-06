@@ -398,9 +398,9 @@ void Renderer2D::PixelConverter::RGBA8888ToARGB8888(const uint8_t *src, uint8_t 
 {
     for (size_t i = 0; i < count; ++i)
     {
-        dst[i * 3 + 0] = src[i * 4 + 3]; // A
-        dst[i * 3 + 1] = src[i * 4 + 0]; // R
-        dst[i * 3 + 2] = src[i * 4 + 1]; // G
+        dst[i * 4 + 0] = src[i * 4 + 3]; // A
+        dst[i * 4 + 1] = src[i * 4 + 0]; // R
+        dst[i * 4 + 2] = src[i * 4 + 1]; // G
         dst[i * 4 + 3] = src[i * 4 + 2]; // B
     }
 }
@@ -408,9 +408,9 @@ void Renderer2D::PixelConverter::ARGB8888ToRGBA8888(const uint8_t *src, uint8_t 
 {
     for (size_t i = 0; i < count; ++i)
     {
-        dst[i * 3 + 3] = src[i * 4 + 0]; // A
-        dst[i * 3 + 0] = src[i * 4 + 1]; // R
-        dst[i * 3 + 1] = src[i * 4 + 2]; // G
+        dst[i * 4 + 3] = src[i * 4 + 0]; // A
+        dst[i * 4 + 0] = src[i * 4 + 1]; // R
+        dst[i * 4 + 1] = src[i * 4 + 2]; // G
         dst[i * 4 + 2] = src[i * 4 + 3]; // B
     }
 }
