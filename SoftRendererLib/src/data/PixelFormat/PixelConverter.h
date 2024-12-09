@@ -26,6 +26,8 @@ namespace Renderer2D
             PixelFormat to;
             ConvertFunc func;
         };
+        
+        static void Move(const uint8_t *src, uint8_t *dst, size_t count);
 
         // GBR24 Conversions
         static void BGR24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
