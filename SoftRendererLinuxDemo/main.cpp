@@ -186,7 +186,7 @@ int main()
         std::cerr << "Failed to open testrgb565.bin" << std::endl;
     }
 
-    context.SetBlendMode(BlendMode::BLEND);
+    context.SetBlendMode(BlendMode::NOBLEND);
     double previousTime = 0.0;
     int frameCount = 0;
     while (running)
@@ -204,8 +204,10 @@ int main()
         context.DrawTexture(text4, 400, 130);
         context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
         context.DrawTexture(text, 40, 40);
+        context.SetBlendMode(BlendMode::BLEND);
         context.DrawTexture(text2, 150, 150);
         context.DrawTexture(text3, 50, 90);
+        context.SetBlendMode(BlendMode::NOBLEND);
 
         context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
         context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);

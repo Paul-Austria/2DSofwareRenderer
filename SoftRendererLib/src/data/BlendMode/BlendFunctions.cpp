@@ -7,6 +7,7 @@
 #include <cmath>
 
 using namespace Renderer2D;
+#include <iostream>
 
 void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const uint8_t *srcRow,
@@ -16,21 +17,20 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               SelectedBlendMode selectedBlendMode)
 {
 
-    bool registryRet = false;
-    auto blendFunc = GetBlendFunc(targetInfo.format, registryRet);
-    if (registryRet)
+    auto blendFunc = GetBlendFunc(targetInfo.format);
+
+    if (blendFunc != nullptr)
     {
-        blendFunc(dstRow,
-                  srcRow,
-                  rowLength,
-                  targetInfo,
-                  sourceInfo,
-                  selectedBlendMode);
+        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, selectedBlendMode);
         return;
     }
+
     // Get conversion functions once
-    auto convertToARGB8888 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
-    auto convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
+    PixelConverter::ConvertFunc convertToARGB8888 = nullptr;
+    PixelConverter::ConvertFunc convertFromARGB8888 = nullptr;
+
+    convertToARGB8888 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
+    convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
     // Temporary storage for conversion
     alignas(16) uint8_t srcARGB8888[4];
@@ -42,15 +42,20 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         uint8_t *dstPixel = dstRow + i * targetInfo.bytesPerPixel;
 
         // Convert source to ARGB8888
+        uint8_t srcAlpha;
+
         convertToARGB8888(srcPixel, srcARGB8888, 1);
-        uint8_t srcAlpha = srcARGB8888[0];
+        srcAlpha = srcARGB8888[0];
 
         if (srcAlpha == 0)
         {
             continue;
         }
 
-        convertToARGB8888(dstPixel, dstARGB8888, 1);
+        if (convertToARGB8888)
+        {
+            convertToARGB8888(dstPixel, dstARGB8888, 1);
+        }
         uint8_t invAlpha = 255 - srcAlpha;
 
         for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
@@ -66,9 +71,6 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
     }
 }
 
-
-
-
 void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const uint8_t *srcRow,
                                 size_t rowLength,
@@ -76,19 +78,20 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const PixelFormatInfo &sourceInfo,
                                 SelectedBlendMode selectedBlendMode)
 {
+
     // Conversion function for the source format
-    auto convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
+    PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
 
     // Temporary storage for source pixel in RGB24
-    alignas(16) uint8_t srcRGB24[1024*3];
+    alignas(16) uint8_t srcRGB24[1024 * 3];
 
-   convertToRGB24(srcRow, srcRGB24, rowLength);
+    convertToRGB24(srcRow, srcRGB24, rowLength);
 
     for (size_t i = 0; i < rowLength; ++i)
     {
         const uint8_t *srcPixel = srcRow + i * sourceInfo.bytesPerPixel;
         uint8_t *dstPixel = dstRow + i * targetInfo.bytesPerPixel;
-        uint8_t alpha = (*((uint32_t*)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
+        uint8_t alpha = (*((uint32_t *)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
         if (alpha == 0)
         {
             continue;

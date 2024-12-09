@@ -2,6 +2,7 @@
 
 using namespace Renderer2D;
 
+
 void PixelConverter::BGR24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)

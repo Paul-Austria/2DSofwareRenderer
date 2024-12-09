@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "../PixelFormat/PixelFormatInfo.h"
 #include <map>
+#include <iostream>
 
 namespace Renderer2D
 {
@@ -26,22 +27,16 @@ namespace Renderer2D
                                const PixelFormatInfo &sourceInfo,
                                SelectedBlendMode selectedBlendMode);
 
-        static const BlendFunc &GetBlendFunc(PixelFormat format, bool &success)
+        static BlendFunc GetBlendFunc(PixelFormat format)
         {
-
-            static const std::map<PixelFormat, BlendFunc> blendRegistry = {
-                {PixelFormat::RGB24, BlendRGB24},
-                {PixelFormat::BGR24, BlendRGB24}};
-
-            auto t = blendRegistry.find(format);
-            if (t == blendRegistry.end())
+            switch (format)
             {
-                success = false;
-                static const BlendFunc nullFunc = nullptr;
-                return nullFunc;
+            case PixelFormat::RGB24:
+            case PixelFormat::BGR24:
+                return BlendRGB24;
+            default:
+                return nullptr;
             }
-            success = true;
-            return blendRegistry.at(format);
         }
 
     public:

@@ -90,7 +90,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
     BlendMode subBlend = mode;
     if (color.GetAlpha() == 255)
         subBlend = BlendMode::NOBLEND;
-        uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
+    uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
 
     switch (subBlend)
     {
@@ -127,7 +127,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
 
         uint8_t rowPixelData[MAXROWLENGTH * MAXBYTESPERPIXEL];
 
-        for (size_t byteIndex = 0; byteIndex < (clipEndX - clipStartX)*4; byteIndex += 4)
+        for (size_t byteIndex = 0; byteIndex < (clipEndX - clipStartX) * 4; byteIndex += 4)
         {
             MemHandler::MemCopy(rowPixelData + byteIndex, color.data, 4);
         }
@@ -137,7 +137,7 @@ void RenderContext2D::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t len
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
             PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
-            BlendFunctions::BlendRow(rowDest,rowPixelData, rowLength,info, infosrcColor);
+            BlendFunctions::BlendRow(rowDest, rowPixelData, rowLength, info, infosrcColor);
         }
         break;
     }
@@ -190,28 +190,17 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     {
         // Conversion function for source to target format if necessary
         PixelConverter::ConvertFunc convertFunc = nullptr;
-        if (sourceFormat != targetFormat)
-        {
-            convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
-            if (!convertFunc)
-                return; // Conversion not supported
-        }
+
+        convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+        if (!convertFunc)
+            return;
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
-            if (convertFunc)
-            {
-                // Convert each pixel in the row from source to target format and copy directly
-                convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
-            }
-            else
-            {
-                // Direct copy if formats match
-                MemHandler::MemCopy(targetRow, sourceRow, (clipEndX - clipStartX) * targetInfo.bytesPerPixel);
-            }
+            convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
         }
         break;
     }
