@@ -246,7 +246,7 @@ int imgheight4 = 243;
 void SetupFunc()
 {
 
-    data = stbi_load("data/img1.jpg", &imgwidth, &imgheight, &nrChannels, 3);
+    data = stbi_load("data/img1.png", &imgwidth, &imgheight, &nrChannels, 3);
     text = Texture(imgwidth, imgheight, data,PixelFormat::RGB24, 0);
     data2 = stbi_load("data/Candera.png", &imgwidth, &imgheight, &nrChannels, 4);
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888,0);
@@ -294,7 +294,6 @@ void TestingFunction()
     context.DrawTexture(text, 40, 40);
     context.DrawTexture(text2, 150, 150);
     context.DrawTexture(text3, 50, 90);
-
     context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
     context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);

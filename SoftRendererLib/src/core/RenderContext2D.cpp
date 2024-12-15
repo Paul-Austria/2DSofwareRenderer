@@ -9,7 +9,6 @@
 
 using namespace Renderer2D;
 
-#define M_PI 3.14159265358979323846f
 
 #define MAXBYTESPERPIXEL 16
 #define MAXROWLENGTH 2048
@@ -31,7 +30,7 @@ void RenderContext2D::ClearTarget(Color color)
 {
     if (targetTexture == nullptr)
     {
-        return; // Early exit if no target texture
+        return; 
     }
 
     PixelFormat format = targetTexture->GetFormat();
@@ -222,6 +221,9 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
         break;
     }
 }
+
+
+
 
 void RenderContext2D::EnableClipping(bool clipping)
 {

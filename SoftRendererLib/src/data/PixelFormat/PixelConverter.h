@@ -26,8 +26,11 @@ namespace Renderer2D
             PixelFormat to;
             ConvertFunc func;
         };
-        
+
         static void Move(const uint8_t *src, uint8_t *dst, size_t count);
+        static void Move2(const uint8_t *src, uint8_t *dst, size_t count);
+        static void Move3(const uint8_t *src, uint8_t *dst, size_t count);
+        static void Move4(const uint8_t *src, uint8_t *dst, size_t count);
 
         // GBR24 Conversions
         static void BGR24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
@@ -37,6 +40,8 @@ namespace Renderer2D
         static void RGB24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
+        static void BGR24ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
+
         static void RGB24ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t count);
 
         // ARGB8888 conversions
@@ -77,7 +82,8 @@ namespace Renderer2D
             // BGR24 conversions
             {PixelFormat::BGR24, PixelFormat::ARGB8888, BGR24ToARGB8888},
             {PixelFormat::BGR24, PixelFormat::RGBA8888, BGR24ToRGBA8888},
-            
+            {PixelFormat::BGR24, PixelFormat::RGB24, BGR24ToRGB24},
+
             // RGB24 conversions
             {PixelFormat::RGB24, PixelFormat::ARGB8888, RGB24ToARGB8888},
             {PixelFormat::RGB24, PixelFormat::RGBA8888, RGB24ToRGBA8888},

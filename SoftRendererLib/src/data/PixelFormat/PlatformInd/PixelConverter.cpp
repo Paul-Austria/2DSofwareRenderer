@@ -439,8 +439,19 @@ void PixelConverter::RGB24ToBGR24(const uint8_t *src, uint8_t *dst, size_t count
 {
     for (size_t i = 0; i < count; ++i)
     {
-        dst[i * 3 + 2] = src[i * 4 + 0]; // R
-        dst[i * 3 + 1] = src[i * 4 + 1]; // G
-        dst[i * 3 + 0] = src[i * 4 + 2]; // B
+        dst[i * 3 + 2] = src[i * 3 + 0]; // R
+        dst[i * 3 + 1] = src[i * 3 + 1]; // G
+        dst[i * 3 + 0] = src[i * 3 + 2]; // B
+    }
+}
+
+
+void PixelConverter::BGR24ToRGB24(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        dst[i * 3 + 0] = src[i * 3 + 2]; // R
+        dst[i * 3 + 1] = src[i * 3 + 1]; // G
+        dst[i * 3 + 2] = src[i * 3 + 0]; // B
     }
 }
