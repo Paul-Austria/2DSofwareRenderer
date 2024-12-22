@@ -170,7 +170,7 @@ int main()
 
     // Allocate memory for texture data and generate initial texture
     unsigned char *imageData = new unsigned char[3 * WIDTH * HEIGHT];
-    TargetTexture = new Texture(WIDTH, HEIGHT, imageData,PixelFormat::RGB24,3*WIDTH);
+    TargetTexture = new Texture(WIDTH, HEIGHT, imageData, PixelFormat::RGB24, 3 * WIDTH);
     context.SetTargetTexture(TargetTexture);
 
     //  generateRandomTextureData(imageData, WIDTH, HEIGHT);
@@ -240,18 +240,18 @@ uint8_t *data2 = nullptr;
 uint8_t *data3 = nullptr;
 Texture text4;
 uint8_t *data4 = nullptr;
-int imgwidth4 = 234;  
-int imgheight4 = 243; 
+int imgwidth4 = 234;
+int imgheight4 = 243;
 
 void SetupFunc()
 {
 
     data = stbi_load("data/img1.png", &imgwidth, &imgheight, &nrChannels, 3);
-    text = Texture(imgwidth, imgheight, data,PixelFormat::RGB24, 0);
+    text = Texture(imgwidth, imgheight, data, PixelFormat::RGB24, 0);
     data2 = stbi_load("data/Candera.png", &imgwidth, &imgheight, &nrChannels, 4);
-    text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888,0);
+    text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
-    text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888,0);
+    text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
 
     // Load the binary file
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
@@ -264,7 +264,7 @@ void SetupFunc()
         if (file.read(reinterpret_cast<char *>(data4), size))
         {
             // Successfully read binary data
-            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565,0);
+            text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565, 0);
         }
         else
         {
@@ -289,14 +289,21 @@ void TestingFunction()
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
     context.ClearTarget(Color(150, 150, 150));
-    context.DrawTexture(text4, 400, 130);
+  /*  context.DrawTexture(text4, 400, 130);
     context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
     context.DrawTexture(text, 40, 40);
     context.DrawTexture(text2, 150, 150);
+
     context.DrawTexture(text3, 50, 90);
     context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+*/
+    context.DrawTexture(text, 40, 40, 270);
+    context.DrawTexture(text, 140, 40, 0);
+    context.DrawTexture(text, 40, 140, 90);
+    context.DrawTexture(text, 140, 140, 180);
 
-    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+//    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+
+//    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
 }

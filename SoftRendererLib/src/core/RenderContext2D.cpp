@@ -9,7 +9,6 @@
 
 using namespace Renderer2D;
 
-
 #define MAXBYTESPERPIXEL 16
 #define MAXROWLENGTH 2048
 
@@ -30,7 +29,7 @@ void RenderContext2D::ClearTarget(Color color)
 {
     if (targetTexture == nullptr)
     {
-        return; 
+        return;
     }
 
     PixelFormat format = targetTexture->GetFormat();
@@ -223,6 +222,131 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 }
 
 
+void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle)
+{
+    if (!targetTexture)
+        return;
+
+    // Get target texture information
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch();
+
+    // Get source texture information
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch();
+
+    // Validate angle
+    int normalizedAngle = static_cast<int>(angle) % 360;
+    if (normalizedAngle < 0)
+        normalizedAngle += 360;
+
+    if (normalizedAngle == 0)
+    {
+        DrawTexture(texture, x, y);
+        return;
+    }
+
+    // Determine blending mode
+    BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
+
+    // Allocate a buffer for one row of converted pixels
+    size_t rowLength = sourceWidth * targetInfo.bytesPerPixel;
+    alignas(16) uint8_t buffer[MAXROWLENGTH * MAXBYTESPERPIXEL];
+    PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+
+    // Rotation-specific loops
+    switch (normalizedAngle)
+    {
+    case 90:
+        for (uint16_t j = 0; j < sourceHeight; ++j)
+        {
+            const uint8_t *sourceRow = sourceData + (j * sourcePitch);
+            convertFunc(sourceRow, buffer, sourceWidth);
+
+            for (uint16_t i = 0; i < sourceWidth; ++i)
+            {
+                int targetX = x + sourceHeight - 1 - j;
+                int targetY = y + i;
+
+                if (enableClipping)
+                {
+                    if (targetX < startX || targetX >= endX || targetY < startY || targetY >= endY)
+                        continue;
+                }
+
+                if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
+                    continue;
+
+                uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
+                memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+            }
+        }
+        break;
+
+    case 180:
+        for (uint16_t j = 0; j < sourceHeight; ++j)
+        {
+            const uint8_t *sourceRow = sourceData + (j * sourcePitch);
+            convertFunc(sourceRow, buffer, sourceWidth);
+
+            for (uint16_t i = 0; i < sourceWidth; ++i)
+            {
+                int targetX = x + sourceWidth - 1 - i;
+                int targetY = y + sourceHeight - 1 - j;
+
+                if (enableClipping)
+                {
+                    if (targetX < startX || targetX >= endX || targetY < startY || targetY >= endY)
+                        continue;
+                }
+
+                if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
+                    continue;
+
+                uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
+                memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+            }
+        }
+        break;
+
+    case 270:
+        for (uint16_t j = 0; j < sourceHeight; ++j)
+        {
+            const uint8_t *sourceRow = sourceData + (j * sourcePitch);
+            convertFunc(sourceRow, buffer, sourceWidth);
+
+            for (uint16_t i = 0; i < sourceWidth; ++i)
+            {
+                int targetX = x + j;
+                int targetY = y + sourceWidth - 1 - i;
+
+                if (enableClipping)
+                {
+                    if (targetX < startX || targetX >= endX || targetY < startY || targetY >= endY)
+                        continue;
+                }
+
+                if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
+                    continue;
+
+                uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
+                memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
+}
 
 
 void RenderContext2D::EnableClipping(bool clipping)

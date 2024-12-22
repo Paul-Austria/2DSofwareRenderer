@@ -23,8 +23,9 @@ namespace Renderer2D
         void SetBlendMode(BlendMode mode);
 
         void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height);
-        void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height, float angle);
+   //     void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height, float angle);
         void DrawTexture(Texture &texture, uint16_t x, uint16_t y);
+        void DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle);
 
         void EnableClipping(bool clipping);
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
