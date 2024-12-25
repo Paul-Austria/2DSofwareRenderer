@@ -221,8 +221,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     }
 }
 
-
-void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle)
+void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle, int32_t offsetX, int32_t offsetY)
 {
     if (!targetTexture)
         return;
@@ -250,6 +249,7 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
 
     if (normalizedAngle == 0)
     {
+
         DrawTexture(texture, x, y);
         return;
     }
@@ -343,12 +343,95 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
         }
         break;
 
-    default:
+    default: // rotate for all remaining degrees
+    {
+        float radians = normalizedAngle * 3.14159265358979f / 180.0f;
+        float cosAngle = cos(radians);
+        float sinAngle = sin(radians);
+
+        offsetX = sourceWidth / 2 + offsetX;
+        offsetY = sourceHeight / 2 + offsetY;
+
+        float pivotX = x + offsetX;
+        float pivotY = y + offsetY;
+
+        // Calculate the bounds of the rotated image by transforming all corners
+        float corners[4][2] = {
+            {-offsetX, -offsetY},                           // Top-left
+            {sourceWidth - offsetX, -offsetY},              // Top-right
+            {-offsetX, sourceHeight - offsetY},             // Bottom-left
+            {sourceWidth - offsetX, sourceHeight - offsetY} // Bottom-right
+        };
+
+        // Find the min/max coordinates after rotation
+        float minX = FLT_MAX, minY = FLT_MAX;
+        float maxX = -FLT_MAX, maxY = -FLT_MAX;
+
+        for (int i = 0; i < 4; i++)
+        {
+            float rotX = corners[i][0] * cosAngle - corners[i][1] * sinAngle + pivotX;
+            float rotY = corners[i][0] * sinAngle + corners[i][1] * cosAngle + pivotY;
+
+            minX = std::min(minX, rotX);
+            minY = std::min(minY, rotY);
+            maxX = std::max(maxX, rotX);
+            maxY = std::max(maxY, rotY);
+        }
+
+        int boundMinX = static_cast<int>(floor(minX)) - 1;
+        int boundMinY = static_cast<int>(floor(minY)) - 1;
+        int boundMaxX = static_cast<int>(ceil(maxX)) + 1;
+        int boundMaxY = static_cast<int>(ceil(maxY)) + 1;
+
+        int lastConvertedRow = -1; 
+
+        
+        for (int destY = boundMinY; destY <= boundMaxY; destY++)
+        {
+            for (int destX = boundMinX; destX <= boundMaxX; destX++)
+            {
+                if (destX < 0 || destX >= targetWidth || destY < 0 || destY >= targetHeight)
+                {
+                    continue;
+                }
+
+                if (enableClipping)
+                {
+                    if (destX < startX || destX >= endX || destY < startY || destY >= endY)
+                    {
+                        continue;
+                    }
+                }
+
+                float dx = destX - pivotX;
+                float dy = destY - pivotY;
+
+                float srcXf = dx * cosAngle + dy * sinAngle + offsetX;
+                float srcYf = -dx * sinAngle + dy * cosAngle + offsetY;
+
+                int srcX = static_cast<int>(srcXf);
+                int srcY = static_cast<int>(srcYf);
+
+                if (srcX >= 0 && srcX < sourceWidth && srcY >= 0 && srcY < sourceHeight)
+                {
+                    if (srcY != lastConvertedRow)
+                    {
+                        const uint8_t *sourceRow = sourceData + (srcY * sourcePitch);
+                        convertFunc(sourceRow, buffer, sourceWidth);
+                        lastConvertedRow = srcY;
+                    }
+
+                    // Use the converted row from buffer
+                    const uint8_t *sourcePixel = buffer + (srcX * targetInfo.bytesPerPixel);
+                    uint8_t *targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
+                    memcpy(targetPixel, sourcePixel, targetInfo.bytesPerPixel);
+                }
+            }
+        }
         break;
     }
+    }
 }
-
-
 void RenderContext2D::EnableClipping(bool clipping)
 {
     this->enableClipping = clipping;

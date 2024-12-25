@@ -279,6 +279,7 @@ void SetupFunc()
 
     context.SetBlendMode(BlendMode::BLEND);
 }
+static float x = 0;
 
 // Function used for testing, updates the texture data
 void TestingFunction()
@@ -289,21 +290,35 @@ void TestingFunction()
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
     context.ClearTarget(Color(150, 150, 150));
-  /*  context.DrawTexture(text4, 400, 130);
-    context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-    context.DrawTexture(text, 40, 40);
-    context.DrawTexture(text2, 150, 150);
+    /*  context.DrawTexture(text4, 400, 130);
+      context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
+      context.DrawTexture(text, 40, 40);
+      context.DrawTexture(text2, 150, 150);
 
-    context.DrawTexture(text3, 50, 90);
-    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-    context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-*/
+      context.DrawTexture(text3, 50, 90);
+      context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
+      context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
+  */
     context.DrawTexture(text, 40, 40, 270);
+    context.DrawRect(Color(255, 0, 0), 40, 40, 5, 5);
+
     context.DrawTexture(text, 140, 40, 0);
+        context.DrawRect(Color(255, 0, 0), 140, 40, 5, 5);
+
     context.DrawTexture(text, 40, 140, 90);
+    context.DrawRect(Color(255, 0, 0), 40, 140, 5, 5);
+
     context.DrawTexture(text, 140, 140, 180);
+    context.DrawRect(Color(255, 0, 0), 140, 140, 5, 5);
 
-//    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+    context.DrawTexture(text2, 150, 150, 180);
+    context.DrawRect(Color(255, 0, 0),150, 150, 5, 5);
 
-//    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+    x += 0.5f;
+    context.DrawTexture(text, 150, 250, x, -60/2, -51/2);
+    context.DrawRect(Color(255, 0, 0), 150, 250, 5, 5);
+
+    //    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+
+    //    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
 }
