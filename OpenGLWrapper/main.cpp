@@ -6,12 +6,17 @@
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 #include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
 #include <fstream>
+#include <thread>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "lib/stb_image.h"
 
 // Constants
 #define WIDTH 800
 #define HEIGHT 400
+const double TARGET_FPS = 6088.0;
+const double TARGET_FRAME_DURATION = 1.0 / TARGET_FPS;
+
 
 using namespace Renderer2D;
 
@@ -184,40 +189,54 @@ int main()
     double previousTime = 0.0;
     int frameCount = 0;
 
-    while (!glfwWindowShouldClose(window))
+   while (!glfwWindowShouldClose(window))
+{
+    // Start frame timer
+    double frameStartTime = glfwGetTime();
+
+    // Generate and update texture data
+    TestingFunction();
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+
+    // Render
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(shaderProgram);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    // Swap buffers and poll events
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+
+    // FPS calculation
+    frameCount++;
+    double currentTime = glfwGetTime();
+
+    // Check if a second has passed
+    if (currentTime - previousTime >= 1.0)
     {
-        // Generate and update texture data
-        TestingFunction();
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+        double fps = frameCount / (currentTime - previousTime);
+        double timePerFrame = 1000.0 / fps; // Convert to milliseconds
+        std::cout << "FPS: " << fps << " | Time per frame: " << timePerFrame << " ms" << std::endl;
 
-        // Render
-        glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(shaderProgram);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        // Swap buffers and poll events
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-        // FPS calculation
-        double currentTime = glfwGetTime();
-        frameCount++;
-
-        // Check if a second has passed
-        if (currentTime - previousTime >= 1.0)
-        {
-            double fps = frameCount / (currentTime - previousTime);
-            double timePerFrame = 1000.0 / fps; // Convert to milliseconds
-            std::cout << "FPS: " << fps << " | Time per frame: " << timePerFrame << " ms" << std::endl;
-
-            // Reset counters
-            previousTime = currentTime;
-            frameCount = 0;
-        }
+        // Reset counters
+        previousTime = currentTime;
+        frameCount = 0;
     }
+
+    // Calculate the frame duration and sleep if necessary
+    double frameEndTime = glfwGetTime();
+    double frameDuration = frameEndTime - frameStartTime;
+
+    if (frameDuration < TARGET_FRAME_DURATION)
+    {
+        // Sleep for the remaining time
+        double sleepTime = TARGET_FRAME_DURATION - frameDuration;
+        std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
+    }
+}
 
     // Cleanup
     glDeleteVertexArrays(1, &VAO);
@@ -281,6 +300,9 @@ void SetupFunc()
 }
 static float x = 0;
 
+
+void TestRotationWithOffset(RenderContext2D& context, Texture& texture, int xOffset = 0, int yOffset = 0);
+
 // Function used for testing, updates the texture data
 void TestingFunction()
 {
@@ -290,15 +312,6 @@ void TestingFunction()
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
     context.ClearTarget(Color(150, 150, 150));
-    /*  context.DrawTexture(text4, 400, 130);
-      context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-      context.DrawTexture(text, 40, 40);
-      context.DrawTexture(text2, 150, 150);
-
-      context.DrawTexture(text3, 50, 90);
-      context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-      context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-  */
     context.DrawTexture(text, 40, 40, 270);
     context.DrawRect(Color(255, 0, 0), 40, 40, 5, 5);
 
@@ -315,10 +328,67 @@ void TestingFunction()
     context.DrawRect(Color(255, 0, 0),150, 150, 5, 5);
 
     x += 0.5f;
-    context.DrawTexture(text, 150, 250, x, -60/2, -51/2);
+    context.DrawTexture(text, 150, 250, x, -60/2,-51/2);
     context.DrawRect(Color(255, 0, 0), 150, 250, 5, 5);
+
+
+    context.DrawTexture(text, 250, 250, 90,-60/2,-51/2);
+    context.DrawRect(Color(255, 0, 0), 250, 250, 5, 5);
+
+    context.DrawTexture(text, 360, 250, 91,-60/2,-51/2);
+    context.DrawRect(Color(255, 0, 0), 360, 250, 5, 5);
+
 
     //    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
 
     //    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+
+
+
+ //  TestRotationWithOffset(context, text, 0, 0);
 }
+
+
+
+#include <iomanip>  // For formatting the grid
+
+void TestRotationWithOffset(RenderContext2D& context, Texture& texture, int xOffset, int yOffset) {
+    // Constants
+    const int screenWidth = 800;
+    const int screenHeight = 400;
+    const int textureWidth = 60;
+    const int textureHeight = 51;
+    const int redSquareSize = 5;
+
+    // Clear the screen
+    context.ClearTarget(Color(150, 150, 150));
+
+    // Rotation and Offset info grid
+    std::cout << "Rotation Grid with Offsets (Degrees):\n";
+    int rows = screenHeight / (20+textureHeight);
+    int cols = screenWidth / (20+textureWidth);
+    int rotation = -5; 
+
+    // Fill the screen with rotated textures
+    for (int y = 0; y < screenHeight; y += textureHeight + 20) {
+        for (int x = 0; x < screenWidth; x += textureWidth + 20) {
+            // Compute rotation angle
+            rotation += 5 ; 
+ 
+            rotation = rotation % 360;
+
+            // Draw the texture with rotation
+            context.DrawTexture(texture, x, y, rotation,xOffset,yOffset);
+
+            // Draw a red square at the same location as the center of the texture
+            int squareX = x;
+            int squareY = y;
+            context.DrawRect(Color(255, 0, 0), squareX, squareY, redSquareSize, redSquareSize);
+
+            // Print rotation angle and offsets in grid format
+            std::cout << std::setw(6) << rotation;
+        }
+        std::cout << '\n'; // New line at the end of each row
+    }
+}
+
