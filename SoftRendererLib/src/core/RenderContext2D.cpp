@@ -221,18 +221,13 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
     }
 }
 
+void DrawTextureRotatedBlending(Texture &texture, uint16_t x, uint16_t y, float angle, int32_t offsetX, int32_t offsetY)
+{
+}
 void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle, int32_t offsetX, int32_t offsetY)
 {
     if (!targetTexture)
         return;
-
-    // Get target texture information
-    PixelFormat targetFormat = targetTexture->GetFormat();
-    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
-    uint8_t *targetData = targetTexture->GetData();
-    uint16_t targetWidth = targetTexture->GetWidth();
-    uint16_t targetHeight = targetTexture->GetHeight();
-    size_t targetPitch = targetTexture->GetPitch();
 
     // Get source texture information
     PixelFormat sourceFormat = texture.GetFormat();
@@ -257,6 +252,19 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
     // Determine blending mode
     BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
 
+    /*   if (subBlend != BlendMode::NOBLEND)
+       {
+           DrawTextureRotatedBlending(texture,x,y,angle,offsetX,offsetY);
+           return;
+       }
+   */
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch();
+
     // Allocate a buffer for one row of converted pixels
     size_t rowLength = sourceWidth * targetInfo.bytesPerPixel;
     alignas(16) uint8_t buffer[MAXROWLENGTH * MAXBYTESPERPIXEL];
@@ -278,8 +286,19 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
 
             for (uint16_t j = 0; j < sourceHeight; ++j)
             {
-                const uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                convertFunc(sourceRow, buffer, sourceWidth);
+                uint8_t *sourceRow = sourceData + (j * sourcePitch);
+                uint8_t *bufferPointer = nullptr;
+                switch (subBlend)
+                {
+                case BlendMode::NOBLEND:
+                    convertFunc(sourceRow, buffer, sourceWidth);
+                    bufferPointer = buffer;
+                    break;
+
+                default:
+                    bufferPointer = sourceRow;
+                    break;
+                }
 
                 for (uint16_t i = 0; i < sourceWidth; ++i)
                 {
@@ -296,7 +315,15 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
                         continue;
 
                     uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                    switch (subBlend)
+                    {
+                    case BlendMode::NOBLEND:
+                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                        break;
+                    default:
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo);
+                        break;
+                    }
                 }
             }
             break;
@@ -304,8 +331,19 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
         case 180:
             for (uint16_t j = 0; j < sourceHeight; ++j)
             {
-                const uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                convertFunc(sourceRow, buffer, sourceWidth);
+                uint8_t *sourceRow = sourceData + (j * sourcePitch);
+                uint8_t *bufferPointer = nullptr;
+                switch (subBlend)
+                {
+                case BlendMode::NOBLEND:
+                    convertFunc(sourceRow, buffer, sourceWidth);
+                    bufferPointer = buffer;
+                    break;
+
+                default:
+                    bufferPointer = sourceRow;
+                    break;
+                }
 
                 for (uint16_t i = 0; i < sourceWidth; ++i)
                 {
@@ -322,7 +360,15 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
                         continue;
 
                     uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                    switch (subBlend)
+                    {
+                    case BlendMode::NOBLEND:
+                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                        break;
+                    default:
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo);
+                        break;
+                    }
                 }
             }
             break;
@@ -330,9 +376,19 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
         case 270:
             for (uint16_t j = 0; j < sourceHeight; ++j)
             {
-                const uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                convertFunc(sourceRow, buffer, sourceWidth);
+                uint8_t *sourceRow = sourceData + (j * sourcePitch);
+                uint8_t *bufferPointer = nullptr;
+                switch (subBlend)
+                {
+                case BlendMode::NOBLEND:
+                    convertFunc(sourceRow, buffer, sourceWidth);
+                    bufferPointer = buffer;
+                    break;
 
+                default:
+                    bufferPointer = sourceRow;
+                    break;
+                }
                 for (uint16_t i = 0; i < sourceWidth; ++i)
                 {
                     int targetX = offX + j;
@@ -348,15 +404,18 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
                         continue;
 
                     uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    memcpy(targetPixel, buffer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                    switch (subBlend)
+                    {
+                    case BlendMode::NOBLEND:
+                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
+                        break;
+                    default:
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo);
+                        break;
+                    }
                 }
             }
             break;
-
-        default: // rotate for all remaining degrees
-        {
-            break;
-        }
         }
     }
     else
@@ -429,17 +488,30 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
 
                 if (srcX >= 0 && srcX < sourceWidth && srcY >= 0 && srcY < sourceHeight)
                 {
-                    if (srcY != lastConvertedRow)
+                    uint8_t *sourcePixel = nullptr;
+                    uint8_t *targetPixel = nullptr;
+                    uint8_t *sourceRow = sourceData + (srcY * sourcePitch);
+                    switch (subBlend)
                     {
-                        const uint8_t *sourceRow = sourceData + (srcY * sourcePitch);
-                        convertFunc(sourceRow, buffer, sourceWidth);
-                        lastConvertedRow = srcY;
-                    }
+                    case BlendMode::NOBLEND:
+                        if (srcY != lastConvertedRow)
+                        {
+                            convertFunc(sourceRow, buffer, sourceWidth);
+                            lastConvertedRow = srcY;
+                        }
+                        sourcePixel = buffer + (srcX * targetInfo.bytesPerPixel);
+                        targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
+                        memcpy(targetPixel, sourcePixel, targetInfo.bytesPerPixel);
+                        break;
 
-                    // Use the converted row from buffer
-                    const uint8_t *sourcePixel = buffer + (srcX * targetInfo.bytesPerPixel);
-                    uint8_t *targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
-                    memcpy(targetPixel, sourcePixel, targetInfo.bytesPerPixel);
+                    default:
+                    {
+                        sourcePixel = sourceRow + (srcX * sourceInfo.bytesPerPixel);
+                        targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
+                        BlendFunctions::BlendRow(targetPixel, sourcePixel, 1, targetInfo, sourceInfo);
+                    }
+                    break;
+                    }
                 }
             }
         }

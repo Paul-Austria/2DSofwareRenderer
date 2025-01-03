@@ -324,7 +324,7 @@ void TestingFunction()
     context.DrawTexture(text, 140, 140, 180);
     context.DrawRect(Color(255, 0, 0), 140, 140, 5, 5);
 
-    context.DrawTexture(text2, 150, 150, 180);
+    context.DrawTexture(text2, 150, 150, x);
     context.DrawRect(Color(255, 0, 0),150, 150, 5, 5);
 
     x += 0.5f;
