@@ -253,6 +253,7 @@ int main()
 Texture text;
 Texture text2;
 Texture text3;
+Texture text5;
 int imgwidth, imgheight, nrChannels;
 uint8_t *data = nullptr;
 uint8_t *data2 = nullptr;
@@ -271,6 +272,8 @@ void SetupFunc()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
+    data4 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 3);
+    text5 = Texture(imgwidth, imgheight, data4, PixelFormat::RGB24, 0); 
 
     // Load the binary file
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
@@ -306,46 +309,24 @@ void TestRotationWithOffset(RenderContext2D& context, Texture& texture, int xOff
 // Function used for testing, updates the texture data
 void TestingFunction()
 {
-    static float time = 0;
-    time += 0.01f;
+    x += 0.5f;
 
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
-    context.ClearTarget(Color(150, 150, 150));
-    context.DrawTexture(text, 40, 40, 270);
-    context.DrawRect(Color(255, 0, 0), 40, 40, 5, 5);
+    context.ClearTarget(Color(200, 200, 200));
+    context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
+   // context.DrawTexture(text, 40, 40);
+    context.DrawTexture(text2, 150, 200);
+    context.DrawTexture(text5, 550, 150, x);
 
-    context.DrawTexture(text, 140, 40, 0);
-        context.DrawRect(Color(255, 0, 0), 140, 40, 5, 5);
-
-    context.DrawTexture(text, 40, 140, 90);
-    context.DrawRect(Color(255, 0, 0), 40, 140, 5, 5);
-
-    context.DrawTexture(text, 140, 140, 180);
-    context.DrawRect(Color(255, 0, 0), 140, 140, 5, 5);
-
-    context.DrawTexture(text2, 150, 150, x);
-    context.DrawRect(Color(255, 0, 0),150, 150, 5, 5);
-
-    x += 0.5f;
-    context.DrawTexture(text, 150, 250, x, -60/2,-51/2);
-    context.DrawRect(Color(255, 0, 0), 150, 250, 5, 5);
+    context.DrawTexture(text3, 50, 90);
+    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
+    context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
 
 
-    context.DrawTexture(text, 250, 250, 90,-60/2,-51/2);
-    context.DrawRect(Color(255, 0, 0), 250, 250, 5, 5);
+    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
 
-    context.DrawTexture(text, 360, 250, 91,-60/2,-51/2);
-    context.DrawRect(Color(255, 0, 0), 360, 250, 5, 5);
-
-
-    //    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
-
-    //    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
-
-
-
- //  TestRotationWithOffset(context, text, 0, 0);
+    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
 }
 
 
