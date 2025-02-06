@@ -252,12 +252,6 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
     // Determine blending mode
     BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
 
-    /*   if (subBlend != BlendMode::NOBLEND)
-       {
-           DrawTextureRotatedBlending(texture,x,y,angle,offsetX,offsetY);
-           return;
-       }
-   */
     PixelFormat targetFormat = targetTexture->GetFormat();
     PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
     uint8_t *targetData = targetTexture->GetData();
@@ -517,6 +511,145 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, floa
         }
     }
     // Rotation-specific loops
+}
+
+void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y,
+                                  float scaleX, float scaleY, SamplingMethod method)
+{
+    if (!targetTexture || scaleX <= 0 || scaleY <= 0)
+        return;
+
+    // Get format information
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch();
+
+    // Get source texture information
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch();
+
+    // Calculate scaled dimensions
+    uint16_t dstWidth = static_cast<uint16_t>(sourceWidth * scaleX);
+    uint16_t dstHeight = static_cast<uint16_t>(sourceHeight * scaleY);
+
+    // Set clipping boundaries based on SCALED size
+    uint16_t clipStartX = enableClipping ? std::max(x, startX) : x;
+    uint16_t clipStartY = enableClipping ? std::max(y, startY) : y;
+    uint16_t clipEndX = enableClipping
+                            ? std::min(static_cast<int>(x + dstWidth), static_cast<int>(endX))
+                            : x + dstWidth;
+    uint16_t clipEndY = enableClipping
+                            ? std::min(static_cast<int>(y + dstHeight), static_cast<int>(endY))
+                            : y + dstHeight;
+
+    // Clamp to target texture bounds
+    clipEndX = std::min(clipEndX, targetWidth);
+    clipEndY = std::min(clipEndY, targetHeight);
+
+    if (clipStartX >= clipEndX || clipStartY >= clipEndY)
+        return;
+
+    // Prepare blending mode
+    BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
+    bool useBlending = (subBlend == BlendMode::BLEND);
+
+    uint8_t dstBuffer[MAXBYTESPERPIXEL];
+
+    for (uint16_t dy = clipStartY; dy < clipEndY; dy++)
+    {
+        for (uint16_t dx = clipStartX; dx < clipEndX; dx++)
+        {
+            // Calculate normalized texture coordinates with inverse scaling
+            float tx = (dx - x) * (static_cast<float>(sourceWidth) / dstWidth);
+            float ty = (dy - y) * (static_cast<float>(sourceHeight) / dstHeight);
+
+            // Clamp coordinates to texture size
+            tx = std::max(0.0f, std::min(tx, static_cast<float>(sourceWidth - 1)));
+            ty = std::max(0.0f, std::min(ty, static_cast<float>(sourceHeight - 1)));
+
+            // Sample texture
+            switch (method)
+            {
+            case SamplingMethod::NEAREST:
+            {
+                // Nearest neighbor sampling
+                uint16_t sx = static_cast<uint16_t>(tx + 0.5f);
+                uint16_t sy = static_cast<uint16_t>(ty + 0.5f);
+                const uint8_t *srcPixel = sourceData +
+                                          sy * sourcePitch +
+                                          sx * sourceInfo.bytesPerPixel;
+
+                PixelConverter::Convert(
+                    sourceFormat,
+                    targetFormat,
+                    srcPixel,
+                    dstBuffer,
+                    1);
+                break;
+            }
+
+            case SamplingMethod::LINEAR:
+            {
+                // Bilinear interpolation
+                int x0 = static_cast<int>(tx);
+                int y0 = static_cast<int>(ty);
+                int x1 = std::min(x0 + 1, static_cast<int>(sourceWidth - 1));
+                int y1 = std::min(y0 + 1, static_cast<int>(sourceHeight - 1));
+
+                float fx = tx - x0;
+                float fy = ty - y0;
+
+                // Get four neighboring pixels
+                const uint8_t *pixels[4] = {
+                    sourceData + y0 * sourcePitch + x0 * sourceInfo.bytesPerPixel, // (x0,y0)
+                    sourceData + y0 * sourcePitch + x1 * sourceInfo.bytesPerPixel, // (x1,y0)
+                    sourceData + y1 * sourcePitch + x0 * sourceInfo.bytesPerPixel, // (x0,y1)
+                    sourceData + y1 * sourcePitch + x1 * sourceInfo.bytesPerPixel  // (x1,y1)
+                };
+
+                // Convert all four pixels to ARGB8888 color format
+                Color colors[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    colors[i] = Color(pixels[i],sourceFormat);
+                }
+
+                // Horizontal interpolation
+                Color top = Color::Lerp(colors[0], colors[1], fx);
+                Color bottom = Color::Lerp(colors[2], colors[3], fx);
+
+                // Vertical interpolation
+                Color finalColor = Color::Lerp(top, bottom, fy);
+
+                finalColor.ConvertTo(targetFormat, dstBuffer);
+                break;
+            }
+            }
+
+            // Get destination pixel location
+            uint8_t *dstPixel = targetData +
+                                dy * targetPitch +
+                                dx * targetInfo.bytesPerPixel;
+
+            // Handle blending
+            if (useBlending)
+            {
+                    BlendFunctions::BlendRow(dstPixel, dstBuffer, 1, targetInfo, sourceInfo);
+            }
+            else
+            {
+                MemHandler::MemCopy(dstPixel, dstBuffer, targetInfo.bytesPerPixel);
+            }
+        }
+    }
 }
 
 void RenderContext2D::EnableClipping(bool clipping)

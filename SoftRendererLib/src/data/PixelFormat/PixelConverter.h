@@ -17,7 +17,7 @@ namespace Renderer2D
         static ConvertFunc GetConversionFunction(PixelFormat from, PixelFormat to);
 
         // Convert pixels using cached function pointer and batch processing
-        void Convert(PixelFormat from, PixelFormat to, const uint8_t *src, uint8_t *dst, size_t count = 1) const;
+        static void Convert(PixelFormat from, PixelFormat to, const uint8_t *src, uint8_t *dst, size_t count = 1);
 
     private:
         struct Conversion

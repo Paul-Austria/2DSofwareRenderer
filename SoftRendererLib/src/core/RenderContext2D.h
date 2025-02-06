@@ -10,6 +10,11 @@
 
 namespace Renderer2D
 {
+    enum class SamplingMethod {
+        NEAREST,  
+        LINEAR    
+    };
+
     using BlendFunction = std::function<Color(const Color &src, const Color &dst)>;
     class RenderContext2D
     {
@@ -30,6 +35,9 @@ namespace Renderer2D
         void EnableClipping(bool clipping);
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
         // Typedef for the custom blend function
+
+        void DrawTexture(Texture& texture, uint16_t x, uint16_t y, 
+                      float scaleX, float scaleY, SamplingMethod method);
 
     private:
 
