@@ -318,7 +318,8 @@ void TestingFunction()
    // context.DrawTexture(text, 40, 40);
     context.DrawTexture(text2, 150, 200);
     context.DrawTexture(text5, 550, 150, x);
-    context.DrawTexture(text5, 550, 190,2,2, SamplingMethod::NEAREST);
+  //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
+    context.DrawTexture(text5, 350, 190,0.2,2,x,0,0,SamplingMethod::NEAREST);
 
     context.DrawTexture(text3, 50, 90);
     context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);

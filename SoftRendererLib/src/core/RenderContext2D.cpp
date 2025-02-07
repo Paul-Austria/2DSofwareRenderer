@@ -652,6 +652,190 @@ void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y,
     }
 }
 
+
+
+
+void RenderContext2D::DrawTexture(Texture &texture, uint16_t x, uint16_t y, 
+                                                 float scaleX, float scaleY, float angle,
+                                                 int32_t offsetX, int32_t offsetY, 
+                                                 SamplingMethod method)
+{
+    if (!targetTexture || scaleX <= 0 || scaleY <= 0)
+        return;
+
+    // Get source texture information
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch();
+
+    // Calculate scaled dimensions
+    uint16_t scaledWidth = static_cast<uint16_t>(sourceWidth * scaleX);
+    uint16_t scaledHeight = static_cast<uint16_t>(sourceHeight * scaleY);
+
+    // Validate angle
+    int normalizedAngle = static_cast<int>(angle) % 360;
+    if (normalizedAngle < 0)
+        normalizedAngle += 360;
+
+    // If no rotation, use the scaling-only function
+    if (normalizedAngle == 0)
+    {
+        DrawTexture(texture, x, y, scaleX, scaleY, method);
+        return;
+    }
+
+    // Get target texture information
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch();
+
+    // Determine blending mode
+    BlendMode subBlend = (mode == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? mode : BlendMode::NOBLEND;
+
+    // Calculate rotation center with scaling
+    float centerX = scaledWidth / 2.0f;
+    float centerY = scaledHeight / 2.0f;
+
+    // Calculate the pivot point including offset
+    float pivotX = x + centerX + offsetX;
+    float pivotY = y + centerY + offsetY;
+
+    float radians = normalizedAngle * 3.14159265358979f / 180.0f;
+    float cosAngle = cos(radians);
+    float sinAngle = sin(radians);
+
+    // Calculate the bounds of the rotated and scaled image
+    float corners[4][2] = {
+        {-centerX, -centerY},             // Top-left
+        {scaledWidth - centerX, -centerY}, // Top-right
+        {-centerX, scaledHeight - centerY}, // Bottom-left
+        {scaledWidth - centerX, scaledHeight - centerY} // Bottom-right
+    };
+
+    // Find the min/max coordinates after rotation
+    float minX = FLT_MAX, minY = FLT_MAX;
+    float maxX = -FLT_MAX, maxY = -FLT_MAX;
+
+    for (int i = 0; i < 4; i++)
+    {
+        float rotX = corners[i][0] * cosAngle - corners[i][1] * sinAngle + pivotX;
+        float rotY = corners[i][0] * sinAngle + corners[i][1] * cosAngle + pivotY;
+
+        minX = std::min(minX, rotX);
+        minY = std::min(minY, rotY);
+        maxX = std::max(maxX, rotX);
+        maxY = std::max(maxY, rotY);
+    }
+
+    // Calculate bounds with padding
+    int boundMinX = static_cast<int>(floor(minX)) - 1;
+    int boundMinY = static_cast<int>(floor(minY)) - 1;
+    int boundMaxX = static_cast<int>(ceil(maxX)) + 1;
+    int boundMaxY = static_cast<int>(ceil(maxY)) + 1;
+
+    // Clamp bounds to target texture and clipping region
+    if (enableClipping)
+    {
+        boundMinX = std::max(boundMinX, static_cast<int>(startX));
+        boundMinY = std::max(boundMinY, static_cast<int>(startY));
+        boundMaxX = std::min(boundMaxX, static_cast<int>(endX));
+        boundMaxY = std::min(boundMaxY, static_cast<int>(endY));
+    }
+
+    boundMinX = std::max(boundMinX, 0);
+    boundMinY = std::max(boundMinY, 0);
+    boundMaxX = std::min(boundMaxX, static_cast<int>(targetWidth));
+    boundMaxY = std::min(boundMaxY, static_cast<int>(targetHeight));
+
+    uint8_t dstBuffer[MAXBYTESPERPIXEL];
+
+    // Inverse transformation matrix
+    float invCosAngle = cosAngle;
+    float invSinAngle = -sinAngle;
+
+    for (int destY = boundMinY; destY < boundMaxY; destY++)
+    {
+        for (int destX = boundMinX; destX < boundMaxX; destX++)
+        {
+            // Calculate source position with rotation and scaling
+            float dx = destX - pivotX;
+            float dy = destY - pivotY;
+
+            // Apply inverse rotation
+            float rotX = dx * invCosAngle - dy * invSinAngle;
+            float rotY = dx * invSinAngle + dy * invCosAngle;
+
+            // Transform to source space (accounting for scale)
+            float srcXf = (rotX + centerX) / scaleX;
+            float srcYf = (rotY + centerY) / scaleY;
+
+            // Check if the source pixel is within bounds
+            if (srcXf >= 0 && srcXf < sourceWidth && srcYf >= 0 && srcYf < sourceHeight)
+            {
+                switch (method)
+                {
+                    case SamplingMethod::NEAREST:
+                    {
+                        uint16_t sx = static_cast<uint16_t>(srcXf + 0.5f);
+                        uint16_t sy = static_cast<uint16_t>(srcYf + 0.5f);
+                        const uint8_t *srcPixel = sourceData + sy * sourcePitch + sx * sourceInfo.bytesPerPixel;
+                        PixelConverter::Convert(sourceFormat, targetFormat, srcPixel, dstBuffer, 1);
+                        break;
+                    }
+
+                    case SamplingMethod::LINEAR:
+                    {
+                        int x0 = static_cast<int>(srcXf);
+                        int y0 = static_cast<int>(srcYf);
+                        int x1 = std::min(x0 + 1, static_cast<int>(sourceWidth - 1));
+                        int y1 = std::min(y0 + 1, static_cast<int>(sourceHeight - 1));
+
+                        float fx = srcXf - x0;
+                        float fy = srcYf - y0;
+
+                        const uint8_t *pixels[4] = {
+                            sourceData + y0 * sourcePitch + x0 * sourceInfo.bytesPerPixel,
+                            sourceData + y0 * sourcePitch + x1 * sourceInfo.bytesPerPixel,
+                            sourceData + y1 * sourcePitch + x0 * sourceInfo.bytesPerPixel,
+                            sourceData + y1 * sourcePitch + x1 * sourceInfo.bytesPerPixel
+                        };
+
+                        Color colors[4];
+                        for (int i = 0; i < 4; i++)
+                        {
+                            colors[i] = Color(pixels[i], sourceFormat);
+                        }
+
+                        Color top = Color::Lerp(colors[0], colors[1], fx);
+                        Color bottom = Color::Lerp(colors[2], colors[3], fx);
+                        Color finalColor = Color::Lerp(top, bottom, fy);
+                        finalColor.ConvertTo(targetFormat, dstBuffer);
+                        break;
+                    }
+                }
+
+                uint8_t *targetPixel = targetData + destY * targetPitch + destX * targetInfo.bytesPerPixel;
+                
+                if (subBlend == BlendMode::BLEND)
+                {
+                    BlendFunctions::BlendRow(targetPixel, dstBuffer, 1, targetInfo, sourceInfo);
+                }
+                else
+                {
+                    MemHandler::MemCopy(targetPixel, dstBuffer, targetInfo.bytesPerPixel);
+                }
+            }
+        }
+    }
+}
+
+
 void RenderContext2D::EnableClipping(bool clipping)
 {
     this->enableClipping = clipping;
