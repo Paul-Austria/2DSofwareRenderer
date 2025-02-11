@@ -314,26 +314,27 @@ void TestingFunction()
     context.SetClipping(80, 30, 170, 290);
     context.EnableClipping(false);
     context.ClearTarget(Color(200, 200, 200));
-    context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
+    context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
    // context.DrawTexture(text, 40, 40);
-    context.DrawTexture(text2, 150, 200);
-    context.DrawTexture(text5, 550, 150, x);
+    context.basicTextureRenderer.DrawTexture(text2, 150, 200);
+    context.transformedTextureRenderer.DrawTexture(text5, 550, 150, x);
   //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
-    context.DrawTexture(text5, 350, 190,0.2,2,x,0,0,SamplingMethod::NEAREST);
+    context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2,x,0,0);
+    context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
 
-    context.DrawTexture(text3, 50, 90);
-    context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-    context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
+    context.basicTextureRenderer.DrawTexture(text3, 50, 90);
+    context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
+    context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
 
 
-    context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+    context.primitivesRenderer.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
 
-    context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+    context.primitivesRenderer.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
 }
 
 
 
-#include <iomanip>  // For formatting the grid
+#include <iomanip>  
 
 void TestRotationWithOffset(RenderContext2D& context, Texture& texture, int xOffset, int yOffset) {
     // Constants
@@ -361,12 +362,12 @@ void TestRotationWithOffset(RenderContext2D& context, Texture& texture, int xOff
             rotation = rotation % 360;
 
             // Draw the texture with rotation
-            context.DrawTexture(texture, x, y, rotation,xOffset,yOffset);
+            context.transformedTextureRenderer.DrawTexture(texture, x, y, rotation,xOffset,yOffset);
 
             // Draw a red square at the same location as the center of the texture
             int squareX = x;
             int squareY = y;
-            context.DrawRect(Color(255, 0, 0), squareX, squareY, redSquareSize, redSquareSize);
+          //  context.DrawRect(Color(255, 0, 0), squareX, squareY, redSquareSize, redSquareSize);
 
             // Print rotation angle and offsets in grid format
             std::cout << std::setw(6) << rotation;

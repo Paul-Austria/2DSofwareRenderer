@@ -7,6 +7,8 @@
 #include "../PixelFormat/PixelFormatInfo.h"
 #include <map>
 #include <iostream>
+#include "BlendMode.h"
+
 
 namespace Renderer2D
 {
