@@ -13,7 +13,7 @@ PrimitivesRenderer::PrimitivesRenderer(RenderContext2D& context) : RendererBase(
 
 
 
-void PrimitivesRenderer::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height)
+void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture)
@@ -27,7 +27,17 @@ void PrimitivesRenderer::DrawRect(Color color, uint16_t x, uint16_t y, uint16_t 
     uint16_t textureHeight = targetTexture->GetHeight();
     uint32_t pitch = targetTexture->GetPitch(); // Get the pitch (bytes per row)
 
-    // Set clipping boundaries (with respect to the rectangle's position)
+    
+    if(x < 0)
+    {
+        length = length + x;
+        x = 0;
+    }
+    if(y < 0)
+    {
+        height = height + y;
+        y = 0;
+    }
 
     auto clippingArea = context.GetClippingArea();
 

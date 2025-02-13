@@ -15,7 +15,7 @@ namespace Renderer2D
         BasicTextureRenderer(RenderContext2D &context);
         ~BasicTextureRenderer() = default;
 
-        void DrawTexture(Texture &texture, uint16_t x, uint16_t y);
+        void DrawTexture(Texture &texture, int16_t x, int16_t y);
 
     private:
     };

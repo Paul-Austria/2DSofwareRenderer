@@ -24,7 +24,7 @@ namespace Renderer2D
     };
 
     struct ClippingArea{
-        uint16_t startX, startY, endX, endY;
+        int16_t startX, startY, endX, endY;
     };
 
     class RenderContext2D

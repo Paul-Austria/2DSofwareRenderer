@@ -13,7 +13,7 @@ namespace Renderer2D
         PrimitivesRenderer(RenderContext2D &context);
         ~PrimitivesRenderer() = default;
 
-        void DrawRect(Color color, uint16_t x, uint16_t y, uint16_t length, uint16_t height);
+        void DrawRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height);
 
     private:
     };

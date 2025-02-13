@@ -13,7 +13,7 @@ BasicTextureRenderer::BasicTextureRenderer(RenderContext2D& context) : RendererB
 }
 
 
-void BasicTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
+void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture)
@@ -37,14 +37,24 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint16_t y)
 
     // Set clipping boundaries within the source and target textures
     auto clippingArea = context.GetClippingArea();
-    uint16_t clipStartX = context.IsClippingEnabled() ? std::max(x, clippingArea.startX) : x;
-    uint16_t clipStartY = context.IsClippingEnabled()  ? std::max(y, clippingArea.startY) : y;
-    uint16_t clipEndX = context.IsClippingEnabled()  ? std::min(static_cast<int>(x + sourceWidth), static_cast<int>(clippingArea.endX)) : x + sourceWidth;
-    uint16_t clipEndY = context.IsClippingEnabled()  ? std::min(static_cast<int>(y + sourceHeight), static_cast<int>(clippingArea.endY)) : y + sourceHeight;
+    int16_t clipStartX = context.IsClippingEnabled() ? std::max(x, clippingArea.startX) : x;
+    int16_t clipStartY = context.IsClippingEnabled() ? std::max(y, clippingArea.startY) : y;
+    int16_t clipEndX = context.IsClippingEnabled() ? std::min(static_cast<int>(x + sourceWidth), static_cast<int>(clippingArea.endX)) : x + sourceWidth;
+    int16_t clipEndY = context.IsClippingEnabled() ? std::min(static_cast<int>(y + sourceHeight), static_cast<int>(clippingArea.endY)) : y + sourceHeight;
 
     // Restrict drawing to the target texture’s bounds
-    clipEndX = std::min(clipEndX, targetWidth);
-    clipEndY = std::min(clipEndY, targetHeight);
+    clipEndX = std::min(clipEndX, (int16_t)targetWidth);
+    clipEndY = std::min(clipEndY, (int16_t)targetHeight);
+
+    // Adjust clipping start positions for negative coordinates
+    if (x < 0)
+    {
+        clipStartX = std::max(clipStartX, static_cast<int16_t>(0));
+    }
+    if (y < 0)
+    {
+        clipStartY = std::max(clipStartY, static_cast<int16_t>(0));
+    }
 
     // Check if there is anything to draw
     if (clipStartX >= clipEndX || clipStartY >= clipEndY)

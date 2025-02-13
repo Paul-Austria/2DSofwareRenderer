@@ -311,16 +311,17 @@ void TestingFunction()
 {
     x += 0.5f;
 
-    context.SetClipping(80, 30, 170, 290);
+    context.SetClipping(80, 30, 370, 290);
     context.EnableClipping(false);
+    context.SetSamplingMethod(SamplingMethod::NEAREST);
     context.ClearTarget(Color(200, 200, 200));
     context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
    // context.DrawTexture(text, 40, 40);
-    context.basicTextureRenderer.DrawTexture(text2, 150, 200);
+    context.basicTextureRenderer.DrawTexture(text2, -50, -30);
     context.transformedTextureRenderer.DrawTexture(text5, 550, 150, x);
   //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
-    context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2,x,0,0);
-    context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
+    context.transformedTextureRenderer.DrawTexture(text5, -1, 190,2,2,x,0,0);
+  //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
 
     context.basicTextureRenderer.DrawTexture(text3, 50, 90);
     context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);

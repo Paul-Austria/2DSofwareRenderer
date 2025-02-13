@@ -12,7 +12,7 @@ using namespace Renderer2D;
 TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D& context) : RendererBase(context){
 }
 
-void TransformedTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint16_t y, float angle, int32_t offsetX, int32_t offsetY)
+void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y, float angle, int16_t offsetX, int16_t offsetY)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture)
@@ -303,7 +303,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint1
     // Rotation-specific loops
 }
 
-void TransformedTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint16_t y,
+void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
                                   float scaleX, float scaleY)
 {
     auto targetTexture = context.GetTargetTexture();
@@ -444,9 +444,9 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint1
     }
 }
 
-void TransformedTextureRenderer::DrawTexture(Texture &texture, uint16_t x, uint16_t y,
+void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
                                   float scaleX, float scaleY, float angle,
-                                  int32_t offsetX, int32_t offsetY)
+                                  int16_t offsetX, int16_t offsetY)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture || scaleX <= 0 || scaleY <= 0)
