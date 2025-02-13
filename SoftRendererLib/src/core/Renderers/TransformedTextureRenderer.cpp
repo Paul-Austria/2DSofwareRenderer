@@ -333,18 +333,18 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
 
     // Set clipping boundaries based on SCALED size
     auto clippingArea = context.GetClippingArea();
-    uint16_t clipStartX = context.IsClippingEnabled() ? std::max(x, clippingArea.startX) : x;
-    uint16_t clipStartY = context.IsClippingEnabled() ? std::max(y, clippingArea.startY) : y;
-    uint16_t clipEndX = context.IsClippingEnabled()
+    int16_t clipStartX = context.IsClippingEnabled() ? std::max(x, clippingArea.startX) : x;
+    int16_t clipStartY = context.IsClippingEnabled() ? std::max(y, clippingArea.startY) : y;
+    int16_t clipEndX = context.IsClippingEnabled()
                             ? std::min(static_cast<int>(x + dstWidth), static_cast<int>(clippingArea.endX))
                             : x + dstWidth;
-    uint16_t clipEndY = context.IsClippingEnabled()
+    int16_t clipEndY = context.IsClippingEnabled()
                             ? std::min(static_cast<int>(y + dstHeight), static_cast<int>(clippingArea.endY))
                             : y + dstHeight;
 
     // Clamp to target texture bounds
-    clipEndX = std::min(clipEndX, targetWidth);
-    clipEndY = std::min(clipEndY, targetHeight);
+    clipEndX = std::min(clipEndX, (int16_t)targetWidth);
+    clipEndY = std::min(clipEndY, (int16_t)targetHeight);
 
     if (clipStartX >= clipEndX || clipStartY >= clipEndY)
         return;
@@ -355,10 +355,12 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
 
     uint8_t dstBuffer[MAXBYTESPERPIXEL];
 
-    for (uint16_t dy = clipStartY; dy < clipEndY; dy++)
+    for (int16_t dy = clipStartY; dy < clipEndY; dy++)
     {
-        for (uint16_t dx = clipStartX; dx < clipEndX; dx++)
+        if(dy < 0) continue;
+        for (int16_t dx = clipStartX; dx < clipEndX; dx++)
         {
+            if(dx < 0) continue;
             // Calculate normalized texture coordinates with inverse scaling
             float tx = (dx - x) * (static_cast<float>(sourceWidth) / dstWidth);
             float ty = (dy - y) * (static_cast<float>(sourceHeight) / dstHeight);

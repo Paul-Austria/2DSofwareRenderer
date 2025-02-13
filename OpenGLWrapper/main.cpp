@@ -320,7 +320,7 @@ void TestingFunction()
     context.basicTextureRenderer.DrawTexture(text2, -50, -30);
     context.transformedTextureRenderer.DrawTexture(text5, 550, 150, x);
   //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
-    context.transformedTextureRenderer.DrawTexture(text5, -1, 190,2,2,x,0,0);
+    context.transformedTextureRenderer.DrawTexture(text5, -1, 190,2,2,0,0,0);
   //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
 
     context.basicTextureRenderer.DrawTexture(text3, 50, 90);
