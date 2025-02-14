@@ -305,16 +305,7 @@ void PixelConverter::RGBA4444ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t
     }
 }
 
-void PixelConverter::Grayscale8ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
-{
-    for (size_t i = 0; i < count; ++i)
-    {
-        dst[i * 4 + 0] = src[i]; // R
-        dst[i * 4 + 1] = src[i]; // G
-        dst[i * 4 + 2] = src[i]; // B
-        dst[i * 4 + 3] = 255;    // A
-    }
-}
+
 
 void PixelConverter::ARGB8888ToARGB1555(const uint8_t *src, uint8_t *dst, size_t count)
 {
@@ -352,16 +343,6 @@ void PixelConverter::ARGB8888ToRGBA4444(const uint8_t *src, uint8_t *dst, size_t
     }
 }
 
-void PixelConverter::Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
-{
-    for (size_t i = 0; i < count; ++i)
-    {
-        dst[i * 4 + 1] = src[i]; // R
-        dst[i * 4 + 2] = src[i]; // G
-        dst[i * 4 + 3] = src[i]; // B
-        dst[i * 4 + 0] = 255;    // A
-    }
-}
 
 void PixelConverter::ARGB8888ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t count)
 {
@@ -453,5 +434,42 @@ void PixelConverter::BGR24ToRGB24(const uint8_t *src, uint8_t *dst, size_t count
         dst[i * 3 + 0] = src[i * 3 + 2]; // R
         dst[i * 3 + 1] = src[i * 3 + 1]; // G
         dst[i * 3 + 2] = src[i * 3 + 0]; // B
+    }
+}
+
+
+void PixelConverter::Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t gray = src[i];  
+
+        dst[i*4]       = gray == 0;
+        dst[i * 4 +1]  = gray;   
+        dst[i * 4 + 2] = gray;
+        dst[i * 4 + 3] = gray;
+    }
+}
+
+void PixelConverter::Grayscale8ToRGB24(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t gray = src[i];  
+
+        dst[i * 3] = gray;   
+        dst[i * 3 + 1] = gray;
+        dst[i * 3 + 2] = gray;
+    }
+}
+void PixelConverter::Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t gray = src[i];  
+
+        dst[i * 3] = gray;     
+        dst[i * 3 + 1] = gray; 
+        dst[i * 3 + 2] = gray; 
     }
 }

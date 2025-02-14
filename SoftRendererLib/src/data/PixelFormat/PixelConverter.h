@@ -74,8 +74,9 @@ namespace Renderer2D
         static void RGBA4444ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
 
         // Grayscale conversions
+        static void Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
+        static void Grayscale8ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
         static void Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
-        static void Grayscale8ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
 
         // Conversion mappings
         static constexpr Conversion defaultConversions[] = {
@@ -122,8 +123,9 @@ namespace Renderer2D
             {PixelFormat::RGBA4444, PixelFormat::RGBA8888, RGBA4444ToRGBA8888},
 
             // Grayscale conversions
-            {PixelFormat::GRAYSCALE8, PixelFormat::ARGB8888, Grayscale8ToARGB8888},
-            {PixelFormat::GRAYSCALE8, PixelFormat::RGBA8888, Grayscale8ToRGBA8888},
+            {PixelFormat::GRAYSCALE8, PixelFormat::BGR24, Grayscale8ToBGR24},
+            {PixelFormat::GRAYSCALE8, PixelFormat::RGB24, Grayscale8ToRGB24},
+            {PixelFormat::GRAYSCALE8, PixelFormat::ARGB8888,Grayscale8ToARGB8888},
         };
     };
 }

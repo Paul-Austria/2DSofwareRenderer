@@ -78,7 +78,6 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const PixelFormatInfo &sourceInfo,
                                 SelectedBlendMode selectedBlendMode)
 {
-
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
 
@@ -91,7 +90,22 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
     {
         const uint8_t *srcPixel = srcRow + i * sourceInfo.bytesPerPixel;
         uint8_t *dstPixel = dstRow + i * targetInfo.bytesPerPixel;
-        uint8_t alpha = (*((uint32_t *)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
+
+        uint8_t alpha = 255; // Default alpha value
+
+        if (sourceInfo.format == PixelFormat::GRAYSCALE8)
+        {
+            uint8_t grayValue = srcPixel[0];
+            if (grayValue == 0)
+            {
+                alpha = 0; 
+            }
+        }
+        else
+        {
+            alpha = (*((uint32_t *)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
+        }
+
         if (alpha == 0)
         {
             continue;

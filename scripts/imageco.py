@@ -52,10 +52,48 @@ def argb8888_conversion(input_path, output_path):
     except Exception as e:
         print(f"An error occurred during ARGB8888 conversion: {e}")
 
+def grayscale8_conversion(input_path, output_path):
+    try:
+        img = Image.open(input_path).convert('L')  # Convert to 8-bit grayscale
+        width, height = img.size
+        grayscale8_data = list(img.getdata())
+
+        with open(output_path, 'wb') as f:
+            f.write(bytes(grayscale8_data))
+
+        print(f"Conversion to 8-bit grayscale complete. File saved to: {output_path}")
+
+    except FileNotFoundError:
+        print(f"Error: File '{input_path}' not found.")
+    except Exception as e:
+        print(f"An error occurred during 8-bit grayscale conversion: {e}")
+
+def grayscale4_conversion(input_path, output_path):
+    try:
+        img = Image.open(input_path).convert('L')  # Convert to 8-bit grayscale
+        width, height = img.size
+        grayscale_data = list(img.getdata())
+        grayscale4_data = []
+
+        for i in range(0, len(grayscale_data), 2):
+            g1 = grayscale_data[i] >> 4  # Keep upper 4 bits
+            g2 = grayscale_data[i+1] >> 4 if i+1 < len(grayscale_data) else 0  # Handle odd pixel count
+            grayscale4_data.append((g1 << 4) | g2)
+
+        with open(output_path, 'wb') as f:
+            f.write(bytes(grayscale4_data))
+
+        print(f"Conversion to 4-bit grayscale complete. File saved to: {output_path}")
+
+    except FileNotFoundError:
+        print(f"Error: File '{input_path}' not found.")
+    except Exception as e:
+        print(f"An error occurred during 4-bit grayscale conversion: {e}")
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: convert_image.py <input_image> <output_file> <format>")
-        print("Format options: rgb565, argb8888")
+        print("Format options: rgb565, argb8888, grayscale8, grayscale4")
         sys.exit(1)
 
     input_path = sys.argv[1]
@@ -66,8 +104,12 @@ def main():
         rgb565_conversion(input_path, output_path)
     elif format_option == 'argb8888':
         argb8888_conversion(input_path, output_path)
+    elif format_option == 'grayscale8':
+        grayscale8_conversion(input_path, output_path)
+    elif format_option == 'grayscale4':
+        grayscale4_conversion(input_path, output_path)
     else:
-        print("Error: Invalid format. Supported formats are 'rgb565' and 'argb8888'.")
+        print("Error: Invalid format. Supported formats are 'rgb565', 'argb8888', 'grayscale8', and 'grayscale4'.")
         sys.exit(1)
 
 if __name__ == "__main__":
