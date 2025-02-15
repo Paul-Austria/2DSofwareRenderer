@@ -107,7 +107,7 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
             PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
-            BlendFunctions::BlendRow(rowDest, rowPixelData, rowLength, info, infosrcColor);
+            BlendFunctions::BlendRow(rowDest, rowPixelData, rowLength, info, infosrcColor,context.GetColoring());
         }
         break;
     }

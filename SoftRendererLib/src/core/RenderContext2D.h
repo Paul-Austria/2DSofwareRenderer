@@ -56,14 +56,16 @@ namespace Renderer2D
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
     	ClippingArea GetClippingArea();
 
-
-
+        void SetColoringSettings(Coloring coloring);
+        Coloring& GetColoring(); 
 
     private:
         Texture *targetTexture = nullptr;
         BlendMode mode = BlendMode::NOBLEND;
         SelectedBlendMode blendmode = SelectedBlendMode::SIMPLE;
         SamplingMethod samplingMethod = SamplingMethod::NEAREST;
+
+        Coloring colorOverlay;
 
         // clipping area
         uint16_t startX, startY, endX, endY;

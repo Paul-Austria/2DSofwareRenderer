@@ -13,7 +13,7 @@ namespace Renderer2D
     public:
         // Constructors for different formats
         Color(uint8_t r, uint8_t g, uint8_t b);            // RGB24 or BGR24
-        Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a); // ARGB8888
+        Color(uint8_t a,uint8_t r, uint8_t g, uint8_t b); // ARGB8888
         Color(const uint8_t *pixel, PixelFormat format);
         Color(uint8_t grayscale); // GRAYSCALE8
         Color() = default;

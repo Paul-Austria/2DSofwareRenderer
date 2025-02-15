@@ -14,6 +14,7 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               size_t rowLength,
                               const PixelFormatInfo &targetInfo,
                               const PixelFormatInfo &sourceInfo,
+                              Coloring coloring,
                               SelectedBlendMode selectedBlendMode)
 {
 
@@ -21,7 +22,7 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
 
     if (blendFunc != nullptr)
     {
-        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, selectedBlendMode);
+        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, selectedBlendMode);
         return;
     }
 
@@ -57,9 +58,11 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
             convertToARGB8888(dstPixel, dstARGB8888, 1);
         }
         uint8_t invAlpha = 255 - srcAlpha;
-
+        uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
+        uint8_t inverseColorFactor = 255-colorFactor;
         for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
         {
+            srcARGB8888[c] = (srcARGB8888[c] * srcAlpha + coloring.color.data[c] * invAlpha) >> 8;
             dstARGB8888[c] = (srcARGB8888[c] * srcAlpha + dstARGB8888[c] * invAlpha) >> 8;
         }
 
@@ -76,6 +79,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 size_t rowLength,
                                 const PixelFormatInfo &targetInfo,
                                 const PixelFormatInfo &sourceInfo,
+                                Coloring coloring,
                                 SelectedBlendMode selectedBlendMode)
 {
     // Conversion function for the source format
@@ -98,7 +102,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
             uint8_t grayValue = srcPixel[0];
             if (grayValue == 0)
             {
-                alpha = 0; 
+                alpha = 0;
             }
         }
         else
@@ -112,9 +116,11 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
         }
 
         uint8_t invAlpha = 255 - alpha;
-
+        uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
+        uint8_t inverseColorFactor = 255-colorFactor;
         for (int c = 0; c < 3; ++c)
         {
+            srcRGB24[i * 3 + c] = (srcRGB24[i * 3 + c] * inverseColorFactor + coloring.color.data[c + 1] * colorFactor) >> 8;
             dstPixel[c] = (srcRGB24[i * 3 + c] * alpha + dstPixel[c] * invAlpha) >> 8;
         }
     }

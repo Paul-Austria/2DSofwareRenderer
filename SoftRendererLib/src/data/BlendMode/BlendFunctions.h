@@ -9,7 +9,6 @@
 #include <iostream>
 #include "BlendMode.h"
 
-
 namespace Renderer2D
 {
     class BlendFunctions
@@ -20,6 +19,7 @@ namespace Renderer2D
                                    size_t rowLength,
                                    const PixelFormatInfo &targetInfo,
                                    const PixelFormatInfo &sourceInfo,
+                                   Coloring coloring,
                                    SelectedBlendMode selectedBlendMode);
 
         static void BlendRGB24(uint8_t *dstRow,
@@ -27,6 +27,7 @@ namespace Renderer2D
                                size_t rowLength,
                                const PixelFormatInfo &targetInfo,
                                const PixelFormatInfo &sourceInfo,
+                               Coloring coloring,
                                SelectedBlendMode selectedBlendMode);
 
         static BlendFunc GetBlendFunc(PixelFormat format)
@@ -42,7 +43,15 @@ namespace Renderer2D
         }
 
     public:
-        static void BlendRow(uint8_t *dstRow, const uint8_t *srcRow, size_t rowLength, const PixelFormatInfo &targetInfo, const PixelFormatInfo &sourceInfo, SelectedBlendMode selectedBlendMode = SelectedBlendMode::SIMPLE);
+        static void BlendRow(uint8_t *dstRow,
+                             const uint8_t *srcRow,
+                             size_t rowLength,
+                             const PixelFormatInfo &targetInfo,
+                             const PixelFormatInfo &sourceInfo,
+                             Coloring coloring,
+                             SelectedBlendMode selectedBlendMode = SelectedBlendMode::SIMPLE
+
+        );
     };
 
 } // namespace Renderer2D

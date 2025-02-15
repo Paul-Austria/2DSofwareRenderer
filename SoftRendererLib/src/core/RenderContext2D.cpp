@@ -95,3 +95,13 @@ ClippingArea Renderer2D::RenderContext2D::GetClippingArea()
 {
     return clippingArea;
 }
+
+void Renderer2D::RenderContext2D::SetColoringSettings(Coloring coloring)
+{
+    this->colorOverlay = coloring;
+}
+
+Coloring &Renderer2D::RenderContext2D::GetColoring()
+{
+    return colorOverlay;
+}

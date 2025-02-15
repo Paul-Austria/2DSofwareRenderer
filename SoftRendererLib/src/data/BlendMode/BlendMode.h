@@ -21,6 +21,11 @@ namespace Renderer2D
 
     };
 
+    struct Coloring{
+        bool colorEnabled = false;
+        Color color;
+    };
+
 }
 
 #endif

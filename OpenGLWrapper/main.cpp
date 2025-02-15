@@ -335,13 +335,15 @@ void TestingFunction()
     context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
 
-    context.primitivesRenderer.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+    context.primitivesRenderer.DrawRect(Color(150,200, 0, 0), 120, 0, 300, 90);
 
-    context.primitivesRenderer.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+    context.primitivesRenderer.DrawRect(Color(150,200, 100, 0), 0, 0, 100, 300);
 
     //context.SetBlendMode(BlendMode::NOBLEND);
+    Coloring st = {true, Color(155,0,255,0)};
+    context.SetColoringSettings(st);
     context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
-
+    context.GetColoring().colorEnabled = false;
     context.SetBlendMode(BlendMode::BLEND);
 }
 
