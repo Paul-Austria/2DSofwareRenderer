@@ -11,7 +11,7 @@ using namespace Renderer2D;
 
 
 
-RenderContext2D::RenderContext2D() : primitivesRenderer(*this), basicTextureRenderer(*this), transformedTextureRenderer(*this)
+RenderContext2D::RenderContext2D() : primitivesRenderer(*this), basicTextureRenderer(*this), transformedTextureRenderer(*this),scaleTextureRenderer(*this)
 {
 }
 void RenderContext2D::SetTargetTexture(Texture *targettexture)
@@ -44,6 +44,8 @@ SamplingMethod Renderer2D::RenderContext2D::GetSamplingMethod()
     return samplingMethod;
 }
 
+#include "iostream"
+
 void RenderContext2D::ClearTarget(Color color)
 {
     if (targetTexture == nullptr)
@@ -54,26 +56,28 @@ void RenderContext2D::ClearTarget(Color color)
     PixelFormat format = targetTexture->GetFormat();
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
-    // Get pointer to the texture data
     uint8_t *textureData = targetTexture->GetData();
     uint16_t width = targetTexture->GetWidth();
     uint16_t height = targetTexture->GetHeight();
+    uint32_t pitch = targetTexture->GetPitch();
 
-    // Use a stack-allocated array for pixel data
     uint8_t pixelData[4];
     color.ConvertTo(format, pixelData);
 
-    // Calculate the total number of pixels
-    size_t totalPixels = width * height;
-
-    // Clear the texture by filling it with the converted color
-    for (size_t i = 0; i < totalPixels; ++i)
+    // Fill the first row with the pixel data
+    uint8_t *row = textureData;
+    for (uint32_t x = 0; x < width; ++x)
     {
-        // Calculate the position in the texture data array
-        size_t pixelIndex = i * info.bytesPerPixel;
-        MemHandler::MemCopy(&textureData[pixelIndex], pixelData, info.bytesPerPixel);
+        MemHandler::MemCopy(row + x * info.bytesPerPixel, pixelData, info.bytesPerPixel);
+    }
+
+    // Copy the first row to the rest of the rows
+    for (uint32_t y = 1; y < height; ++y)
+    {
+        MemHandler::MemCopy(textureData + y * pitch, textureData, width * info.bytesPerPixel);
     }
 }
+
 
 void RenderContext2D::EnableClipping(bool clipping)
 {

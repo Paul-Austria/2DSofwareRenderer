@@ -320,8 +320,11 @@ void TestingFunction()
 
     context.SetClipping(80, 30, 370, 290);
     context.EnableClipping(false);
+    context.primitivesRenderer.DrawLine(Color(255, 0, 0),0,0,255,33);
+    context.primitivesRenderer.DrawLine(Color(0, 0, 255),0,33,10,33);
+    context.SetClipping(80, 30, 370, 290);
+    context.EnableClipping(false);
     context.SetSamplingMethod(SamplingMethod::NEAREST);
-    context.ClearTarget(Color(200, 200, 200));
     context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
     // context.DrawTexture(text, 40, 40);
     context.basicTextureRenderer.DrawTexture(text2, -50, -30);
@@ -345,6 +348,7 @@ void TestingFunction()
     context.SetColoringSettings(st);
     context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
     context.GetColoring().colorEnabled = false;
+    context.SetBlendMode(BlendMode::SIMPLE);
     context.SetBlendMode(BlendMode::SIMPLE);
 }
 

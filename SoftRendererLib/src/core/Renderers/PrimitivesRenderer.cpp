@@ -218,7 +218,7 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
                 uint8_t *targetPixel = textureData + (destY * pitch) + (destX * info.bytesPerPixel);
                 if (subBlend != BlendMode::NOBLEND)
                 {
-                    BlendFunctions::BlendRow(targetPixel,buffer,1,info,PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888),context.GetColoring(),context.GetBlendMode()); 
+                    BlendFunctions::BlendRow(targetPixel, buffer, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), context.GetBlendMode());
                 }
                 else
                 {
@@ -226,6 +226,155 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
                     MemHandler::MemCopy(targetPixel, buffer, info.bytesPerPixel);
                 }
             }
+        }
+    }
+}
+
+void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x1, int16_t y1)
+{
+    auto targetTexture = context.GetTargetTexture();
+    if (!targetTexture)
+        return;
+
+    if (x0 == x1)
+    {
+        DrawRect(color, x0, y0, 1, y1 - y0);
+        return;
+    }
+    if (y0 == y1)
+    {
+        DrawRect(color, x0, y0, x1 - x0, 1);
+        return;
+    }
+    auto clippingArea = context.GetClippingArea();
+
+    // Clip the line to the clipping area
+    if (context.IsClippingEnabled())
+    {
+        // Cohen-Sutherland clipping algorithm
+        auto clipCode = [](int16_t x, int16_t y, const ClippingArea &clip)
+        {
+            int code = 0;
+            if (x < clip.startX)
+                code |= 1;
+            if (x > clip.endX)
+                code |= 2;
+            if (y < clip.startY)
+                code |= 4;
+            if (y > clip.endY)
+                code |= 8;
+            return code;
+        };
+
+        int code0 = clipCode(x0, y0, clippingArea);
+        int code1 = clipCode(x1, y1, clippingArea);
+        bool accept = false;
+
+        while (true)
+        {
+            if (!(code0 | code1))
+            {
+                accept = true;
+                break;
+            }
+            else if (code0 & code1)
+            {
+                return;
+            }
+            else
+            {
+                int codeOut = code0 ? code0 : code1;
+                int16_t x, y;
+
+                if (codeOut & 8)
+                {
+                    x = x0 + (x1 - x0) * (clippingArea.endY - y0) / (y1 - y0);
+                    y = clippingArea.endY;
+                }
+                else if (codeOut & 4)
+                {
+                    x = x0 + (x1 - x0) * (clippingArea.startY - y0) / (y1 - y0);
+                    y = clippingArea.startY;
+                }
+                else if (codeOut & 2)
+                {
+                    y = y0 + (y1 - y0) * (clippingArea.endX - x0) / (x1 - x0);
+                    x = clippingArea.endX;
+                }
+                else
+                {
+                    y = y0 + (y1 - y0) * (clippingArea.startX - x0) / (x1 - x0);
+                    x = clippingArea.startX;
+                }
+
+                if (codeOut == code0)
+                {
+                    x0 = x;
+                    y0 = y;
+                    code0 = clipCode(x0, y0, clippingArea);
+                }
+                else
+                {
+                    x1 = x;
+                    y1 = y;
+                    code1 = clipCode(x1, y1, clippingArea);
+                }
+            }
+        }
+
+        if (!accept)
+        {
+            return;
+        }
+    }
+
+    PixelFormat format = targetTexture->GetFormat();
+    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+
+    uint8_t *textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+    uint32_t pitch = targetTexture->GetPitch(); 
+
+    int16_t dx = std::abs(x1 - x0);
+    int16_t dy = std::abs(y1 - y0);
+    int16_t sx = (x0 < x1) ? 1 : -1;
+    int16_t sy = (y0 < y1) ? 1 : -1;
+    int16_t err = dx - dy;
+
+    BlendMode subBlend = context.GetBlendMode();
+    uint8_t pixelData[MAXBYTESPERPIXEL];
+    color.ConvertTo(format, pixelData);
+
+    while (true)
+    {
+        if (x0 >= 0 && x0 < textureWidth && y0 >= 0 && y0 < textureHeight)
+        {
+            uint8_t *targetPixel = textureData + (y0 * pitch) + (x0 * info.bytesPerPixel);
+            switch (subBlend)
+            {
+            case BlendMode::NOBLEND:
+                MemHandler::MemCopy(targetPixel, pixelData, info.bytesPerPixel);
+                break;
+            default:
+                BlendFunctions::BlendRow(targetPixel, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), context.GetBlendMode());
+                break;
+            }
+        }
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        int16_t e2 = 2 * err;
+        if (e2 > -dy)
+        {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx)
+        {
+            err += dx;
+            y0 += sy;
         }
     }
 }

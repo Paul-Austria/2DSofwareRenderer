@@ -85,7 +85,7 @@ double getCurrentTime()
     static auto startTime = Clock::now();    // Store the starting time point
     auto currentTime = Clock::now();         // Get the current time point
     auto duration = std::chrono::duration<double>(currentTime - startTime);
-    return duration.count();                 // Return time in seconds
+    return duration.count(); // Return time in seconds
 }
 
 int main()
@@ -152,6 +152,8 @@ int main()
     uint8_t *data3 = nullptr;
     Texture text4;
     uint8_t *data4 = nullptr;
+    Texture text5;
+    uint8_t *data5 = nullptr;
     int imgwidth4 = 234;
     int imgheight4 = 243;
 
@@ -161,7 +163,8 @@ int main()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
-
+    data5 = stbi_load("data/images_small.png", &imgwidth, &imgheight, &nrChannels, 3);
+    text5 = Texture(imgwidth, imgheight, data5, PixelFormat::RGB24, 0);
     // Load the binary file
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
     if (file)
@@ -186,9 +189,10 @@ int main()
         std::cerr << "Failed to open testrgb565.bin" << std::endl;
     }
 
-    context.SetBlendMode(BlendMode::NOBLEND);
+    context.SetBlendMode(BlendMode::SIMPLE);
     double previousTime = 0.0;
     int frameCount = 0;
+    float x = 0.0f;
     while (running)
     {
         // Render to the back buffer
@@ -201,25 +205,33 @@ int main()
         context.SetClipping(80, 30, 170, 290);
         context.EnableClipping(false);
         context.ClearTarget(Color(150, 150, 150));
-        context.basicTextureRenderer.DrawTexture(text4, 400, 130);
-        context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-        context.basicTextureRenderer.DrawTexture(text, 40, 40);
-        context.SetBlendMode(BlendMode::SIMPLE);
-        context.basicTextureRenderer.DrawTexture(text2, 150, 150);
-        context.basicTextureRenderer.DrawTexture(text3, 50, 90);
-        context.SetBlendMode(BlendMode::NOBLEND);
+        Coloring st = {false, Color(155, 0, 255, 0)};
+        context.SetColoringSettings(st);
 
-        context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-        context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-        context.primitivesRenderer.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+        for (size_t i = 0; i < 1; i++)
+        {
 
-        context.primitivesRenderer.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+            for (size_t y = 0; y < 5; y++)
+            {
+
+                for (int16_t x = 0; x < 10; x++)
+                {
+                    context.scaleTextureRenderer.DrawTexture(text5, x * 50, y * 50, 1, 1);
+                }
+            }
+            /* code */
+        }
+
+        context.GetColoring().colorEnabled = false;
+      //  context.basicTextureRenderer.DrawTexture(text4, 400, 130);
+        context.transformedTextureRenderer.DrawTexture(text2, 10, 10, 0);
         // Perform a page flip to show the back buffer
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 
         // Wait for the page flip event to complete
         handle_drm_events(drm_fd);
 
+        x += 0.5f;
         // Switch buffers
         current = next;
 

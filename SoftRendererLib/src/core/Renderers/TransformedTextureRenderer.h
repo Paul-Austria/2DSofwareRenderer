@@ -18,11 +18,8 @@ namespace Renderer2D
         void DrawTexture(Texture &texture, int16_t x, int16_t y, float angle, int16_t offsetX = 0, int16_t offsetY = 0);
         
         void DrawTexture(Texture &texture, int16_t x, int16_t y,
-                         float scaleX, float scaleY);
-
-        void DrawTexture(Texture &texture, int16_t x, int16_t y,
                          float scaleX, float scaleY, float angle,
-                         int16_t offsetX, int16_t offsetY);
+                         int16_t offsetX = 0, int16_t offsetY = 0);
 
 
     private:

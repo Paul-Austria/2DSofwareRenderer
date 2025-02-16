@@ -10,6 +10,8 @@
 #include "Renderers/PrimitivesRenderer.h"
 #include "Renderers/BasicTextureRenderer.h"
 #include "Renderers/TransformedTextureRenderer.h"
+#include "Renderers/ScaleTextureRenderer.h"
+
 
 #define MAXBYTESPERPIXEL 16
 #define MAXROWLENGTH 2048
@@ -37,8 +39,11 @@ namespace Renderer2D
         PrimitivesRenderer primitivesRenderer;
         BasicTextureRenderer basicTextureRenderer;
         TransformedTextureRenderer transformedTextureRenderer;
+        ScaleTextureRenderer scaleTextureRenderer;
 
-        void SetTargetTexture(Texture *targettexture);
+
+
+        void SetTargetTexture(Texture *targetTexture);
         Texture* GetTargetTexture();
 
 

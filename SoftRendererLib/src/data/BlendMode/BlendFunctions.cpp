@@ -39,7 +39,7 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, selectedBlendMode);
         return;
     }
-
+    
     // Get conversion functions once
     PixelConverter::ConvertFunc convertToARGB8888 = nullptr;
     PixelConverter::ConvertFunc convertFromARGB8888 = nullptr;
