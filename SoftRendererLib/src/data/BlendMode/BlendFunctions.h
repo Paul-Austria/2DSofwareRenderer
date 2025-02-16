@@ -20,7 +20,7 @@ namespace Renderer2D
                                    const PixelFormatInfo &targetInfo,
                                    const PixelFormatInfo &sourceInfo,
                                    Coloring coloring,
-                                   SelectedBlendMode selectedBlendMode);
+                                   BlendMode selectedBlendMode);
 
         static void BlendRGB24(uint8_t *dstRow,
                                const uint8_t *srcRow,
@@ -28,13 +28,18 @@ namespace Renderer2D
                                const PixelFormatInfo &targetInfo,
                                const PixelFormatInfo &sourceInfo,
                                Coloring coloring,
-                               SelectedBlendMode selectedBlendMode);
+                               BlendMode selectedBlendMode);
+
+
+        //BLend pixel for clean byte sperated colors
+        static inline void BlendPixel(uint8_t *dstPixel, const uint8_t *srcPixel, uint8_t alpha, uint8_t invAlpha, BlendMode blendMode);
 
         static BlendFunc GetBlendFunc(PixelFormat format)
         {
             switch (format)
             {
             case PixelFormat::RGB24:
+                return BlendRGB24;
             case PixelFormat::BGR24:
                 return BlendRGB24;
             default:
@@ -49,7 +54,7 @@ namespace Renderer2D
                              const PixelFormatInfo &targetInfo,
                              const PixelFormatInfo &sourceInfo,
                              Coloring coloring,
-                             SelectedBlendMode selectedBlendMode = SelectedBlendMode::SIMPLE
+                             BlendMode selectedBlendMode = BlendMode::SIMPLE
 
         );
     };

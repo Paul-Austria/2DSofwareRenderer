@@ -61,8 +61,7 @@ namespace Renderer2D
 
     private:
         Texture *targetTexture = nullptr;
-        BlendMode mode = BlendMode::NOBLEND;
-        SelectedBlendMode blendmode = SelectedBlendMode::SIMPLE;
+        BlendMode mode = BlendMode::SIMPLE;
         SamplingMethod samplingMethod = SamplingMethod::NEAREST;
 
         Coloring colorOverlay;

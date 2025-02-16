@@ -14,6 +14,7 @@ namespace Renderer2D
         ~PrimitivesRenderer() = default;
 
         void DrawRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height);
+        void DrawRotatedRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height, float angle, int16_t offsetX = 0, int16_t offsetY = 0);
 
     private:
     };

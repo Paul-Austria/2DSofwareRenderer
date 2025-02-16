@@ -11,17 +11,23 @@ namespace Renderer2D
     enum class BlendMode
     {
         NOBLEND,
-        BLEND,
-    };
-
-    enum class SelectedBlendMode
-    {
+        COLORINGONLY,
         SIMPLE,
         MULTIPLY
 
     };
 
-    struct Coloring{
+    enum class SelectedBlendMode
+    {
+        NOBLEND,
+        COLORINGONLY,
+        SIMPLE,
+        MULTIPLY
+
+    };
+
+    struct Coloring
+    {
         bool colorEnabled = false;
         Color color;
     };

@@ -8,10 +8,9 @@
 
 using namespace Renderer2D;
 
-
-BasicTextureRenderer::BasicTextureRenderer(RenderContext2D& context) : RendererBase(context){
+BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererBase(context)
+{
 }
-
 
 void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
 {
@@ -63,8 +62,6 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
     // Determine blending mode
     BlendMode subBlend = (context.GetBlendMode() == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? context.GetBlendMode() : BlendMode::NOBLEND;
 
-    if(context.GetColoring().colorEnabled) subBlend = BlendMode::BLEND;
-
     switch (subBlend)
     {
     case BlendMode::NOBLEND:
@@ -85,8 +82,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         }
         break;
     }
-
-    case BlendMode::BLEND:
+    default:
     {
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
@@ -94,12 +90,10 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
             // Blend the entire row
-            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo,sourceInfo,context.GetColoring());
+            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(), context.GetBlendMode());
         }
         break;
     }
-
-    default:
-        break;
+    break;
     }
 }

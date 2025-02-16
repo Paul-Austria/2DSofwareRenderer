@@ -7,7 +7,21 @@
 #include <cmath>
 
 using namespace Renderer2D;
-#include <iostream>
+
+void BlendFunctions::BlendPixel(uint8_t *dstPixel, const uint8_t *srcPixel, uint8_t alpha, uint8_t invAlpha, BlendMode blendMode)
+{
+    switch (blendMode)
+    {
+    case BlendMode::SIMPLE:
+        dstPixel[0] = (srcPixel[0] * alpha + dstPixel[0] * invAlpha) >> 8;
+        break;
+    case BlendMode::MULTIPLY:
+        dstPixel[0] = ((srcPixel[0] * dstPixel[0]) * alpha + dstPixel[0] * invAlpha) >> 8;
+        break;
+    default:
+        break;
+    }
+}
 
 void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const uint8_t *srcRow,
@@ -15,7 +29,7 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const PixelFormatInfo &targetInfo,
                               const PixelFormatInfo &sourceInfo,
                               Coloring coloring,
-                              SelectedBlendMode selectedBlendMode)
+                              BlendMode selectedBlendMode)
 {
 
     auto blendFunc = GetBlendFunc(targetInfo.format);
@@ -59,11 +73,14 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         }
         uint8_t invAlpha = 255 - srcAlpha;
         uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
-        uint8_t inverseColorFactor = 255-colorFactor;
+        uint8_t inverseColorFactor = 255 - colorFactor;
         for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
         {
             srcARGB8888[c] = (srcARGB8888[c] * srcAlpha + coloring.color.data[c] * invAlpha) >> 8;
-            dstARGB8888[c] = (srcARGB8888[c] * srcAlpha + dstARGB8888[c] * invAlpha) >> 8;
+            if (selectedBlendMode != BlendMode::COLORINGONLY)
+            {
+                dstARGB8888[c] = (srcARGB8888[c] * srcAlpha + dstARGB8888[c] * invAlpha) >> 8;
+            }
         }
 
         // Use the maximum alpha
@@ -80,7 +97,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const PixelFormatInfo &targetInfo,
                                 const PixelFormatInfo &sourceInfo,
                                 Coloring coloring,
-                                SelectedBlendMode selectedBlendMode)
+                                BlendMode selectedBlendMode)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -110,18 +127,31 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
             alpha = (*((uint32_t *)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
         }
 
+        uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
+        uint8_t inverseColorFactor = 255 - colorFactor;
+
         if (alpha == 0)
         {
             continue;
         }
-
+        else if (alpha == 255) // handling for 255 alpha
+        {
+            for (int c = 0; c < 3; ++c)
+            {
+                dstPixel[c] = (srcRGB24[i * 3 + c] * inverseColorFactor + coloring.color.data[c + 1] * colorFactor) >> 8;
+            }
+            continue;
+        }
+        
         uint8_t invAlpha = 255 - alpha;
-        uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
-        uint8_t inverseColorFactor = 255-colorFactor;
         for (int c = 0; c < 3; ++c)
         {
             srcRGB24[i * 3 + c] = (srcRGB24[i * 3 + c] * inverseColorFactor + coloring.color.data[c + 1] * colorFactor) >> 8;
-            dstPixel[c] = (srcRGB24[i * 3 + c] * alpha + dstPixel[c] * invAlpha) >> 8;
+            if (selectedBlendMode != BlendMode::COLORINGONLY)
+            {
+                // TODO BE ABLE TO SELECt between different blending modes and make it effiecent
+                dstPixel[c] = (srcRGB24[i * 3 + c] * alpha + dstPixel[c] * invAlpha) >> 8;
+            }
         }
     }
 }

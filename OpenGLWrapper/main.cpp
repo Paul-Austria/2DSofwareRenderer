@@ -307,7 +307,7 @@ void SetupFunc()
     loadTexture("data/logo8.bin", PixelFormat::GRAYSCALE8, logo8Texture, 136, 500);
     loadTexture("data/logo4.bin", PixelFormat::GRAYSCALE4, logo4Texture, 136, 500);
 
-    context.SetBlendMode(BlendMode::BLEND);
+    context.SetBlendMode(BlendMode::SIMPLE);
 }
 static float x = 0;
 
@@ -338,13 +338,14 @@ void TestingFunction()
     context.primitivesRenderer.DrawRect(Color(150,200, 0, 0), 120, 0, 300, 90);
 
     context.primitivesRenderer.DrawRect(Color(150,200, 100, 0), 0, 0, 100, 300);
+   // context.primitivesRenderer.DrawRotatedRect(Color(255,200, 100, 255), 250, 250, 100, 300,x);
 
     //context.SetBlendMode(BlendMode::NOBLEND);
     Coloring st = {true, Color(155,0,255,0)};
     context.SetColoringSettings(st);
     context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
     context.GetColoring().colorEnabled = false;
-    context.SetBlendMode(BlendMode::BLEND);
+    context.SetBlendMode(BlendMode::SIMPLE);
 }
 
 #include <iomanip>
