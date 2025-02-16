@@ -201,19 +201,19 @@ int main()
         context.SetClipping(80, 30, 170, 290);
         context.EnableClipping(false);
         context.ClearTarget(Color(150, 150, 150));
-        context.DrawTexture(text4, 400, 130);
-        context.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-        context.DrawTexture(text, 40, 40);
-        context.SetBlendMode(BlendMode::BLEND);
-        context.DrawTexture(text2, 150, 150);
-        context.DrawTexture(text3, 50, 90);
+        context.basicTextureRenderer.DrawTexture(text4, 400, 130);
+        context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
+        context.basicTextureRenderer.DrawTexture(text, 40, 40);
+        context.SetBlendMode(BlendMode::SIMPLE);
+        context.basicTextureRenderer.DrawTexture(text2, 150, 150);
+        context.basicTextureRenderer.DrawTexture(text3, 50, 90);
         context.SetBlendMode(BlendMode::NOBLEND);
 
-        context.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-        context.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
-        context.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
+        context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
+        context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
+        context.primitivesRenderer.DrawRect(Color(200, 0, 0, 150), 120, 0, 300, 90);
 
-        context.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
+        context.primitivesRenderer.DrawRect(Color(200, 100, 0, 150), 0, 0, 100, 300);
         // Perform a page flip to show the back buffer
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 

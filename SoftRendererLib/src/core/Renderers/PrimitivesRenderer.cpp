@@ -4,6 +4,8 @@
 #include "../data/BlendMode/BlendFunctions.h"
 
 #include "../RenderContext2D.h"
+#include <float.h>
+#include <math.h>
 
 using namespace Renderer2D;
 

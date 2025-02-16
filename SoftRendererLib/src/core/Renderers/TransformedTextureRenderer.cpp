@@ -5,6 +5,8 @@
 #include "../../data/BlendMode/BlendFunctions.h"
 #include "../../data/PixelFormat/PixelConverter.h"
 #include "../RenderContext2D.h"
+#include <float.h>
+#include <math.h>
 
 using namespace Renderer2D;
 
