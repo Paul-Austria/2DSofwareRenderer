@@ -317,18 +317,17 @@ void TestRotationWithOffset(RenderContext2D &context, Texture &texture, int xOff
 void TestingFunction()
 {
     x += 0.5f;
-
+    context.ClearTarget(Color(150,150,150));
     context.SetClipping(80, 30, 370, 290);
     context.EnableClipping(false);
-    context.primitivesRenderer.DrawLine(Color(255, 0, 0),0,0,255,33);
-    context.primitivesRenderer.DrawLine(Color(0, 0, 255),0,33,10,33);
+    context.primitivesRenderer.DrawLine(Color(255, 0, 0), 0, 0, 255, 33);
+    context.primitivesRenderer.DrawLine(Color(0, 0, 255), 0, 33, 10, 33);
     context.SetClipping(80, 30, 370, 290);
     context.EnableClipping(false);
     context.SetSamplingMethod(SamplingMethod::NEAREST);
     context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
     // context.DrawTexture(text, 40, 40);
     context.basicTextureRenderer.DrawTexture(text2, -50, -30);
-    context.transformedTextureRenderer.DrawTexture(text5, 550, 150, x);
     //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
     context.transformedTextureRenderer.DrawTexture(text5, -1, 190, 2, 2, 0, 0, 0);
     //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
@@ -338,15 +337,17 @@ void TestingFunction()
     context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);
 
-    context.primitivesRenderer.DrawRect(Color(150,200, 0, 0), 120, 0, 300, 90);
+    context.primitivesRenderer.DrawRect(Color(150, 200, 0, 0), 120, 0, 300, 90);
 
-    context.primitivesRenderer.DrawRect(Color(150,200, 100, 0), 0, 0, 100, 300);
-   // context.primitivesRenderer.DrawRotatedRect(Color(255,200, 100, 255), 250, 250, 100, 300,x);
+    context.primitivesRenderer.DrawRect(Color(150, 200, 100, 0), 0, 0, 100, 300);
+    // context.primitivesRenderer.DrawRotatedRect(Color(255,200, 100, 255), 250, 250, 100, 300,x);
 
-    //context.SetBlendMode(BlendMode::NOBLEND);
-    Coloring st = {true, Color(155,0,255,0)};
+    // context.SetBlendMode(BlendMode::NOBLEND);
+    Coloring st = {true, Color(155, 0, 255, 0)};
     context.SetColoringSettings(st);
     context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
+    context.transformedTextureRenderer.DrawTexture(text5, 550, 150,0.5,0.5, x);
+
     context.GetColoring().colorEnabled = false;
     context.SetBlendMode(BlendMode::SIMPLE);
     context.SetBlendMode(BlendMode::SIMPLE);
@@ -383,7 +384,7 @@ void TestRotationWithOffset(RenderContext2D &context, Texture &texture, int xOff
             rotation = rotation % 360;
 
             // Draw the texture with rotation
-            context.transformedTextureRenderer.DrawTexture(texture, x, y, rotation, xOffset, yOffset);
+            //           context.transformedTextureRenderer.DrawTexture(texture, x, y, rotation, xOffset, yOffset);
 
             // Draw a red square at the same location as the center of the texture
             int squareX = x;

@@ -10,8 +10,8 @@
 
 using namespace Renderer2D;
 
-
-TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D& context) : RendererBase(context){
+TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D &context) : RendererBase(context)
+{
 }
 
 void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y, float angle, int16_t offsetX, int16_t offsetY)
@@ -19,14 +19,6 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture)
         return;
-
-    // Get source texture information
-    PixelFormat sourceFormat = texture.GetFormat();
-    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
-    uint8_t *sourceData = texture.GetData();
-    uint16_t sourceWidth = texture.GetWidth();
-    uint16_t sourceHeight = texture.GetHeight();
-    size_t sourcePitch = texture.GetPitch();
 
     // Validate angle
     int normalizedAngle = static_cast<int>(angle) % 360;
@@ -40,8 +32,16 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
         return;
     }
 
+    // Get source texture information
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch();
+
     // Determine blending mode
-    BlendMode subBlend = (context.GetBlendMode() == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? context.GetBlendMode() : BlendMode::NOBLEND;
+    BlendMode subBlend = context.BlendModeToUse(sourceInfo);
 
     PixelFormat targetFormat = targetTexture->GetFormat();
     PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
@@ -107,7 +107,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo,context.GetColoring(),context.GetBlendMode());
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(), subBlend);
                         break;
                     }
                 }
@@ -152,7 +152,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo,context.GetColoring());
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring());
                         break;
                     }
                 }
@@ -196,7 +196,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo,context.GetColoring());
+                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),subBlend);
                         break;
                     }
                 }
@@ -294,7 +294,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                     {
                         sourcePixel = sourceRow + (srcX * sourceInfo.bytesPerPixel);
                         targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
-                        BlendFunctions::BlendRow(targetPixel, sourcePixel, 1, targetInfo, sourceInfo,context.GetColoring());
+                        BlendFunctions::BlendRow(targetPixel, sourcePixel, 1, targetInfo, sourceInfo, context.GetColoring(),subBlend);
                     }
                     break;
                     }
@@ -305,10 +305,9 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     // Rotation-specific loops
 }
 
-
 void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
-                                  float scaleX, float scaleY, float angle,
-                                  int16_t offsetX, int16_t offsetY)
+                                             float scaleX, float scaleY, float angle,
+                                             int16_t offsetX, int16_t offsetY)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture || scaleX <= 0 || scaleY <= 0)
@@ -347,7 +346,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     size_t targetPitch = targetTexture->GetPitch();
 
     // Determine blending mode
-    BlendMode subBlend = (context.GetBlendMode() == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? context.GetBlendMode() : BlendMode::NOBLEND;
+    BlendMode subBlend = context.BlendModeToUse(targetInfo);
 
     // Calculate rotation center with scaling
     float centerX = scaledWidth / 2.0f;
@@ -475,7 +474,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
 
                 if (subBlend != BlendMode::NOBLEND)
                 {
-                    BlendFunctions::BlendRow(targetPixel, dstBuffer, 1, targetInfo, sourceInfo,context.GetColoring());
+                    BlendFunctions::BlendRow(targetPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),subBlend);
                 }
                 else
                 {

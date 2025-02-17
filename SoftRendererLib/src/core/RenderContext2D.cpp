@@ -34,6 +34,17 @@ BlendMode Renderer2D::RenderContext2D::GetBlendMode()
     return this->mode;
 }
 
+BlendMode Renderer2D::RenderContext2D::BlendModeToUse(const PixelFormatInfo &info)
+{
+    BlendMode touse = mode;
+
+    if(touse == BlendMode::NOBLEND) return touse;
+    if(!info.hasAlpha && !GetColoring().colorEnabled) return BlendMode::NOBLEND;
+    if(!info.hasAlpha && GetColoring().colorEnabled) return BlendMode::COLORINGONLY;
+
+    return touse;
+}
+
 void Renderer2D::RenderContext2D::SetSamplingMethod(SamplingMethod method)
 {
     this->samplingMethod = method;

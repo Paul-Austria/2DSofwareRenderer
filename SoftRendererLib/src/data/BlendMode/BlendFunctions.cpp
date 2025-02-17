@@ -121,7 +121,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
             {
                 alpha = 0;
             }
-        }
+        }else if(selectedBlendMode == BlendMode::COLORINGONLY) alpha = 255;
         else
         {
             alpha = (*((uint32_t *)srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
@@ -151,6 +151,8 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
             {
                 // TODO BE ABLE TO SELECt between different blending modes and make it effiecent
                 dstPixel[c] = (srcRGB24[i * 3 + c] * alpha + dstPixel[c] * invAlpha) >> 8;
+            }else{
+                dstPixel[c] = srcRGB24[i * 3 + c];
             }
         }
     }

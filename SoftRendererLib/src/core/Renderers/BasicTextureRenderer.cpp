@@ -60,7 +60,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         return;
 
     // Determine blending mode
-    BlendMode subBlend = (context.GetBlendMode() == BlendMode::NOBLEND || sourceInfo.hasAlpha) ? context.GetBlendMode() : BlendMode::NOBLEND;
+    BlendMode subBlend = context.BlendModeToUse(sourceInfo);
 
     switch (subBlend)
     {
@@ -90,7 +90,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
             // Blend the entire row
-            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(), context.GetBlendMode());
+            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(), subBlend);
         }
         break;
     }

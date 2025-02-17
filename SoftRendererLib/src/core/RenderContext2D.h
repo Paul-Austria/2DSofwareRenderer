@@ -49,7 +49,8 @@ namespace Renderer2D
 
         void SetBlendMode(BlendMode mode);
         BlendMode GetBlendMode();
-
+        //Determenes if for example a texture not having alpha still needs to blend when coloring is enabled for example,
+        BlendMode BlendModeToUse(const PixelFormatInfo& info);
 
         void SetSamplingMethod(SamplingMethod method);
         SamplingMethod GetSamplingMethod();
@@ -59,6 +60,7 @@ namespace Renderer2D
         void EnableClipping(bool clipping);
         bool IsClippingEnabled();
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
+        
     	ClippingArea GetClippingArea();
 
         void SetColoringSettings(Coloring coloring);
