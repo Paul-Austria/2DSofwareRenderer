@@ -2,22 +2,20 @@
 set(SOURCES
     ${SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/PixelConverter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/PlatformInd/PixelConverter.cpp
 )
 
 
-if(SIMD_OPTIMIZED)
+if(USE_NEON)
 set(SOURCES
     ${SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Optimized/PixelConverter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/arm_neon/PixelConverter.cpp
+
 )
 else()
-
 set(SOURCES
     ${SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/PlatformInd/PixelConverter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/generic/PixelConverter.cpp
 )
-
 endif()
 
 
