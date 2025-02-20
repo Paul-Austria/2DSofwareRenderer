@@ -3,7 +3,6 @@
 #include "PixelFormat/PixelConverter.h"
 #include "../util/MemHandler.h"
 
-
 #include <algorithm>
 
 using namespace Renderer2D;
@@ -19,8 +18,9 @@ Color::Color(uint8_t r, uint8_t g, uint8_t b)
 
 Color::Color(const uint8_t *pixel, PixelFormat format)
 {
-    if(pixel == nullptr){
-            format = PixelFormat::ARGB8888;
+    if (pixel == nullptr)
+    {
+        format = PixelFormat::ARGB8888;
     }
     if (format == PixelFormat::ARGB8888)
     {
@@ -43,7 +43,7 @@ uint8_t Color::GetAlpha()
     return data[0];
 }
 
-Color::Color( uint8_t a,uint8_t r, uint8_t g, uint8_t b)
+Color::Color(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
 {
     data[0] = a;
     data[1] = r;
@@ -97,13 +97,12 @@ void Color::ConvertTo(PixelFormat targetFormat, uint8_t *outColor) const
     PixelConverter::Convert(format, targetFormat, data, outColor);
 }
 
-
-Color Color::Lerp(const Color& a, const Color& b, float t) {
-        t = std::clamp(t, 0.0f, 1.0f);
-        return Color(
-            static_cast<uint8_t>(a.data[1] + t * (b.data[1] - a.data[1])),
-            static_cast<uint8_t>(a.data[2] + t * (b.data[2] - a.data[2])),
-            static_cast<uint8_t>(a.data[3] + t * (b.data[3] - a.data[3])),
-            static_cast<uint8_t>(a.data[0] + t * (b.data[0] - b.data[0]))
-        );
-    }
+Color Color::Lerp(const Color &a, const Color &b, float t)
+{
+    t = std::clamp(t, 0.0f, 1.0f);
+    return Color(
+        static_cast<uint8_t>(a.data[0] + t * (b.data[0] - b.data[0])),
+        static_cast<uint8_t>(a.data[1] + t * (b.data[1] - a.data[1])),
+        static_cast<uint8_t>(a.data[2] + t * (b.data[2] - a.data[2])),
+        static_cast<uint8_t>(a.data[3] + t * (b.data[3] - a.data[3])));
+}
