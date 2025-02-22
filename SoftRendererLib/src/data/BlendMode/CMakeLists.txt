@@ -7,14 +7,17 @@ set(SOURCES
 )
 
 
-if(SIMD_OPTIMZED)
+if(USE_NEON)
 set(SOURCES
     ${SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/arm_neon/BlendFunctions.cpp
 )
 else()
 
 set(SOURCES
     ${SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/generic/BlendFunctions.cpp
+
 )
 
 endif()

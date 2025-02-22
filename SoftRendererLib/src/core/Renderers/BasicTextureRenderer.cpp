@@ -90,7 +90,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
             // Blend the entire row
-            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(), subBlend);
+            BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(),false, subBlend);
         }
         break;
     }

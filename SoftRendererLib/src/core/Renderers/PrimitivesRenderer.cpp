@@ -101,12 +101,29 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
             PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
-            BlendFunctions::BlendRow(rowDest, rowPixelData, rowLength, info, infosrcColor, context.GetColoring(), context.GetBlendMode());
+            BlendFunctions::BlendRow(rowDest, rowPixelData, rowLength, info, infosrcColor, context.GetColoring(),true, context.GetBlendMode());
         }
         break;
     }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height, float angle, int16_t offsetX, int16_t offsetY)
 {
@@ -218,7 +235,7 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
                 uint8_t *targetPixel = textureData + (destY * pitch) + (destX * info.bytesPerPixel);
                 if (subBlend != BlendMode::NOBLEND)
                 {
-                    BlendFunctions::BlendRow(targetPixel, buffer, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), context.GetBlendMode());
+                    BlendFunctions::BlendRow(targetPixel, buffer, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(),false, context.GetBlendMode());
                 }
                 else
                 {
@@ -357,7 +374,7 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
                 MemHandler::MemCopy(targetPixel, pixelData, info.bytesPerPixel);
                 break;
             default:
-                BlendFunctions::BlendRow(targetPixel, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), context.GetBlendMode());
+                BlendFunctions::BlendRow(targetPixel, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(),false, context.GetBlendMode());
                 break;
             }
         }

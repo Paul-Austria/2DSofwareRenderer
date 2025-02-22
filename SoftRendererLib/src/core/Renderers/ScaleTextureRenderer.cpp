@@ -151,7 +151,7 @@ void ScaleTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
             // Handle blending
             if (subBlend != BlendMode::NOBLEND)
             {
-                BlendFunctions::BlendRow(dstPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),subBlend);
+                BlendFunctions::BlendRow(dstPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
             }
             else
             {

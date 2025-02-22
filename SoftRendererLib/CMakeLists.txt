@@ -39,13 +39,5 @@ elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
     )
 endif()
 
-# Enable SIMD optimizations if the option is set
-if(SIMD_OPTIMIZED)
-    target_compile_options(SoftRendererLib PRIVATE 
-        -msse2                   # Enable SSE2 (adjust based on the target CPU)
-        -mavx                    # Enable AVX (if supported)
-    )
-endif()
-
 set_target_properties(SoftRendererLib PROPERTIES LINKER_LANGUAGE CXX)
 

@@ -53,7 +53,7 @@ set(USE_NEON ON CACHE BOOL "use neon")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flax-vector-conversions")
 
 if(USE_NEON)
-message("arm neon is used")
+message("arm NEON is used")
 endif()
 # Second target for testing SoftRendererLib without OpenGL
 add_executable(SoftRendererLinuxDemo SoftRendererLinuxDemo/main.cpp)

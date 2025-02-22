@@ -333,6 +333,7 @@ void TestingFunction()
     //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
 
     context.basicTextureRenderer.DrawTexture(text3, 50, 90);
+        context.primitivesRenderer.DrawRect(Color(130,90,90,90),0,0,WIDTH, HEIGHT);
 
     context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
     context.primitivesRenderer.DrawRect(Color(0, 150, 40), 0, 0, 400, 40);

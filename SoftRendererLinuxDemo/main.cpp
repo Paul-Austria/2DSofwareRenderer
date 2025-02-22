@@ -216,7 +216,7 @@ int main()
 
                 for (int16_t x = 0; x < 10; x++)
                 {
-                    context.scaleTextureRenderer.DrawTexture(text5, x * 50, y * 50, 1, 1);
+                    context.scaleTextureRenderer.DrawTexture(text5, x * 51, y * 52, 1, 1);
                 }
             }
             /* code */
