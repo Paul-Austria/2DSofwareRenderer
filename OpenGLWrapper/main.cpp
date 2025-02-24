@@ -305,7 +305,6 @@ void SetupFunc()
     // Load the binary file
     loadTexture("data/testrgb565.bin", PixelFormat::RGB565, text4, 234, 243);
     loadTexture("data/logo8.bin", PixelFormat::GRAYSCALE8, logo8Texture, 136, 500);
-    loadTexture("data/logo4.bin", PixelFormat::GRAYSCALE4, logo4Texture, 136, 500);
 
     context.SetBlendMode(BlendMode::SIMPLE);
 }
