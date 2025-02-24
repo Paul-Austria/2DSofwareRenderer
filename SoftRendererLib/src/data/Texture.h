@@ -12,6 +12,7 @@ public:
     Texture() = default;
     Texture(uint16_t width, uint16_t height, PixelFormat format, uint16_t pitch = 0);
     Texture(uint16_t width, uint16_t height, uint8_t* data,PixelFormat format, uint16_t pitch = 0);
+    Texture(uint16_t orgWidth,uint16_t orgHeight,uint16_t width, uint16_t height, uint16_t startX, uint16_t startY, uint8_t* data, PixelFormat format, uint16_t pitch = 0);
     ~Texture();
 
     /// @brief Get Pointer of Texture
@@ -31,6 +32,7 @@ public:
 private:
     uint8_t* data;
     PixelFormat format;
+    bool isSubTexture = false;
     bool storedLocally = false;
     uint16_t width, height;
     uint16_t pitch = 0;

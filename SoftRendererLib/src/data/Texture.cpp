@@ -22,11 +22,21 @@ Texture::Texture(uint16_t width, uint16_t height, uint8_t *data, PixelFormat for
     storedLocally = false;
 }
 
+Texture::Texture(uint16_t orgWidth,uint16_t orgHeight,uint16_t width, uint16_t height, uint16_t startX, uint16_t startY, uint8_t* data, PixelFormat format, uint16_t sourcePitch)
+    : width(width), height(height), format(format), storedLocally(false)
+{
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(format);
+    
+    if (pitch == 0)  this->pitch = (orgWidth * targetInfo.bytesPerPixel) ;
+    uint32_t offset = (startY*orgWidth+startX)*targetInfo.bytesPerPixel;
+    this->data = data + offset;
+}
 Texture::~Texture()
 {
     if (storedLocally)
         delete[] data;
 }
+
 
 uint8_t *Texture::GetData()
 {
