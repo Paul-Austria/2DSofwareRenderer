@@ -32,7 +32,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
     uint8_t *sourceData = texture.GetData();
     uint16_t sourceWidth = texture.GetWidth();
     uint16_t sourceHeight = texture.GetHeight();
-    size_t sourcePitch = texture.GetPitch(); // Row stride for source texture
+    size_t sourcePitch = texture.GetPitch();
 
     // Set clipping boundaries within the source and target textures
     auto clippingArea = context.GetClippingArea();
@@ -66,11 +66,8 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
     {
     case BlendMode::NOBLEND:
     {
-        // Conversion function for source to target format if necessary
-        PixelConverter::ConvertFunc convertFunc = nullptr;
-
-        convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
-        if (!convertFunc)
+        PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+        if (!convertFunc) // error no conversion found
             return;
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
@@ -88,8 +85,6 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         {
             uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
-
-            // Blend the entire row
             BlendFunctions::BlendRow(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(),false, subBlend);
         }
         break;

@@ -80,18 +80,16 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            // Calculate the destination for the current row using pitch
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
 
-            // Use memcpy to copy the whole row of pixels at once
             MemHandler::MemCopy(rowDest, rowPixelData, bytesPerRow);
         }
         break;
     }
     default:
     {
-
-        for (size_t byteIndex = 0; byteIndex < (clipEndX - clipStartX) * 4; byteIndex += 4)
+        //Prepare data set
+        for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += 4)
         {
             MemHandler::MemCopy(rowPixelData + byteIndex, color.data, 4);
         }
@@ -107,23 +105,6 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
     }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height, float angle, int16_t offsetX, int16_t offsetY)
 {
@@ -150,9 +131,10 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
         return;
     }
 
-    // Allocate a buffer for one row of converted pixels
-    size_t rowLength = length * info.bytesPerPixel;
-    alignas(16) uint8_t buffer[MAXROWLENGTH * MAXBYTESPERPIXEL];
+    // Precompute sine and cosine values
+    float radians = normalizedAngle * 3.14159265358979f / 180.0f;
+    float cosAngle = cos(radians);
+    float sinAngle = sin(radians);
 
     // Calculate the center of the rectangle
     int centerX = length / 2;
@@ -166,10 +148,6 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
     float pivotY = y + offsetY;
 
     ClippingArea clippingArea = context.GetClippingArea();
-
-    float radians = normalizedAngle * 3.14159265358979f / 180.0f;
-    float cosAngle = cos(radians);
-    float sinAngle = sin(radians);
 
     // Calculate the bounds of the rotated rectangle by transforming all corners
     float corners[4][2] = {
@@ -198,6 +176,9 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
     int boundMinY = static_cast<int>(floor(minY)) - 1;
     int boundMaxX = static_cast<int>(ceil(maxX)) + 1;
     int boundMaxY = static_cast<int>(ceil(maxY)) + 1;
+    size_t rowLength = length * info.bytesPerPixel;
+    alignas(16) uint8_t buffer[MAXROWLENGTH * MAXBYTESPERPIXEL];
+
     color.ConvertTo(format, buffer);
 
     BlendMode subBlend = context.GetBlendMode();
@@ -206,20 +187,18 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
 
     for (int destY = boundMinY; destY <= boundMaxY; destY++)
     {
+        // Skip rows outside the texture bounds
+        if (destY < 0 || destY >= textureHeight)
+            continue;
+
         for (int destX = boundMinX; destX <= boundMaxX; destX++)
         {
-            if (destX < 0 || destX >= textureWidth || destY < 0 || destY >= textureHeight)
-            {
+            // Skip columns outside the texture bounds
+            if (destX < 0 || destX >= textureWidth)
                 continue;
-            }
 
-            if (context.IsClippingEnabled())
-            {
-                if (destX < clippingArea.startX || destX >= clippingArea.endX || destY < clippingArea.startY || destY >= clippingArea.endY)
-                {
-                    continue;
-                }
-            }
+            if (context.IsClippingEnabled() && (destX < clippingArea.startX || destX >= clippingArea.endX || destY < clippingArea.startY || destY >= clippingArea.endY))
+                continue;
 
             float dx = destX - pivotX;
             float dy = destY - pivotY;
@@ -235,11 +214,10 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
                 uint8_t *targetPixel = textureData + (destY * pitch) + (destX * info.bytesPerPixel);
                 if (subBlend != BlendMode::NOBLEND)
                 {
-                    BlendFunctions::BlendRow(targetPixel, buffer, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(),false, context.GetBlendMode());
+                    BlendFunctions::BlendRow(targetPixel, color.data, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), false, context.GetBlendMode());
                 }
                 else
                 {
-
                     MemHandler::MemCopy(targetPixel, buffer, info.bytesPerPixel);
                 }
             }
@@ -360,6 +338,7 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
     int16_t err = dx - dy;
 
     BlendMode subBlend = context.GetBlendMode();
+    if(color.GetAlpha() == 255) subBlend = BlendMode::NOBLEND;
     uint8_t pixelData[MAXBYTESPERPIXEL];
     color.ConvertTo(format, pixelData);
 

@@ -455,21 +455,17 @@ void PixelConverter::Grayscale8ToRGB24(const uint8_t *src, uint8_t *dst, size_t 
 {
     for (size_t i = 0; i < count; ++i)
     {
-        uint8_t gray = src[i];  
-
-        dst[i * 3] = gray;   
-        dst[i * 3 + 1] = gray;
-        dst[i * 3 + 2] = gray;
+        dst[i * 3] =  src[i];   
+        dst[i * 3 + 1] =  src[i];
+        dst[i * 3 + 2] =  src[i];
     }
 }
 void PixelConverter::Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)
     {
-        uint8_t gray = src[i];  
-
-        dst[i * 3] = gray;     
-        dst[i * 3 + 1] = gray; 
-        dst[i * 3 + 2] = gray; 
+        dst[i * 3] =  src[i];     
+        dst[i * 3 + 1] =  src[i]; 
+        dst[i * 3 + 2] = src[i]; 
     }
 }

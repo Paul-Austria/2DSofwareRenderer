@@ -10,11 +10,12 @@ namespace Renderer2D
     {
     private:
     public:
-        static void MemCopy(void *_Dst, const void *_Src, size_t _Size);
+        static inline void MemCopy(void *_Dst, const void *_Src, size_t _Size)
+        {
+            std::memcpy(_Dst, _Src, _Size);
+        }
     };
 
 }
-
-
 
 #endif // !MEM_HANDLER_H

@@ -2,7 +2,6 @@
 
 namespace Renderer2D
 {
-    // Define array in CPP file
     const PixelFormatInfo PixelFormatRegistry::formatInfoArray[] = {
      {PixelFormat::RGB24, 3, 0, false, 3, false, "RGB24", 0xFF, 0, 0xFF, 8, 0xFF, 16},
        {PixelFormat::BGR24, 3, 0, false, 3, false, "BGR24", 0xFF, 16, 0xFF, 8, 0xFF, 0},
