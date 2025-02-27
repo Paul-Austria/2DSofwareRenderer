@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstring>
 
-namespace Renderer2D
+namespace Tergos2D
 {
 
     class Color
@@ -39,6 +39,6 @@ namespace Renderer2D
         PixelFormat format; // The current format of the color data
     };
 
-} // namespace Renderer2D
+} // namespace Tergos2D
 
 #endif // COLOR_H

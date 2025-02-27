@@ -6,7 +6,7 @@
 #include <cstdint>
 #include "../Color.h"
 #include <cstdint>
-namespace Renderer2D
+namespace Tergos2D
 {
 
     struct PixelFormatInfo

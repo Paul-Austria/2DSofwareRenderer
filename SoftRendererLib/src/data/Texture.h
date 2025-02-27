@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "PixelFormat/PixelFormat.h"
 
-namespace Renderer2D{
+namespace Tergos2D{
 
 class Texture
 {

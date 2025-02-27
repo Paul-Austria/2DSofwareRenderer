@@ -6,7 +6,7 @@
 #include "../../data/Texture.h"
 #include <functional>
 
-namespace Renderer2D
+namespace Tergos2D
 {
     class TransformedTextureRenderer : RendererBase
     {
@@ -25,6 +25,6 @@ namespace Renderer2D
     private:
     };
 
-} // namespace Renderer2D
+} // namespace Tergos2D
 
 #endif //

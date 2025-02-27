@@ -4,7 +4,7 @@
 #include "../RendererBase.h"
 #include "../../data/Color.h"
 
-namespace Renderer2D
+namespace Tergos2D
 {
 
     class PrimitivesRenderer : RendererBase
@@ -20,6 +20,6 @@ namespace Renderer2D
     private:
     };
 
-} // namespace Renderer2D
+} // namespace Tergos2D
 
 #endif //

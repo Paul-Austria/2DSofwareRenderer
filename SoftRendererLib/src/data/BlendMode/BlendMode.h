@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "../PixelFormat/PixelFormatInfo.h"
 
-namespace Renderer2D
+namespace Tergos2D
 {
     enum class BlendMode
     {

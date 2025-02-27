@@ -4,7 +4,7 @@
 #include "../RendererBase.h"
 #include "../../data/Texture.h"
 
-namespace Renderer2D
+namespace Tergos2D
 {
     class ScaleTextureRenderer : RendererBase
     {

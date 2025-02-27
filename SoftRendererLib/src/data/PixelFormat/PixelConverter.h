@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <cstdint>
 
-namespace Renderer2D
+namespace Tergos2D
 {
     class PixelConverter
     {

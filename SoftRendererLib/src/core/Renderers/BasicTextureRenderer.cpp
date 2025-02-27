@@ -6,7 +6,7 @@
 #include "../../data/PixelFormat/PixelConverter.h"
 #include "../RenderContext2D.h"
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererBase(context)
 {

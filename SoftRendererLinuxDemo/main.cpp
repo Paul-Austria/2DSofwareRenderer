@@ -19,7 +19,7 @@
 #include "lib/stb_image.h"
 #include <fstream>
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 #define CHECK_ERR(cond, msg) \
     if (cond)                \

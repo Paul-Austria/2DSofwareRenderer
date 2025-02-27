@@ -17,7 +17,7 @@
 #define MAXROWLENGTH 2048
 
 
-namespace Renderer2D
+namespace Tergos2D
 {
     enum class SamplingMethod
     {

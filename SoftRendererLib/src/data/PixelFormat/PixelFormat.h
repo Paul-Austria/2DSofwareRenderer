@@ -1,7 +1,7 @@
 #ifndef PIXELFORMAT_H
 #define PIXELFORMAT_H
 
-namespace Renderer2D
+namespace Tergos2D
 {
 
     enum class PixelFormat

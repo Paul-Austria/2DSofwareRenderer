@@ -6,7 +6,7 @@
 #include "../RenderContext2D.h"
 #include <float.h>
 #include <math.h>
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 ScaleTextureRenderer::ScaleTextureRenderer(RenderContext2D &context) : RendererBase(context)
 {

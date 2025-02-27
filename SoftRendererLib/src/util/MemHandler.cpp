@@ -1,5 +1,5 @@
 #include "MemHandler.h"
 #include <memory>
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 

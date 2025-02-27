@@ -17,7 +17,7 @@
 const double TARGET_FPS = 6088.0;
 const double TARGET_FRAME_DURATION = 1.0 / TARGET_FPS;
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 // Vertex Shader source code
 const char *vertexShaderSource = R"(

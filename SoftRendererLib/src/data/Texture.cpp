@@ -1,6 +1,6 @@
 #include "Texture.h"
 #include "PixelFormat/PixelFormatInfo.h"
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 Texture::Texture(uint16_t width, uint16_t height, PixelFormat format, uint16_t pitch) : pitch(pitch), width(width), height(height), format(format)
 {

@@ -9,7 +9,7 @@
 #include <iostream>
 #include "BlendMode.h"
 
-namespace Renderer2D
+namespace Tergos2D
 {
     class BlendFunctions
     {
@@ -71,6 +71,6 @@ namespace Renderer2D
         );
     };
 
-} // namespace Renderer2D
+} // namespace Tergos2D
 
 #endif // !BLENDFUNCTIONS_H

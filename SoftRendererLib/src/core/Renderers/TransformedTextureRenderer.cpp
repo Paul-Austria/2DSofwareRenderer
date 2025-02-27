@@ -8,7 +8,7 @@
 #include <float.h>
 #include <math.h>
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D &context) : RendererBase(context)
 {

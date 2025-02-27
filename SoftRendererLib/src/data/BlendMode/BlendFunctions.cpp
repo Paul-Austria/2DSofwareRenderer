@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 void BlendFunctions::BlendPixel(uint8_t *dstPixel, const uint8_t *srcPixel, uint8_t alpha, uint8_t invAlpha, BlendMode blendMode)
 {

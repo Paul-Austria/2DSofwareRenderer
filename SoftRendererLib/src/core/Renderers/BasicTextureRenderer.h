@@ -6,7 +6,7 @@
 #include "../../data/Texture.h"
 #include <functional>
 
-namespace Renderer2D
+namespace Tergos2D
 {
     using BlendFunction = std::function<Color(const Color &src, const Color &dst)>;
     class BasicTextureRenderer : RendererBase
@@ -20,6 +20,6 @@ namespace Renderer2D
     private:
     };
 
-} // namespace Renderer2D
+} // namespace Tergos2D
 
 #endif //

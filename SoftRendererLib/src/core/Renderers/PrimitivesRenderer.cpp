@@ -7,7 +7,7 @@
 #include <float.h>
 #include <math.h>
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 PrimitivesRenderer::PrimitivesRenderer(RenderContext2D &context) : RendererBase(context)
 {

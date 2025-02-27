@@ -7,7 +7,7 @@
 #include "../util/MemHandler.h"
 #include "../data/BlendMode/BlendFunctions.h"
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 
 
@@ -29,12 +29,12 @@ void RenderContext2D::SetBlendMode(BlendMode mode)
     this->mode = mode;
 }
 
-BlendMode Renderer2D::RenderContext2D::GetBlendMode()
+BlendMode Tergos2D::RenderContext2D::GetBlendMode()
 {
     return this->mode;
 }
 
-BlendMode Renderer2D::RenderContext2D::BlendModeToUse(const PixelFormatInfo &info)
+BlendMode Tergos2D::RenderContext2D::BlendModeToUse(const PixelFormatInfo &info)
 {
     BlendMode touse = mode;
 
@@ -45,12 +45,12 @@ BlendMode Renderer2D::RenderContext2D::BlendModeToUse(const PixelFormatInfo &inf
     return touse;
 }
 
-void Renderer2D::RenderContext2D::SetSamplingMethod(SamplingMethod method)
+void Tergos2D::RenderContext2D::SetSamplingMethod(SamplingMethod method)
 {
     this->samplingMethod = method;
 }
 
-SamplingMethod Renderer2D::RenderContext2D::GetSamplingMethod()
+SamplingMethod Tergos2D::RenderContext2D::GetSamplingMethod()
 {
     return samplingMethod;
 }
@@ -94,7 +94,7 @@ void RenderContext2D::EnableClipping(bool clipping)
 {
     this->enableClipping = clipping;
 }
-bool Renderer2D::RenderContext2D::IsClippingEnabled()
+bool Tergos2D::RenderContext2D::IsClippingEnabled()
 {
     return enableClipping;
 }
@@ -106,17 +106,17 @@ void RenderContext2D::SetClipping(uint16_t startX, uint16_t startY, uint16_t end
     this->clippingArea.endY = endY;
 }
 
-ClippingArea Renderer2D::RenderContext2D::GetClippingArea()
+ClippingArea Tergos2D::RenderContext2D::GetClippingArea()
 {
     return clippingArea;
 }
 
-void Renderer2D::RenderContext2D::SetColoringSettings(Coloring coloring)
+void Tergos2D::RenderContext2D::SetColoringSettings(Coloring coloring)
 {
     this->colorOverlay = coloring;
 }
 
-Coloring &Renderer2D::RenderContext2D::GetColoring()
+Coloring &Tergos2D::RenderContext2D::GetColoring()
 {
     return colorOverlay;
 }

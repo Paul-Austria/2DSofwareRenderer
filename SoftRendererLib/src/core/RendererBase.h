@@ -5,7 +5,7 @@
 #define MAXBYTESPERPIXEL 16
 #define MAXROWLENGTH 2048
 
-namespace Renderer2D{
+namespace Tergos2D{
     class RenderContext2D;
     
     class RendererBase

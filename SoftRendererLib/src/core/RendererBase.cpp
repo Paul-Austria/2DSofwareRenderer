@@ -1,6 +1,6 @@
 #include "RendererBase.h"
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 RendererBase::RendererBase(RenderContext2D& context) : context(context){
 }

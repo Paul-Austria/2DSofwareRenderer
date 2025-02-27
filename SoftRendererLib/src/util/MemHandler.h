@@ -4,7 +4,7 @@
 #include <memory>
 #include <cstring>
 
-namespace Renderer2D
+namespace Tergos2D
 {
     class MemHandler
     {

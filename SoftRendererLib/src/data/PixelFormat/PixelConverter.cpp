@@ -1,7 +1,7 @@
 #include "PixelConverter.h"
 #include "PixelFormatInfo.h"
 
-namespace Renderer2D
+namespace Tergos2D
 {
 
     void PixelConverter::Move(const uint8_t *src, uint8_t *dst, size_t count)
@@ -63,4 +63,4 @@ namespace Renderer2D
         func(src, dst, count);
     }
 
-} // namespace Renderer2D
+} // namespace Tergos2D

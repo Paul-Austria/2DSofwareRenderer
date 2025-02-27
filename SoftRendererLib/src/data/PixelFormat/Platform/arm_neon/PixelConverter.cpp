@@ -6,7 +6,7 @@
 #include <cstddef>
 
 
-using namespace Renderer2D;
+using namespace Tergos2D;
 
 
 
@@ -262,7 +262,7 @@ void PixelConverter::RGB565ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t
 {
 }
 
-void Renderer2D::PixelConverter::RGBA8888ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
+void Tergos2D::PixelConverter::RGBA8888ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     size_t i = 0;
     for (; i + 8 <= count; i += 8)
@@ -288,7 +288,7 @@ void Renderer2D::PixelConverter::RGBA8888ToARGB8888(const uint8_t *src, uint8_t 
     }
 }
 
-void Renderer2D::PixelConverter::ARGB8888ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
+void Tergos2D::PixelConverter::ARGB8888ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     size_t i = 0;
     for (; i + 8 <= count; i += 8)
