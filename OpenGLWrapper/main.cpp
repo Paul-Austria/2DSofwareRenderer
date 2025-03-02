@@ -316,6 +316,7 @@ void TestRotationWithOffset(RenderContext2D &context, Texture &texture, int xOff
 void TestingFunction()
 {
     x += 0.5f;
+    context.SetBlendFunc(BlendFunctions::BlendRow);
     context.ClearTarget(Color(150, 150, 150));
     context.SetClipping(80, 30, 370, 290);
     context.EnableClipping(false);
@@ -332,10 +333,12 @@ void TestingFunction()
     //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
 
     context.basicTextureRenderer.DrawTexture(text3, 50, 90);
+    context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
     context.primitivesRenderer.DrawRect(Color(130, 90, 90, 90), 0, 0, WIDTH, HEIGHT);
+    context.SetBlendFunc(BlendFunctions::BlendRow);
 
     context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-    context.primitivesRenderer.DrawRotatedRect(Color(0, 150, 40), 0, 0, 400, 40,x);
+    context.primitivesRenderer.DrawRotatedRect(Color(0, 150, 40), 0, 0, 400, 40, x);
 
     context.primitivesRenderer.DrawRect(Color(150, 200, 0, 0), 120, 0, 300, 90);
 
@@ -346,26 +349,28 @@ void TestingFunction()
     Coloring st = {true, Color(155, 0, 255, 0)};
     context.SetColoringSettings(st);
     context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
+    context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
     context.transformedTextureRenderer.DrawTexture(text5, 550, 150, 0.5, 0.5, x);
+    context.SetBlendFunc(BlendFunctions::BlendRow);
 
     context.GetColoring().colorEnabled = false;
     context.SetBlendMode(BlendMode::SIMPLE);
     context.SetBlendMode(BlendMode::SIMPLE);
-/*
-    for (size_t i = 0; i < 1; i++)
-    {
-
-        for (size_t y = 0; y < 30; y++)
+    /*
+        for (size_t i = 0; i < 1; i++)
         {
 
-            for (int16_t x = 0; x < 40; x++)
+            for (size_t y = 0; y < 30; y++)
             {
-                context.basicTextureRenderer.DrawTexture(text, x * 51, y * 52);
+
+                for (int16_t x = 0; x < 40; x++)
+                {
+                    context.basicTextureRenderer.DrawTexture(text, x * 51, y * 52);
+                }
             }
         }
-    }
 
-    */
+        */
 }
 
 #include <iomanip>

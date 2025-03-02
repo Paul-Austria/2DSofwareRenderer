@@ -107,7 +107,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false, subBlend);
+                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false, subBlend);
                         break;
                     }
                 }
@@ -152,7 +152,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring());
+                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
                         break;
                     }
                 }
@@ -196,7 +196,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                         memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
                         break;
                     default:
-                        BlendFunctions::BlendRow(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
+                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
                         break;
                     }
                 }
@@ -294,7 +294,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
                     {
                         sourcePixel = sourceRow + (srcX * sourceInfo.bytesPerPixel);
                         targetPixel = targetData + (destY * targetPitch) + (destX * targetInfo.bytesPerPixel);
-                        BlendFunctions::BlendRow(targetPixel, sourcePixel, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
+                        context.GetBlendFunc()(targetPixel, sourcePixel, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
                     }
                     break;
                     }
@@ -474,7 +474,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
 
                 if (subBlend != BlendMode::NOBLEND)
                 {
-                    BlendFunctions::BlendRow(targetPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
+                    context.GetBlendFunc()(targetPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend);
                 }
                 else
                 {

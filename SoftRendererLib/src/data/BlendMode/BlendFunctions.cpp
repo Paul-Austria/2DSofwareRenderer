@@ -8,20 +8,6 @@
 
 using namespace Tergos2D;
 
-void BlendFunctions::BlendPixel(uint8_t *dstPixel, const uint8_t *srcPixel, uint8_t alpha, uint8_t invAlpha, BlendMode blendMode)
-{
-    switch (blendMode)
-    {
-    case BlendMode::SIMPLE:
-        dstPixel[0] = (srcPixel[0] * alpha + dstPixel[0] * invAlpha) >> 8;
-        break;
-    case BlendMode::MULTIPLY:
-        dstPixel[0] = ((srcPixel[0] * dstPixel[0]) * alpha + dstPixel[0] * invAlpha) >> 8;
-        break;
-    default:
-        break;
-    }
-}
 
 void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const uint8_t *srcRow,
@@ -33,14 +19,14 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               BlendMode selectedBlendMode)
 {
 
-    auto blendFunc = GetBlendFunc(targetInfo.format,useSolidColor);
+    auto blendFunc = GetBlendFunc(targetInfo.format, useSolidColor);
 
     if (blendFunc != nullptr)
     {
-        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, selectedBlendMode);
+        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, useSolidColor, selectedBlendMode);
         return;
     }
-    
+
     // Get conversion functions once
     PixelConverter::ConvertFunc convertToARGB8888 = nullptr;
     PixelConverter::ConvertFunc convertFromARGB8888 = nullptr;
@@ -91,5 +77,3 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         convertFromARGB8888(dstARGB8888, dstPixel, 1);
     }
 }
-
-

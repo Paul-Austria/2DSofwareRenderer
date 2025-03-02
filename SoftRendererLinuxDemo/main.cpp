@@ -223,9 +223,12 @@ int main()
         }
 
         context.GetColoring().colorEnabled = false;
-      //  context.basicTextureRenderer.DrawTexture(text4, 400, 130);
-        context.primitivesRenderer.DrawRect(Color(130,90,90,90),0,0,width,height);
+        //  context.basicTextureRenderer.DrawTexture(text4, 400, 130);
+        context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
+        context.primitivesRenderer.DrawRect(Color(130, 90, 90, 90), 0, 0, width, height);
+        context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
         context.transformedTextureRenderer.DrawTexture(text2, 10, 10, 0);
+        context.SetBlendFunc(BlendFunctions::BlendRow);
         // Perform a page flip to show the back buffer
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 

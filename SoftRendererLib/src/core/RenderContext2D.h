@@ -1,12 +1,12 @@
 #ifndef CONTEXT2D_H
 #define CONTEXT2D_H
 
-#include <iostream>
+#include <functional>
+#include <cstdint>
 #include "../data/Texture.h"
 #include "../data/Color.h"
 #include "../data/BlendMode/BlendMode.h"
-#include <functional>
-#include <cstdint>
+#include "../data/BlendMode/BlendFunctions.h"
 #include "Renderers/PrimitivesRenderer.h"
 #include "Renderers/BasicTextureRenderer.h"
 #include "Renderers/TransformedTextureRenderer.h"
@@ -66,13 +66,17 @@ namespace Tergos2D
         void SetColoringSettings(Coloring coloring);
         Coloring& GetColoring(); 
 
+        void SetBlendFunc(BlendFunc blendFunc);
+        BlendFunc GetBlendFunc();
+
+
     private:
         Texture *targetTexture = nullptr;
         BlendMode mode = BlendMode::SIMPLE;
         SamplingMethod samplingMethod = SamplingMethod::NEAREST;
 
         Coloring colorOverlay;
-
+        BlendFunc blendFunc = BlendFunctions::BlendRow;
         // clipping area
         uint16_t startX, startY, endX, endY;
         ClippingArea clippingArea;

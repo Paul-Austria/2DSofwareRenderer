@@ -3,18 +3,16 @@
 #include "../../../PixelFormat/PixelConverter.h"
 #include "../../../PixelFormat/PixelFormatInfo.h"
 
-
 using namespace Tergos2D;
 
-
-
 void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
-                                const uint8_t *srcRow,
-                                size_t rowLength,
-                                const PixelFormatInfo &targetInfo,
-                                const PixelFormatInfo &sourceInfo,
-                                Coloring coloring,
-                                BlendMode selectedBlendMode)
+                                        const uint8_t *srcRow,
+                                        size_t rowLength,
+                                        const PixelFormatInfo &targetInfo,
+                                        const PixelFormatInfo &sourceInfo,
+                                        Coloring coloring,
+                                        bool useSolidColor,
+                                        BlendMode selectedBlendMode)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -50,7 +48,6 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
         srcRGB24[2] = (srcRGB24[2] * inverseColorFactor + coloring.color.data[3] * colorFactor) >> 8;
     }
 
-   
     uint8_t invAlpha = 255 - alpha;
     for (size_t i = 0; i < rowLength * 3; i += 3)
     {
@@ -62,6 +59,53 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
 
 
 
+void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
+                               const uint8_t *srcRow,
+                               size_t rowLength,
+                               const PixelFormatInfo &targetInfo,
+                               const PixelFormatInfo &sourceInfo,
+                               Coloring coloring,
+                               bool useSolidColor,
+                               BlendMode selectedBlendMode)
+{
+    // Conversion function for the source format
+    PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
+
+    // Temporary storage for source pixel in RGB24
+    alignas(16) uint8_t srcRGB24[1024 * 3];
+
+    convertToRGB24(srcRow, srcRGB24, rowLength);
+
+    const uint8_t *srcPixel = srcRow;
+    uint8_t *dstPixel = dstRow;
+
+    uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
+    uint8_t inverseColorFactor = 255 - colorFactor;
+    uint8_t colorR = coloring.color.data[1];
+    uint8_t colorG = coloring.color.data[2];
+    uint8_t colorB = coloring.color.data[3];
+
+    for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
+    {
+        uint8_t alpha = (selectedBlendMode == BlendMode::COLORINGONLY) * 255 + (selectedBlendMode != BlendMode::COLORINGONLY) * srcPixel[3];
+
+        uint8_t mask = -(alpha != 0);
+        alpha &= mask;
+
+        uint8_t *srcColor = &srcRGB24[i * 3];
+
+        srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
+        srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
+        srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
+
+        uint8_t invAlpha = 255 - alpha;
+
+        dstPixel[0] = ((srcColor[0] * alpha) + (dstPixel[0] * invAlpha)) >> 8;
+        dstPixel[1] = ((srcColor[1] * alpha) + (dstPixel[1] * invAlpha)) >> 8;
+        dstPixel[2] = ((srcColor[2] * alpha) + (dstPixel[2] * invAlpha)) >> 8;
+    }
+}
+
 
 
 void BlendFunctions::BlendRGB24(uint8_t *dstRow,
@@ -70,6 +114,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const PixelFormatInfo &targetInfo,
                                 const PixelFormatInfo &sourceInfo,
                                 Coloring coloring,
+                                bool useSolidColor,
                                 BlendMode selectedBlendMode)
 {
 
@@ -89,7 +134,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
 
     for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
     {
-        uint8_t alpha = 255; // Default alpha value
+        uint8_t alpha = 255; 
 
         if (sourceInfo.format == PixelFormat::GRAYSCALE8)
         {
@@ -133,5 +178,3 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
         dstPixel[2] = (srcColor[2] * alpha + dstPixel[2] * invAlpha) >> 8;
     }
 }
-
-

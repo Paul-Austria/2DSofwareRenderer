@@ -247,6 +247,29 @@ void PixelConverter::ARGB1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t
     }
 }
 
+void PixelConverter::ARGB1555ToRGB24(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint16_t pixel = reinterpret_cast<const uint16_t *>(src)[i];
+        dst[i * 3 + 0] = (pixel & 0x7C00) >> 7;  // R
+        dst[i * 3 + 1] = (pixel & 0x03E0) >> 2;  // G
+        dst[i * 3 + 2] = (pixel & 0x001F) << 3;  // B
+    }
+}
+
+void PixelConverter::ARGB1555ToBGR24(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint16_t pixel = reinterpret_cast<const uint16_t *>(src)[i];
+        dst[i * 3 + 0] = (pixel & 0x001F) << 3;  // B
+        dst[i * 3 + 1] = (pixel & 0x03E0) >> 2;  // G
+        dst[i * 3 + 2] = (pixel & 0x7C00) >> 7;  // R
+    }
+}
+
+
 void PixelConverter::BGR24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count)
 {
     for (size_t i = 0; i < count; ++i)
