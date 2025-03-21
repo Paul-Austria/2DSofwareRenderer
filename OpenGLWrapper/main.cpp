@@ -329,7 +329,7 @@ void TestingFunction()
     //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
     context.transformedTextureRenderer.DrawTexture(text5, -1, 190, 2, 2, 0, 0, 0);
     //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
-
+    context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
     context.basicTextureRenderer.DrawTexture(text3, 50, 90);
     context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
     context.primitivesRenderer.DrawRect(Color(130, 90, 90, 90), 0, 0, WIDTH, HEIGHT);

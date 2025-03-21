@@ -33,26 +33,21 @@ namespace Tergos2D
 
     enum class BlendOperation
     {
-        Add,  // Simplified, most common blend operation
+        Add, // Simplified, most common blend operation
         Min, // not implemented
-        Max  //not  implemented
+        Max  // not  implemented
     };
-
 
     struct BlendContext
     {
-        BlendFactor colorBlendFactorSrc;
-        BlendFactor colorBlendFactorDst;
-        BlendOperation colorBlendOperation;
+        BlendFactor colorBlendFactorSrc = BlendFactor::SourceAlpha;
+        BlendFactor colorBlendFactorDst = BlendFactor::InverseSourceAlpha;
+        BlendOperation colorBlendOperation = BlendOperation::Add;
 
-        BlendFactor alphaBlendFactorSrc;
-        BlendFactor alphaBlendFactorDst;
-        BlendOperation alphaBlendOperation;
+        BlendFactor alphaBlendFactorSrc = BlendFactor::One;
+        BlendFactor alphaBlendFactorDst = BlendFactor::Zero;
+        BlendOperation alphaBlendOperation = BlendOperation::Add;
     };
-
-
-
-
 
     struct Coloring
     {
