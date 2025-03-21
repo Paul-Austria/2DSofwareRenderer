@@ -16,14 +16,15 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const PixelFormatInfo &sourceInfo,
                               Coloring coloring,
                               bool useSolidColor,
-                              BlendMode selectedBlendMode)
+                              BlendMode selectedBlendMode,
+                              BlendContext context)
 {
 
     auto blendFunc = GetBlendFunc(targetInfo.format, useSolidColor);
 
     if (blendFunc != nullptr)
     {
-        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, useSolidColor, selectedBlendMode);
+        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, useSolidColor, selectedBlendMode,context);
         return;
     }
 
@@ -77,3 +78,6 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         convertFromARGB8888(dstARGB8888, dstPixel, 1);
     }
 }
+
+
+
