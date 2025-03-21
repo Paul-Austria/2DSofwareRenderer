@@ -17,15 +17,6 @@ namespace Tergos2D
 
     };
 
-    enum class SelectedBlendMode
-    {
-        NOBLEND,
-        COLORINGONLY,
-        SIMPLE,
-        MULTIPLY
-
-    };
-
     struct Coloring
     {
         bool colorEnabled = false;

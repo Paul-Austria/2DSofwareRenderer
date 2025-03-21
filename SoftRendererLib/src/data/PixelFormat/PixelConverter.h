@@ -68,6 +68,8 @@ namespace Tergos2D
         // ARGB1555 conversions
         static void ARGB1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void ARGB1555ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
+        static void ARGB1555ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
+        static void ARGB1555ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
 
         // RGBA4444 conversions
         static void RGBA4444ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
@@ -117,6 +119,8 @@ namespace Tergos2D
             // ARGB1555 conversions
             {PixelFormat::ARGB1555, PixelFormat::ARGB8888, ARGB1555ToARGB8888},
             {PixelFormat::ARGB1555, PixelFormat::RGBA8888, ARGB1555ToRGBA8888},
+            {PixelFormat::ARGB1555, PixelFormat::RGB24, ARGB1555ToRGB24},
+            {PixelFormat::ARGB1555, PixelFormat::BGR24, ARGB1555ToBGR24},
 
             // RGBA4444 conversions
             {PixelFormat::RGBA4444, PixelFormat::ARGB8888, RGBA4444ToARGB8888},

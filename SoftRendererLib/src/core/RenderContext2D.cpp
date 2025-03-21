@@ -120,3 +120,13 @@ Coloring &Tergos2D::RenderContext2D::GetColoring()
 {
     return colorOverlay;
 }
+
+void Tergos2D::RenderContext2D::SetBlendFunc(BlendFunc blendFunc)
+{
+    this->blendFunc = blendFunc;
+}
+
+BlendFunc Tergos2D::RenderContext2D::GetBlendFunc()
+{
+    return blendFunc;
+}
