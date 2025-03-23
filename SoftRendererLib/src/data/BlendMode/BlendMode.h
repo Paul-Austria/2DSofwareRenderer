@@ -33,9 +33,7 @@ namespace Tergos2D
 
     enum class BlendOperation
     {
-        Add, // Simplified, most common blend operation
-        Min, // not implemented
-        Max  // not  implemented
+        Add, // currently only add supported
     };
 
     struct BlendContext

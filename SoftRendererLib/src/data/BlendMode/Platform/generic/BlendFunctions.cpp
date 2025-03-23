@@ -6,14 +6,14 @@
 using namespace Tergos2D;
 
 void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
-                                        const uint8_t *srcRow,
-                                        size_t rowLength,
-                                        const PixelFormatInfo &targetInfo,
-                                        const PixelFormatInfo &sourceInfo,
-                                        Coloring coloring,
-                                        bool useSolidColor,
-                                        BlendMode selectedBlendMode,
-                                        BlendContext context)
+                                               const uint8_t *srcRow,
+                                               size_t rowLength,
+                                               const PixelFormatInfo &targetInfo,
+                                               const PixelFormatInfo &sourceInfo,
+                                               Coloring coloring,
+                                               bool useSolidColor,
+                                               BlendMode selectedBlendMode,
+                                               BlendContext context)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -50,17 +50,123 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
     }
 
     uint8_t invAlpha = 255 - alpha;
+
     for (size_t i = 0; i < rowLength * 3; i += 3)
     {
-        dstRow[i] = (srcRGB24[0] * alpha + dstRow[i] * invAlpha) >> 8;
-        dstRow[i + 1] = (srcRGB24[1] * alpha + dstRow[i + 1] * invAlpha) >> 8;
-        dstRow[i + 2] = (srcRGB24[2] * alpha + dstRow[i + 2] * invAlpha) >> 8;
+        uint8_t srcFactorR, dstFactorR;
+        uint8_t srcFactorG, dstFactorG;
+        uint8_t srcFactorB, dstFactorB;
+
+        switch (context.colorBlendFactorSrc)
+        {
+            case BlendFactor::Zero: 
+                srcFactorR = srcFactorG = srcFactorB = 0; 
+                break;
+            case BlendFactor::One: 
+                srcFactorR = srcFactorG = srcFactorB = 255; 
+                break;
+            case BlendFactor::SourceAlpha: 
+                srcFactorR = srcFactorG = srcFactorB = alpha; 
+                break;
+            case BlendFactor::InverseSourceAlpha: 
+                srcFactorR = srcFactorG = srcFactorB = 255 - alpha; 
+                break;
+            case BlendFactor::DestAlpha: 
+                srcFactorR = dstRow[i]; 
+                srcFactorG = dstRow[i + 1]; 
+                srcFactorB = dstRow[i + 2]; 
+                break;
+            case BlendFactor::InverseDestAlpha: 
+                srcFactorR = 255 - dstRow[i]; 
+                srcFactorG = 255 - dstRow[i + 1]; 
+                srcFactorB = 255 - dstRow[i + 2]; 
+                break;
+            case BlendFactor::SourceColor: 
+                srcFactorR = srcRGB24[0]; 
+                srcFactorG = srcRGB24[1]; 
+                srcFactorB = srcRGB24[2]; 
+                break;
+            case BlendFactor::DestColor: 
+                srcFactorR = dstRow[i]; 
+                srcFactorG = dstRow[i + 1]; 
+                srcFactorB = dstRow[i + 2]; 
+                break;
+            case BlendFactor::InverseSourceColor: 
+                srcFactorR = 255 - srcRGB24[0]; 
+                srcFactorG = 255 - srcRGB24[1]; 
+                srcFactorB = 255 - srcRGB24[2]; 
+                break;
+            case BlendFactor::InverseDestColor: 
+                srcFactorR = 255 - dstRow[i]; 
+                srcFactorG = 255 - dstRow[i + 1]; 
+                srcFactorB = 255 - dstRow[i + 2]; 
+                break;
+            default: 
+                srcFactorR = srcFactorG = srcFactorB = 255; 
+                break;
+        }
+
+        switch (context.colorBlendFactorDst)
+        {
+            case BlendFactor::Zero: 
+                dstFactorR = dstFactorG = dstFactorB = 0; 
+                break;
+            case BlendFactor::One: 
+                dstFactorR = dstFactorG = dstFactorB = 255; 
+                break;
+            case BlendFactor::SourceAlpha: 
+                dstFactorR = dstFactorG = dstFactorB = alpha; 
+                break;
+            case BlendFactor::InverseSourceAlpha: 
+                dstFactorR = dstFactorG = dstFactorB = 255 - alpha; 
+                break;
+            case BlendFactor::DestAlpha: 
+                dstFactorR = dstRow[i]; 
+                dstFactorG = dstRow[i + 1]; 
+                dstFactorB = dstRow[i + 2]; 
+                break;
+            case BlendFactor::InverseDestAlpha: 
+                dstFactorR = 255 - dstRow[i]; 
+                dstFactorG = 255 - dstRow[i + 1]; 
+                dstFactorB = 255 - dstRow[i + 2]; 
+                break;
+            case BlendFactor::SourceColor: 
+                dstFactorR = srcRGB24[0]; 
+                dstFactorG = srcRGB24[1]; 
+                dstFactorB = srcRGB24[2]; 
+                break;
+            case BlendFactor::DestColor: 
+                dstFactorR = dstRow[i]; 
+                dstFactorG = dstRow[i + 1]; 
+                dstFactorB = dstRow[i + 2]; 
+                break;
+            case BlendFactor::InverseSourceColor: 
+                dstFactorR = 255 - srcRGB24[0]; 
+                dstFactorG = 255 - srcRGB24[1]; 
+                dstFactorB = 255 - srcRGB24[2]; 
+                break;
+            case BlendFactor::InverseDestColor: 
+                dstFactorR = 255 - dstRow[i]; 
+                dstFactorG = 255 - dstRow[i + 1]; 
+                dstFactorB = 255 - dstRow[i + 2]; 
+                break;
+            default: 
+                dstFactorR = dstFactorG = dstFactorB = 255; 
+                break;
+        }
+
+        switch (context.colorBlendOperation)
+        {
+            case BlendOperation::Add:
+                dstRow[i] = (srcRGB24[0] * srcFactorR + dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG + dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
+        }
     }
 }
-
-
-
-
 
 void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const uint8_t *srcRow,
@@ -127,6 +233,9 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
             continue;
         }
 
+
+
+        //TODO use context starting from here:
         uint8_t invAlpha = 255 - alpha;
         dstPixel[0] = (srcColor[0] * alpha + dstPixel[0] * invAlpha) >> 8;
         dstPixel[1] = (srcColor[1] * alpha + dstPixel[1] * invAlpha) >> 8;
@@ -136,20 +245,21 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
 
 
 void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
-    const uint8_t *srcRow,
-    size_t rowLength,
-    const PixelFormatInfo &targetInfo,
-    const PixelFormatInfo &sourceInfo,
-    Coloring coloring,
-    bool useSolidColor,
-    BlendMode selectedBlendMode,
-    BlendContext blendContext)
+                                        const uint8_t *srcRow,
+                                        size_t rowLength,
+                                        const PixelFormatInfo &targetInfo,
+                                        const PixelFormatInfo &sourceInfo,
+                                        Coloring coloring,
+                                        bool useSolidColor,
+                                        BlendMode selectedBlendMode,
+                                        BlendContext context)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
 
     // Temporary storage for source pixel in RGB24
     alignas(16) uint8_t srcRGB24[1024 * 3];
+
     convertToRGB24(srcRow, srcRGB24, rowLength);
 
     const uint8_t *srcPixel = srcRow;
@@ -163,100 +273,131 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
 
     for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
     {
-        uint8_t alpha = srcPixel[3];
+        uint8_t alpha = (selectedBlendMode == BlendMode::COLORINGONLY) * 255 + (selectedBlendMode != BlendMode::COLORINGONLY) * srcPixel[3];
 
-        // Apply coloring if enabled
-        uint8_t srcColor[3] = { srcRGB24[i * 3], srcRGB24[i * 3 + 1], srcRGB24[i * 3 + 2] };
-        if (coloring.colorEnabled) {
-            srcColor[0] = (srcColor[0] * inverseColorFactor + colorR * colorFactor) / 255;
-            srcColor[1] = (srcColor[1] * inverseColorFactor + colorG * colorFactor) / 255;
-            srcColor[2] = (srcColor[2] * inverseColorFactor + colorB * colorFactor) / 255;
-        }
+        uint8_t mask = -(alpha != 0);
+        alpha &= mask;
 
-        // Calculate color factors for R, G, B
-        uint8_t srcFactor[3], dstFactor[3];
-        for (int c = 0; c < 3; ++c)
+        uint8_t *srcColor = &srcRGB24[i * 3];
+
+        // Keep the change of color like this:
+        srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
+        srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
+        srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
+
+        uint8_t invAlpha = 255 - alpha;
+
+        uint8_t srcFactorR, dstFactorR;
+        uint8_t srcFactorG, dstFactorG;
+        uint8_t srcFactorB, dstFactorB;
+
+        switch (context.colorBlendFactorSrc)
         {
-            switch (blendContext.colorBlendFactorSrc)
-            {
-                case BlendFactor::Zero: srcFactor[c] = 0; break;
-                case BlendFactor::One: srcFactor[c] = 255; break;
-                case BlendFactor::SourceColor: srcFactor[c] = srcColor[c]; break;
-                case BlendFactor::InverseSourceColor: srcFactor[c] = 255 - srcColor[c]; break;
-                case BlendFactor::SourceAlpha: srcFactor[c] = alpha; break;
-                case BlendFactor::InverseSourceAlpha: srcFactor[c] = 255 - alpha; break;
-                case BlendFactor::DestColor: srcFactor[c] = dstPixel[c]; break;
-                case BlendFactor::InverseDestColor: srcFactor[c] = 255 - dstPixel[c]; break;
-                case BlendFactor::DestAlpha: srcFactor[c] = dstPixel[3]; break;
-                case BlendFactor::InverseDestAlpha: srcFactor[c] = 255 - dstPixel[3]; break;
-                default: srcFactor[c] = 255; break;
-            }
-
-            switch (blendContext.colorBlendFactorDst)
-            {
-                case BlendFactor::Zero: dstFactor[c] = 0; break;
-                case BlendFactor::One: dstFactor[c] = 255; break;
-                case BlendFactor::SourceColor: dstFactor[c] = srcColor[c]; break;
-                case BlendFactor::InverseSourceColor: dstFactor[c] = 255 - srcColor[c]; break;
-                case BlendFactor::SourceAlpha: dstFactor[c] = alpha; break;
-                case BlendFactor::InverseSourceAlpha: dstFactor[c] = 255 - alpha; break;
-                case BlendFactor::DestColor: dstFactor[c] = dstPixel[c]; break;
-                case BlendFactor::InverseDestColor: dstFactor[c] = 255 - dstPixel[c]; break;
-                case BlendFactor::DestAlpha: dstFactor[c] = dstPixel[3]; break;
-                case BlendFactor::InverseDestAlpha: dstFactor[c] = 255 - dstPixel[3]; break;
-                default: dstFactor[c] = 255; break;
-            }
+            case BlendFactor::Zero: 
+                srcFactorR = srcFactorG = srcFactorB = 0; 
+                break;
+            case BlendFactor::One: 
+                srcFactorR = srcFactorG = srcFactorB = 255; 
+                break;
+            case BlendFactor::SourceAlpha: 
+                srcFactorR = srcFactorG = srcFactorB = alpha; 
+                break;
+            case BlendFactor::InverseSourceAlpha: 
+                srcFactorR = srcFactorG = srcFactorB = 255 - alpha; 
+                break;
+            case BlendFactor::DestAlpha: 
+                srcFactorR = dstPixel[0]; 
+                srcFactorG = dstPixel[1]; 
+                srcFactorB = dstPixel[2]; 
+                break;
+            case BlendFactor::InverseDestAlpha: 
+                srcFactorR = 255 - dstPixel[0]; 
+                srcFactorG = 255 - dstPixel[1]; 
+                srcFactorB = 255 - dstPixel[2]; 
+                break;
+            case BlendFactor::SourceColor: 
+                srcFactorR = srcColor[0]; 
+                srcFactorG = srcColor[1]; 
+                srcFactorB = srcColor[2]; 
+                break;
+            case BlendFactor::DestColor: 
+                srcFactorR = dstPixel[0]; 
+                srcFactorG = dstPixel[1]; 
+                srcFactorB = dstPixel[2]; 
+                break;
+            case BlendFactor::InverseSourceColor: 
+                srcFactorR = 255 - srcColor[0]; 
+                srcFactorG = 255 - srcColor[1]; 
+                srcFactorB = 255 - srcColor[2]; 
+                break;
+            case BlendFactor::InverseDestColor: 
+                srcFactorR = 255 - dstPixel[0]; 
+                srcFactorG = 255 - dstPixel[1]; 
+                srcFactorB = 255 - dstPixel[2]; 
+                break;
+            default: 
+                srcFactorR = srcFactorG = srcFactorB = 255; 
+                break;
         }
 
-        // Apply color blend operation (simplified, add mode here)
-        uint8_t blendedColor[3];
-        for (int c = 0; c < 3; ++c)
+        switch (context.colorBlendFactorDst)
         {
-            blendedColor[c] = (srcColor[c] * srcFactor[c] + dstPixel[c] * dstFactor[c]) / 255;
+            case BlendFactor::Zero: 
+                dstFactorR = dstFactorG = dstFactorB = 0; 
+                break;
+            case BlendFactor::One: 
+                dstFactorR = dstFactorG = dstFactorB = 255; 
+                break;
+            case BlendFactor::SourceAlpha: 
+                dstFactorR = dstFactorG = dstFactorB = alpha; 
+                break;
+            case BlendFactor::InverseSourceAlpha: 
+                dstFactorR = dstFactorG = dstFactorB = 255 - alpha; 
+                break;
+            case BlendFactor::DestAlpha: 
+                dstFactorR = dstPixel[0]; 
+                dstFactorG = dstPixel[1]; 
+                dstFactorB = dstPixel[2]; 
+                break;
+            case BlendFactor::InverseDestAlpha: 
+                dstFactorR = 255 - dstPixel[0]; 
+                dstFactorG = 255 - dstPixel[1]; 
+                dstFactorB = 255 - dstPixel[2]; 
+                break;
+            case BlendFactor::SourceColor: 
+                dstFactorR = srcColor[0]; 
+                dstFactorG = srcColor[1]; 
+                dstFactorB = srcColor[2]; 
+                break;
+            case BlendFactor::DestColor: 
+                dstFactorR = dstPixel[0]; 
+                dstFactorG = dstPixel[1]; 
+                dstFactorB = dstPixel[2]; 
+                break;
+            case BlendFactor::InverseSourceColor: 
+                dstFactorR = 255 - srcColor[0]; 
+                dstFactorG = 255 - srcColor[1]; 
+                dstFactorB = 255 - srcColor[2]; 
+                break;
+            case BlendFactor::InverseDestColor: 
+                dstFactorR = 255 - dstPixel[0]; 
+                dstFactorG = 255 - dstPixel[1]; 
+                dstFactorB = 255 - dstPixel[2]; 
+                break;
+            default: 
+                dstFactorR = dstFactorG = dstFactorB = 255; 
+                break;
         }
 
-        // Calculate alpha factors (same approach as for color channels)
-        uint8_t srcAlphaFactor, dstAlphaFactor;
-
-        switch (blendContext.alphaBlendFactorSrc)
+        switch (context.colorBlendOperation)
         {
-            case BlendFactor::Zero: srcAlphaFactor = 0; break;
-            case BlendFactor::One: srcAlphaFactor = 255; break;
-            case BlendFactor::SourceColor: srcAlphaFactor = alpha; break;
-            case BlendFactor::InverseSourceColor: srcAlphaFactor = 255 - alpha; break;
-            case BlendFactor::SourceAlpha: srcAlphaFactor = alpha; break;
-            case BlendFactor::InverseSourceAlpha: srcAlphaFactor = 255 - alpha; break;
-            case BlendFactor::DestColor: srcAlphaFactor = dstPixel[3]; break;
-            case BlendFactor::InverseDestColor: srcAlphaFactor = 255 - dstPixel[3]; break;
-            case BlendFactor::DestAlpha: srcAlphaFactor = dstPixel[3]; break;
-            case BlendFactor::InverseDestAlpha: srcAlphaFactor = 255 - dstPixel[3]; break;
-            default: srcAlphaFactor = 255; break;
+            case BlendOperation::Add:
+                dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
-
-        switch (blendContext.alphaBlendFactorDst)
-        {
-            case BlendFactor::Zero: dstAlphaFactor = 0; break;
-            case BlendFactor::One: dstAlphaFactor = 255; break;
-            case BlendFactor::SourceColor: dstAlphaFactor = alpha; break;
-            case BlendFactor::InverseSourceColor: dstAlphaFactor = 255 - alpha; break;
-            case BlendFactor::SourceAlpha: dstAlphaFactor = alpha; break;
-            case BlendFactor::InverseSourceAlpha: dstAlphaFactor = 255 - alpha; break;
-            case BlendFactor::DestColor: dstAlphaFactor = dstPixel[3]; break;
-            case BlendFactor::InverseDestColor: dstAlphaFactor = 255 - dstPixel[3]; break;
-            case BlendFactor::DestAlpha: dstAlphaFactor = dstPixel[3]; break;
-            case BlendFactor::InverseDestAlpha: dstAlphaFactor = 255 - dstPixel[3]; break;
-            default: dstAlphaFactor = 255; break;
-        }
-
-        uint8_t blendedAlpha = (alpha * srcAlphaFactor + dstPixel[3] * dstAlphaFactor) / 255;
-
-        // Combine the final color and alpha
-        uint8_t invAlpha = 255 - blendedAlpha;
-
-        for (int c = 0; c < 3; ++c)
-        {
-            dstPixel[c] = (blendedColor[c] * blendedAlpha + dstPixel[c] * invAlpha) >> 8;
-        }
-        dstPixel[3] = blendedAlpha;  // Update the alpha channel
     }
 }
