@@ -13,7 +13,7 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
                                         const PixelFormatInfo &sourceInfo,
                                         Coloring coloring,
                                         bool useSolidColor,
-                                        BlendContext &context)
+                                        BlendContext& context)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -157,13 +157,28 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstRow[i] = (srcRGB24[0] * srcFactorR + dstRow[i] * dstFactorR) >> 8;
-            dstRow[i + 1] = (srcRGB24[1] * srcFactorG + dstRow[i + 1] * dstFactorG) >> 8;
-            dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstRow[i] = (srcRGB24[0] * srcFactorR + dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG + dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstRow[i] = (srcRGB24[0] * srcFactorR - dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG - dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB - dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstRow[i] = (dstRow[i] * dstFactorR - srcRGB24[0] * srcFactorR) >> 8;
+                dstRow[i + 1] = (dstRow[i + 1] * dstFactorG - srcRGB24[1] * srcFactorG) >> 8;
+                dstRow[i + 2] = (dstRow[i + 2] * dstFactorB - srcRGB24[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstRow[i] = (srcRGB24[0] * srcFactorR & dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG & dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB & dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }
@@ -175,7 +190,7 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                                 const PixelFormatInfo &sourceInfo,
                                 Coloring coloring,
                                 bool useSolidColor,
-                                BlendContext &context)
+                                BlendContext& context)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -337,13 +352,28 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
-            dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
-            dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstPixel[0] = (srcColor[0] * srcFactorR - dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG - dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB - dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstPixel[0] = (dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8;
+                dstPixel[1] = (dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8;
+                dstPixel[2] = (dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }
@@ -355,7 +385,7 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
                                         const PixelFormatInfo &sourceInfo,
                                         Coloring coloring,
                                         bool useSolidColor,
-                                        BlendContext &context)
+                                        BlendContext& context)
 {
     // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
@@ -494,13 +524,28 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
-            dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
-            dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstPixel[0] = (srcColor[0] * srcFactorR - dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG - dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB - dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstPixel[0] = (dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8;
+                dstPixel[1] = (dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8;
+                dstPixel[2] = (dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }

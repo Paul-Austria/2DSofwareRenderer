@@ -164,13 +164,28 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstARGB8888[1] = (srcARGB8888[1] * srcFactorR + dstARGB8888[1] * dstFactorR) >> 8;
-            dstARGB8888[2] = (srcARGB8888[2] * srcFactorG + dstARGB8888[2] * dstFactorG) >> 8;
-            dstARGB8888[3] = (srcARGB8888[3] * srcFactorB + dstARGB8888[3] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstARGB8888[1] = (srcARGB8888[1] * srcFactorR + dstARGB8888[1] * dstFactorR) >> 8;
+                dstARGB8888[2] = (srcARGB8888[2] * srcFactorG + dstARGB8888[2] * dstFactorG) >> 8;
+                dstARGB8888[3] = (srcARGB8888[3] * srcFactorB + dstARGB8888[3] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstARGB8888[1] = (srcARGB8888[1] * srcFactorR - dstARGB8888[1] * dstFactorR) >> 8;
+                dstARGB8888[2] = (srcARGB8888[2] * srcFactorG - dstARGB8888[2] * dstFactorG) >> 8;
+                dstARGB8888[3] = (srcARGB8888[3] * srcFactorB - dstARGB8888[3] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstARGB8888[1] = (dstARGB8888[1] * dstFactorR - srcARGB8888[1] * srcFactorR) >> 8;
+                dstARGB8888[2] = (dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8;
+                dstARGB8888[3] = (dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstARGB8888[1] = (srcARGB8888[1] * srcFactorR & dstARGB8888[1] * dstFactorR) >> 8;
+                dstARGB8888[2] = (srcARGB8888[2] * srcFactorG & dstARGB8888[2] * dstFactorG) >> 8;
+                dstARGB8888[3] = (srcARGB8888[3] * srcFactorB & dstARGB8888[3] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
 
         // Use the maximum alpha
@@ -178,5 +193,63 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
 
         // Convert blended pixel back to target format
         convertFromARGB8888(dstARGB8888, dstPixel, 1);
+    }
+}
+
+
+
+// ONLY SOURCEALPHA, INVERSESOURCEALPHA, ADD ONE ZERO ADD
+void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
+    const uint8_t *srcRow,
+    size_t rowLength,
+    const PixelFormatInfo &targetInfo,
+    const PixelFormatInfo &sourceInfo,
+    Coloring coloring,
+    bool useSolidColor,
+    BlendContext& context)
+{
+    // Conversion function for the source format
+    PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
+
+    // Temporary storage for source pixel in RGB24
+    alignas(16) uint8_t srcRGB24[1024 * 3];
+
+    convertToRGB24(srcRow, srcRGB24, rowLength);
+
+    const uint8_t *srcPixel = srcRow;
+    uint8_t *dstPixel = dstRow;
+
+    uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
+    uint8_t inverseColorFactor = 255 - colorFactor;
+    uint8_t colorR = coloring.color.data[1];
+    uint8_t colorG = coloring.color.data[2];
+    uint8_t colorB = coloring.color.data[3];
+
+    for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
+    {
+        uint8_t grayValue = srcPixel[0];
+        uint8_t alpha = (grayValue == 0) ? 0 : 255;
+
+        if (alpha == 0)
+        {
+        continue;
+        }
+
+        uint8_t *srcColor = &srcRGB24[i * 3];
+
+        // Apply coloring if needed
+        if (coloring.colorEnabled)
+        {
+            srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
+            srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
+            srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
+        }
+
+        uint8_t invAlpha = 255 - alpha;
+
+        // Blend the source and destination pixels
+        dstPixel[0] = (srcColor[0] * alpha + dstPixel[0] * invAlpha) >> 8;
+        dstPixel[1] = (srcColor[1] * alpha + dstPixel[1] * invAlpha) >> 8;
+        dstPixel[2] = (srcColor[2] * alpha + dstPixel[2] * invAlpha) >> 8;
     }
 }

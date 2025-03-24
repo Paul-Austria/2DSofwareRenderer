@@ -156,13 +156,28 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstRow[i] = (srcRGB24[0] * srcFactorR + dstRow[i] * dstFactorR) >> 8;
-            dstRow[i + 1] = (srcRGB24[1] * srcFactorG + dstRow[i + 1] * dstFactorG) >> 8;
-            dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstRow[i] = (srcRGB24[0] * srcFactorR + dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG + dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstRow[i] = (srcRGB24[0] * srcFactorR - dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG - dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB - dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstRow[i] = (dstRow[i] * dstFactorR - srcRGB24[0] * srcFactorR) >> 8;
+                dstRow[i + 1] = (dstRow[i + 1] * dstFactorG - srcRGB24[1] * srcFactorG) >> 8;
+                dstRow[i + 2] = (dstRow[i + 2] * dstFactorB - srcRGB24[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstRow[i] = (srcRGB24[0] * srcFactorR & dstRow[i] * dstFactorR) >> 8;
+                dstRow[i + 1] = (srcRGB24[1] * srcFactorG & dstRow[i + 1] * dstFactorG) >> 8;
+                dstRow[i + 2] = (srcRGB24[2] * srcFactorB & dstRow[i + 2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }
@@ -336,13 +351,28 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
-            dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
-            dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstPixel[0] = (srcColor[0] * srcFactorR - dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG - dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB - dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstPixel[0] = (dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8;
+                dstPixel[1] = (dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8;
+                dstPixel[2] = (dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }
@@ -382,11 +412,12 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
 
         uint8_t *srcColor = &srcRGB24[i * 3];
 
-        // Keep the change of color like this:
-        srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
-        srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
-        srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
-
+        if(colorFactor)
+        {
+            srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
+            srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
+            srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
+        }
         uint8_t invAlpha = 255 - alpha;
 
         uint8_t srcFactorR, dstFactorR;
@@ -493,13 +524,28 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t *dstRow,
 
         switch (context.colorBlendOperation)
         {
-        case BlendOperation::Add:
-            dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
-            dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
-            dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
-            break;
-        default:
-            break;
+            case BlendOperation::Add:
+                dstPixel[0] = (srcColor[0] * srcFactorR + dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG + dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB + dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::Subtract:
+                dstPixel[0] = (srcColor[0] * srcFactorR - dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG - dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB - dstPixel[2] * dstFactorB) >> 8;
+                break;
+            case BlendOperation::ReverseSubtract:
+                dstPixel[0] = (dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8;
+                dstPixel[1] = (dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8;
+                dstPixel[2] = (dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8;
+                break;
+            case BlendOperation::BitwiseAnd:
+                dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
+                dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
+                dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
+                break;
+            default:
+                break;
         }
     }
 }
