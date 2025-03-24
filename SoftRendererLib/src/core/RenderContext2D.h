@@ -46,33 +46,32 @@ namespace Tergos2D
         void SetTargetTexture(Texture *targetTexture);
         Texture* GetTargetTexture();
 
-
-        void SetBlendMode(BlendMode mode);
-        BlendMode GetBlendMode();
         //Determenes if for example a texture not having alpha still needs to blend when coloring is enabled for example,
         BlendMode BlendModeToUse(const PixelFormatInfo& info);
 
         void SetSamplingMethod(SamplingMethod method);
         SamplingMethod GetSamplingMethod();
-        
+
 
         void ClearTarget(Color color);
         void EnableClipping(bool clipping);
         bool IsClippingEnabled();
         void SetClipping(uint16_t startX, uint16_t startY, uint16_t endX, uint16_t endY);
-        
+
     	ClippingArea GetClippingArea();
 
         void SetColoringSettings(Coloring coloring);
-        Coloring& GetColoring(); 
+        Coloring& GetColoring();
 
         void SetBlendFunc(BlendFunc blendFunc);
         BlendFunc GetBlendFunc();
 
+        BlendContext& GetBlendContext();
+        void SetBlendContext(BlendContext context);
 
     private:
         Texture *targetTexture = nullptr;
-        BlendMode mode = BlendMode::SIMPLE;
+        BlendContext m_BlendContext = BlendContext();
         SamplingMethod samplingMethod = SamplingMethod::NEAREST;
 
         Coloring colorOverlay;

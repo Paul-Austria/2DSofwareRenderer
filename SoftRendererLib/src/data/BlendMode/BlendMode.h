@@ -12,8 +12,7 @@ namespace Tergos2D
     {
         NOBLEND,
         COLORINGONLY,
-        SIMPLE,
-        MULTIPLY
+        BLEND
 
     };
 
@@ -34,10 +33,14 @@ namespace Tergos2D
     enum class BlendOperation
     {
         Add, // currently only add supported
+        Subtract,
+        ReverseSubtract,
+        BitwiseAnd,
     };
 
     struct BlendContext
     {
+        BlendMode mode = BlendMode::BLEND;
         BlendFactor colorBlendFactorSrc = BlendFactor::SourceAlpha;
         BlendFactor colorBlendFactorDst = BlendFactor::InverseSourceAlpha;
         BlendOperation colorBlendOperation = BlendOperation::Add;

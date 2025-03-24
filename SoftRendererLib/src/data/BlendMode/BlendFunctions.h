@@ -18,8 +18,7 @@ namespace Tergos2D
                                const PixelFormatInfo &sourceInfo,
                                Coloring coloring,
                                bool useSolidColor,
-                               BlendMode selectedBlendMode,
-                               BlendContext context);
+                               BlendContext& context);
 
     class BlendFunctions
     {
@@ -48,9 +47,8 @@ namespace Tergos2D
                              const PixelFormatInfo &targetInfo,
                              const PixelFormatInfo &sourceInfo,
                              Coloring coloring,
-                             bool useSolidColor = false,
-                             BlendMode selectedBlendMode = BlendMode::SIMPLE,
-                             BlendContext context = BlendContext());
+                             bool useSolidColor,
+                             BlendContext& context);
 
         static void BlendRGB24(uint8_t *dstRow,
                                const uint8_t *srcRow,
@@ -59,8 +57,7 @@ namespace Tergos2D
                                const PixelFormatInfo &sourceInfo,
                                Coloring coloring,
                                bool useSolidColor,
-                               BlendMode selectedBlendMode = BlendMode::SIMPLE,
-                               BlendContext context = BlendContext());
+                               BlendContext& context);
 
         // NoBranching
         static void BlendRGBA32ToRGB24(uint8_t *dstRow,
@@ -70,8 +67,7 @@ namespace Tergos2D
                                        const PixelFormatInfo &sourceInfo,
                                        Coloring coloring,
                                        bool useSolidColor,
-                                       BlendMode selectedBlendMode = BlendMode::SIMPLE ,
-                                       BlendContext context = BlendContext());
+                                       BlendContext& context);
 
         static void BlendSolidRowRGB24(uint8_t *dstRow,
                                        const uint8_t *srcRow,
@@ -80,8 +76,7 @@ namespace Tergos2D
                                        const PixelFormatInfo &sourceInfo,
                                        Coloring coloring,
                                        bool useSolidColor,
-                                       BlendMode selectedBlendMode = BlendMode::SIMPLE,
-                                       BlendContext context = BlendContext());
+                                       BlendContext& context);
     };
 } // namespace Tergos2D
 

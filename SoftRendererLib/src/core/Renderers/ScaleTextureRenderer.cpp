@@ -64,7 +64,8 @@ void ScaleTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
         return;
 
     // Prepare blending mode
-    BlendMode subBlend = context.BlendModeToUse(sourceInfo);
+    BlendContext bc = context.GetBlendContext();
+    bc.mode = context.BlendModeToUse(sourceInfo);
 
     uint8_t dstBuffer[MAXBYTESPERPIXEL];
 
@@ -149,9 +150,9 @@ void ScaleTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
                                 dx * targetInfo.bytesPerPixel;
 
             // Handle blending
-            if (subBlend != BlendMode::NOBLEND)
+            if (bc.mode != BlendMode::NOBLEND)
             {
-                context.GetBlendFunc()(dstPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,subBlend,BlendContext());
+                context.GetBlendFunc()(dstPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,bc);
             }
             else
             {

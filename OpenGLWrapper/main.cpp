@@ -304,7 +304,6 @@ void SetupFunc()
     loadTexture("data/testrgb565.bin", PixelFormat::RGB565, text4, 234, 243);
     loadTexture("data/logo8.bin", PixelFormat::GRAYSCALE8, logo8Texture, 136, 500);
 
-    context.SetBlendMode(BlendMode::SIMPLE);
 }
 static float x = 0;
 
@@ -352,8 +351,6 @@ void TestingFunction()
     context.SetBlendFunc(BlendFunctions::BlendRow);
 
     context.GetColoring().colorEnabled = false;
-    context.SetBlendMode(BlendMode::SIMPLE);
-    context.SetBlendMode(BlendMode::SIMPLE);
     /*
         for (size_t i = 0; i < 1; i++)
         {
