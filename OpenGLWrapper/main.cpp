@@ -281,11 +281,17 @@ void loadTexture(std::string texturePath, PixelFormat format, Texture &target, i
         }
         else
         {
+
+  //          std::cerr << "Failed to read" << texturePath << std::endl;
+
         }
         file.close();
     }
     else
     {
+
+//        std::cerr << "Failed to open " << texturePath << std::endl;
+
     }
 }
 void SetupFunc()
