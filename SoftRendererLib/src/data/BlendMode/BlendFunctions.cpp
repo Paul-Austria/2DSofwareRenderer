@@ -8,7 +8,6 @@
 
 using namespace Tergos2D;
 
-
 void BlendFunctions::BlendRow(uint8_t *dstRow,
                               const uint8_t *srcRow,
                               size_t rowLength,
@@ -19,12 +18,11 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                               BlendMode selectedBlendMode,
                               BlendContext context)
 {
-
     auto blendFunc = GetBlendFunc(targetInfo.format, useSolidColor);
 
     if (blendFunc != nullptr)
     {
-        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, useSolidColor, selectedBlendMode,context);
+        blendFunc(dstRow, srcRow, rowLength, targetInfo, sourceInfo, coloring, useSolidColor, selectedBlendMode, context);
         return;
     }
 
@@ -62,13 +60,118 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         uint8_t invAlpha = 255 - srcAlpha;
         uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
         uint8_t inverseColorFactor = 255 - colorFactor;
-        for (int c = 1; c <= 3; ++c) // Red, Green, Blue channels
+
+        uint8_t srcFactorR, dstFactorR;
+        uint8_t srcFactorG, dstFactorG;
+        uint8_t srcFactorB, dstFactorB;
+
+        switch (context.colorBlendFactorSrc)
         {
-            srcARGB8888[c] = (srcARGB8888[c] * srcAlpha + coloring.color.data[c] * invAlpha) >> 8;
-            if (selectedBlendMode != BlendMode::COLORINGONLY)
-            {
-                dstARGB8888[c] = (srcARGB8888[c] * srcAlpha + dstARGB8888[c] * invAlpha) >> 8;
-            }
+        case BlendFactor::Zero:
+            srcFactorR = srcFactorG = srcFactorB = 0;
+            break;
+        case BlendFactor::One:
+            srcFactorR = srcFactorG = srcFactorB = 255;
+            break;
+        case BlendFactor::SourceAlpha:
+            srcFactorR = srcFactorG = srcFactorB = srcAlpha;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            srcFactorR = srcFactorG = srcFactorB = 255 - srcAlpha;
+            break;
+        case BlendFactor::DestAlpha:
+            srcFactorR = dstARGB8888[0];
+            srcFactorG = dstARGB8888[1];
+            srcFactorB = dstARGB8888[2];
+            break;
+        case BlendFactor::InverseDestAlpha:
+            srcFactorR = 255 - dstARGB8888[0];
+            srcFactorG = 255 - dstARGB8888[1];
+            srcFactorB = 255 - dstARGB8888[2];
+            break;
+        case BlendFactor::SourceColor:
+            srcFactorR = srcARGB8888[1];
+            srcFactorG = srcARGB8888[2];
+            srcFactorB = srcARGB8888[3];
+            break;
+        case BlendFactor::DestColor:
+            srcFactorR = dstARGB8888[1];
+            srcFactorG = dstARGB8888[2];
+            srcFactorB = dstARGB8888[3];
+            break;
+        case BlendFactor::InverseSourceColor:
+            srcFactorR = 255 - srcARGB8888[1];
+            srcFactorG = 255 - srcARGB8888[2];
+            srcFactorB = 255 - srcARGB8888[3];
+            break;
+        case BlendFactor::InverseDestColor:
+            srcFactorR = 255 - dstARGB8888[1];
+            srcFactorG = 255 - dstARGB8888[2];
+            srcFactorB = 255 - dstARGB8888[3];
+            break;
+        default:
+            srcFactorR = srcFactorG = srcFactorB = 255;
+            break;
+        }
+
+        switch (context.colorBlendFactorDst)
+        {
+        case BlendFactor::Zero:
+            dstFactorR = dstFactorG = dstFactorB = 0;
+            break;
+        case BlendFactor::One:
+            dstFactorR = dstFactorG = dstFactorB = 255;
+            break;
+        case BlendFactor::SourceAlpha:
+            dstFactorR = dstFactorG = dstFactorB = srcAlpha;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            dstFactorR = dstFactorG = dstFactorB = 255 - srcAlpha;
+            break;
+        case BlendFactor::DestAlpha:
+            dstFactorR = dstARGB8888[0];
+            dstFactorG = dstARGB8888[1];
+            dstFactorB = dstARGB8888[2];
+            break;
+        case BlendFactor::InverseDestAlpha:
+            dstFactorR = 255 - dstARGB8888[0];
+            dstFactorG = 255 - dstARGB8888[1];
+            dstFactorB = 255 - dstARGB8888[2];
+            break;
+        case BlendFactor::SourceColor:
+            dstFactorR = srcARGB8888[1];
+            dstFactorG = srcARGB8888[2];
+            dstFactorB = srcARGB8888[3];
+            break;
+        case BlendFactor::DestColor:
+            dstFactorR = dstARGB8888[1];
+            dstFactorG = dstARGB8888[2];
+            dstFactorB = dstARGB8888[3];
+            break;
+        case BlendFactor::InverseSourceColor:
+            dstFactorR = 255 - srcARGB8888[1];
+            dstFactorG = 255 - srcARGB8888[2];
+            dstFactorB = 255 - srcARGB8888[3];
+            break;
+        case BlendFactor::InverseDestColor:
+            dstFactorR = 255 - dstARGB8888[1];
+            dstFactorG = 255 - dstARGB8888[2];
+            dstFactorB = 255 - dstARGB8888[3];
+            break;
+        default:
+            dstFactorR = dstFactorG = dstFactorB = 255;
+            break;
+        }
+
+        switch (context.colorBlendOperation)
+        {
+        case BlendOperation::Add:
+            dstARGB8888[1] = (srcARGB8888[1] * srcFactorR + dstARGB8888[1] * dstFactorR) >> 8;
+            dstARGB8888[2] = (srcARGB8888[2] * srcFactorG + dstARGB8888[2] * dstFactorG) >> 8;
+            dstARGB8888[3] = (srcARGB8888[3] * srcFactorB + dstARGB8888[3] * dstFactorB) >> 8;
+            break;
+        default:
+            break;
         }
 
         // Use the maximum alpha
@@ -78,6 +181,3 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         convertFromARGB8888(dstARGB8888, dstPixel, 1);
     }
 }
-
-
-
