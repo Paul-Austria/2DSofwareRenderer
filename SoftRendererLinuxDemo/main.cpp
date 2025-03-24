@@ -189,7 +189,7 @@ int main()
         std::cerr << "Failed to open testrgb565.bin" << std::endl;
     }
 
-    context.SetBlendMode(BlendMode::SIMPLE);
+    context.SetBlendMode(BlendMode::BLEND);
     double previousTime = 0.0;
     int frameCount = 0;
     float x = 0.0f;

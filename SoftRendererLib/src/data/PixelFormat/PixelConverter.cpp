@@ -54,7 +54,7 @@ namespace Tergos2D
                 return conversion.func;
             }
         }
-        throw std::runtime_error("Conversion function not found between these formats.");
+        return nullptr;
     }
 
     void PixelConverter::Convert(PixelFormat from, PixelFormat to, const uint8_t *src, uint8_t *dst, size_t count)

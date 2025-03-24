@@ -60,9 +60,10 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         return;
 
     // Determine blending mode
-    BlendMode subBlend = context.BlendModeToUse(sourceInfo);
+    BlendContext bc = context.GetBlendContext();
+    bc.mode = context.BlendModeToUse(sourceInfo);
 
-    switch (subBlend)
+    switch (bc.mode)
     {
     case BlendMode::NOBLEND:
     {
@@ -85,7 +86,7 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         {
             uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
-            context.GetBlendFunc()(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(),false, subBlend);
+            context.GetBlendFunc()(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(),false,bc);
         }
         break;
     }

@@ -55,15 +55,16 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
     // Calculate the number of bytes in a row
     size_t bytesPerRow = (clipEndX - clipStartX) * info.bytesPerPixel;
 
-    BlendMode subBlend = context.GetBlendMode();
+    BlendContext bc = context.GetBlendContext();
+
     if (color.GetAlpha() == 255)
-        subBlend = BlendMode::NOBLEND;
+        bc.mode = BlendMode::NOBLEND;
     uint8_t *dest = textureData + (clipStartY * pitch) + (clipStartX * info.bytesPerPixel);
 
     uint8_t pixelData[MAXBYTESPERPIXEL];
     uint8_t rowPixelData[MAXROWLENGTH * MAXBYTESPERPIXEL];
 
-    switch (subBlend)
+    switch (bc.mode)
     {
     case BlendMode::NOBLEND:
     {
@@ -99,7 +100,7 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
             size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
             PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
-            context.GetBlendFunc()(rowDest, rowPixelData, rowLength, info, infosrcColor, context.GetColoring(),true, context.GetBlendMode());
+            context.GetBlendFunc()(rowDest, rowPixelData, rowLength, info, infosrcColor, context.GetColoring(),true,context.GetBlendContext());
         }
         break;
     }
@@ -181,9 +182,10 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
 
     color.ConvertTo(format, buffer);
 
-    BlendMode subBlend = context.GetBlendMode();
+    BlendContext bc = context.GetBlendContext();
+
     if (color.GetAlpha() == 255)
-        subBlend = BlendMode::NOBLEND;
+        bc.mode = BlendMode::NOBLEND;
 
     for (int destY = boundMinY; destY <= boundMaxY; destY++)
     {
@@ -212,9 +214,9 @@ void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint
             if (srcX >= 0 && srcX < length && srcY >= 0 && srcY < height)
             {
                 uint8_t *targetPixel = textureData + (destY * pitch) + (destX * info.bytesPerPixel);
-                if (subBlend != BlendMode::NOBLEND)
+                if (bc.mode  != BlendMode::NOBLEND)
                 {
-                    context.GetBlendFunc()(targetPixel, color.data, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), false, context.GetBlendMode());
+                    context.GetBlendFunc()(targetPixel, color.data, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), false,context.GetBlendContext());
                 }
                 else
                 {
@@ -329,7 +331,7 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
     uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
-    uint32_t pitch = targetTexture->GetPitch(); 
+    uint32_t pitch = targetTexture->GetPitch();
 
     int16_t dx = std::abs(x1 - x0);
     int16_t dy = std::abs(y1 - y0);
@@ -337,8 +339,9 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
     int16_t sy = (y0 < y1) ? 1 : -1;
     int16_t err = dx - dy;
 
-    BlendMode subBlend = context.GetBlendMode();
-    if(color.GetAlpha() == 255) subBlend = BlendMode::NOBLEND;
+    BlendContext bc = context.GetBlendContext();
+
+    if(color.GetAlpha() == 255) bc.mode = BlendMode::NOBLEND;
     uint8_t pixelData[MAXBYTESPERPIXEL];
     color.ConvertTo(format, pixelData);
 
@@ -347,13 +350,13 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
         if (x0 >= 0 && x0 < textureWidth && y0 >= 0 && y0 < textureHeight)
         {
             uint8_t *targetPixel = textureData + (y0 * pitch) + (x0 * info.bytesPerPixel);
-            switch (subBlend)
+            switch (bc.mode)
             {
             case BlendMode::NOBLEND:
                 MemHandler::MemCopy(targetPixel, pixelData, info.bytesPerPixel);
                 break;
             default:
-                context.GetBlendFunc()(targetPixel, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(),false, context.GetBlendMode());
+                context.GetBlendFunc()(targetPixel, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(),false,context.GetBlendContext());
                 break;
             }
         }

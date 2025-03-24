@@ -24,19 +24,11 @@ Texture * RenderContext2D::GetTargetTexture()
     return targetTexture;
 }
 
-void RenderContext2D::SetBlendMode(BlendMode mode)
-{
-    this->mode = mode;
-}
 
-BlendMode Tergos2D::RenderContext2D::GetBlendMode()
-{
-    return this->mode;
-}
 
 BlendMode Tergos2D::RenderContext2D::BlendModeToUse(const PixelFormatInfo &info)
 {
-    BlendMode touse = mode;
+    BlendMode touse = m_BlendContext.mode;
 
     if(touse == BlendMode::NOBLEND) return touse;
     if(!info.hasAlpha && !GetColoring().colorEnabled) return BlendMode::NOBLEND;
@@ -129,4 +121,14 @@ void Tergos2D::RenderContext2D::SetBlendFunc(BlendFunc blendFunc)
 BlendFunc Tergos2D::RenderContext2D::GetBlendFunc()
 {
     return blendFunc;
+}
+
+BlendContext &Tergos2D::RenderContext2D::GetBlendContext()
+{
+    return m_BlendContext;
+}
+
+void Tergos2D::RenderContext2D::SetBlendContext(BlendContext context)
+{
+    this->m_BlendContext = context;
 }
