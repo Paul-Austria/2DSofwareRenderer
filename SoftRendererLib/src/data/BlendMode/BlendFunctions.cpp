@@ -80,13 +80,13 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
             break;
         case BlendFactor::DestAlpha:
             srcFactorR = dstARGB8888[0];
-            srcFactorG = dstARGB8888[1];
-            srcFactorB = dstARGB8888[2];
+            srcFactorG = dstARGB8888[0];
+            srcFactorB = dstARGB8888[0];
             break;
         case BlendFactor::InverseDestAlpha:
             srcFactorR = 255 - dstARGB8888[0];
-            srcFactorG = 255 - dstARGB8888[1];
-            srcFactorB = 255 - dstARGB8888[2];
+            srcFactorG = 255 - dstARGB8888[0];
+            srcFactorB = 255 - dstARGB8888[0];
             break;
         case BlendFactor::SourceColor:
             srcFactorR = srcARGB8888[1];
@@ -129,13 +129,13 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
             break;
         case BlendFactor::DestAlpha:
             dstFactorR = dstARGB8888[0];
-            dstFactorG = dstARGB8888[1];
-            dstFactorB = dstARGB8888[2];
+            dstFactorG = dstARGB8888[0];
+            dstFactorB = dstARGB8888[0];
             break;
         case BlendFactor::InverseDestAlpha:
             dstFactorR = 255 - dstARGB8888[0];
-            dstFactorG = 255 - dstARGB8888[1];
-            dstFactorB = 255 - dstARGB8888[2];
+            dstFactorG = 255 - dstARGB8888[0];
+            dstFactorB = 255 - dstARGB8888[0];
             break;
         case BlendFactor::SourceColor:
             dstFactorR = srcARGB8888[1];
