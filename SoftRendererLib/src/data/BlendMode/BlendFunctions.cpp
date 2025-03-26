@@ -32,6 +32,8 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
     convertToARGB8888 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
     convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
+    // Temporary storage for source pixel in RGB24
+    alignas(16) uint8_t srcRGB24[1024 * 3];
     // Temporary storage for conversion
     alignas(16) uint8_t srcARGB8888[4];
     alignas(16) uint8_t dstARGB8888[4];
@@ -56,9 +58,16 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
         {
             convertToARGB8888(dstPixel, dstARGB8888, 1);
         }
-        uint8_t invAlpha = 255 - srcAlpha;
         uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
-        uint8_t inverseColorFactor = 255 - colorFactor;
+
+
+        if(colorFactor){
+            srcARGB8888[1] = (srcARGB8888[1] * coloring.color.data[1]) >> 8;
+            srcARGB8888[2] = (srcARGB8888[2] * coloring.color.data[2]) >> 8;
+            srcARGB8888[3] = (srcARGB8888[3] * coloring.color.data[3]) >> 8;
+            srcAlpha = (srcAlpha * coloring.color.data[0]) >> 8;
+        }
+        uint8_t invAlpha = 255 - srcAlpha;
 
         uint8_t srcFactorR, dstFactorR;
         uint8_t srcFactorG, dstFactorG;
@@ -170,14 +179,14 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                 dstARGB8888[3] = (srcARGB8888[3] * srcFactorB + dstARGB8888[3] * dstFactorB) >> 8;
                 break;
             case BlendOperation::Subtract:
-                dstARGB8888[1] = (srcARGB8888[1] * srcFactorR - dstARGB8888[1] * dstFactorR) >> 8;
-                dstARGB8888[2] = (srcARGB8888[2] * srcFactorG - dstARGB8888[2] * dstFactorG) >> 8;
-                dstARGB8888[3] = (srcARGB8888[3] * srcFactorB - dstARGB8888[3] * dstFactorB) >> 8;
+                dstARGB8888[1] = ((srcARGB8888[1] * srcFactorR - dstARGB8888[1] * dstFactorR) >> 8) < 0 ? 0 : (((srcARGB8888[1] * srcFactorR - dstARGB8888[1] * dstFactorR) >> 8) > 255 ? 255 : (srcARGB8888[1] * srcFactorR - dstARGB8888[1] * dstFactorR) >> 8);
+                dstARGB8888[2] = ((srcARGB8888[2] * srcFactorG - dstARGB8888[2] * dstFactorG) >> 8) < 0 ? 0 : (((srcARGB8888[2] * srcFactorG - dstARGB8888[2] * dstFactorG) >> 8) > 255 ? 255 : (srcARGB8888[2] * srcFactorG - dstARGB8888[2] * dstFactorG) >> 8);
+                dstARGB8888[3] = ((srcARGB8888[3] * srcFactorB - dstARGB8888[3] * dstFactorB) >> 8) < 0 ? 0 : (((srcARGB8888[3] * srcFactorB - dstARGB8888[3] * dstFactorB) >> 8) > 255 ? 255 : (srcARGB8888[3] * srcFactorB - dstARGB8888[3] * dstFactorB) >> 8);
                 break;
             case BlendOperation::ReverseSubtract:
-                dstARGB8888[1] = (dstARGB8888[1] * dstFactorR - srcARGB8888[1] * srcFactorR) >> 8;
-                dstARGB8888[2] = (dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8;
-                dstARGB8888[3] = (dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8;
+                dstARGB8888[1] = ((dstARGB8888[1] * dstFactorR - srcARGB8888[1] * srcFactorR) >> 8) < 0 ? 0 : (((dstARGB8888[1] * dstFactorR - srcARGB8888[1] * srcFactorR) >> 8) > 255 ? 255 : (dstARGB8888[1] * dstFactorR - srcARGB8888[1] * srcFactorR) >> 8);
+                dstARGB8888[2] = ((dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8) < 0 ? 0 : (((dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8) > 255 ? 255 : (dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8);
+                dstARGB8888[3] = ((dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8) < 0 ? 0 : (((dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8) > 255 ? 255 : (dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8);
                 break;
             case BlendOperation::BitwiseAnd:
                 dstARGB8888[1] = (srcARGB8888[1] * srcFactorR & dstARGB8888[1] * dstFactorR) >> 8;
@@ -208,11 +217,12 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
     bool useSolidColor,
     BlendContext& context)
 {
-    // Conversion function for the source format
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
+    PixelConverter::ConvertFunc convertColorToRGB24 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
     // Temporary storage for source pixel in RGB24
     alignas(16) uint8_t srcRGB24[1024 * 3];
+    alignas(16) uint8_t colorDataAsRGB[3];
 
     convertToRGB24(srcRow, srcRGB24, rowLength);
 
@@ -221,9 +231,6 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
 
     uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
     uint8_t inverseColorFactor = 255 - colorFactor;
-    uint8_t colorR = coloring.color.data[1];
-    uint8_t colorG = coloring.color.data[2];
-    uint8_t colorB = coloring.color.data[3];
 
     for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
     {
@@ -240,9 +247,10 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
         // Apply coloring if needed
         if (coloring.colorEnabled)
         {
-            srcColor[0] = ((srcColor[0] * inverseColorFactor) + (colorR * colorFactor)) >> 8;
-            srcColor[1] = ((srcColor[1] * inverseColorFactor) + (colorG * colorFactor)) >> 8;
-            srcColor[2] = ((srcColor[2] * inverseColorFactor) + (colorB * colorFactor)) >> 8;
+            srcColor[0] = (srcColor[0] * colorDataAsRGB[0]) >> 8;
+            srcColor[1] = (srcColor[1] * colorDataAsRGB[1]) >> 8;
+            srcColor[2] = (srcColor[2] * colorDataAsRGB[2]) >> 8;
+            alpha = (alpha * coloring.color.data[0]) >> 8;
         }
 
         uint8_t invAlpha = 255 - alpha;
