@@ -8,6 +8,7 @@ set(SOURCES
 
 
 if(USE_NEON)
+message("Blend Neon used")
 set(SOURCES
     ${SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/Platform/arm_neon/BlendFunctions.cpp

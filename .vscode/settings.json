@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cpp": "cpp",
         "xiosbase": "cpp",
         "cmath": "cpp",
         "iostream": "cpp",
@@ -81,6 +82,8 @@
         "semaphore": "cpp",
         "span": "cpp",
         "cinttypes": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "condition_variable": "cpp",
+        "queue": "cpp"
     }
 }

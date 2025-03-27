@@ -5,6 +5,62 @@
 
 using namespace Tergos2D;
 
+
+// ONLY SOURCEALPHA, INVERSESOURCEALPHA, ADD ONE ZERO ADD
+void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
+    const uint8_t *srcRow,
+    size_t rowLength,
+    const PixelFormatInfo &targetInfo,
+    const PixelFormatInfo &sourceInfo,
+    Coloring coloring,
+    bool useSolidColor,
+    BlendContext& context)
+{
+    PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
+    PixelConverter::ConvertFunc convertColorToRGB24 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
+
+    // Temporary storage for source pixel in RGB24
+    alignas(16) uint8_t srcRGB24[1024 * 3];
+    alignas(16) uint8_t colorDataAsRGB[3];
+
+    convertToRGB24(srcRow, srcRGB24, rowLength);
+
+    const uint8_t *srcPixel = srcRow;
+    uint8_t *dstPixel = dstRow;
+
+    uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
+    uint8_t inverseColorFactor = 255 - colorFactor;
+
+    for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
+    {
+        uint8_t grayValue = srcPixel[0];
+        uint8_t alpha = (grayValue == 0) ? 0 : 255;
+
+        if (alpha == 0)
+        {
+        continue;
+        }
+
+        uint8_t *srcColor = &srcRGB24[i * 3];
+
+        // Apply coloring if needed
+        if (coloring.colorEnabled)
+        {
+            srcColor[0] = (srcColor[0] * colorDataAsRGB[0]) >> 8;
+            srcColor[1] = (srcColor[1] * colorDataAsRGB[1]) >> 8;
+            srcColor[2] = (srcColor[2] * colorDataAsRGB[2]) >> 8;
+            alpha = (alpha * coloring.color.data[0]) >> 8;
+        }
+
+        uint8_t invAlpha = 255 - alpha;
+
+        // Blend the source and destination pixels
+        dstPixel[0] = (srcColor[0] * alpha + dstPixel[0] * invAlpha) >> 8;
+        dstPixel[1] = (srcColor[1] * alpha + dstPixel[1] * invAlpha) >> 8;
+        dstPixel[2] = (srcColor[2] * alpha + dstPixel[2] * invAlpha) >> 8;
+    }
+}
+
 void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
                                         const uint8_t *srcRow,
                                         size_t rowLength,
@@ -181,11 +237,7 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
                 dstRow[i + 2] = tempB < 0 ? 0 : (tempB > 255 ? 255 : tempB);
                 break;
             }
-            case BlendOperation::BitwiseAnd:
-                dstRow[i] = ((srcRGB24[0] * srcFactorR) & (dstRow[i] * dstFactorR)) >> 8;
-                dstRow[i + 1] = ((srcRGB24[1] * srcFactorG) & (dstRow[i + 1] * dstFactorG)) >> 8;
-                dstRow[i + 2] = ((srcRGB24[2] * srcFactorB) & (dstRow[i + 2] * dstFactorB)) >> 8;
-                break;
+
             default:
                 break;
         }
@@ -377,11 +429,6 @@ void BlendFunctions::BlendRGB24(uint8_t *dstRow,
                 dstPixel[0] = ((dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8) < 0 ? 0 : (((dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8) > 255 ? 255 : (dstPixel[0] * dstFactorR - srcColor[0] * srcFactorR) >> 8);
                 dstPixel[1] = ((dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8) < 0 ? 0 : (((dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8) > 255 ? 255 : (dstPixel[1] * dstFactorG - srcColor[1] * srcFactorG) >> 8);
                 dstPixel[2] = ((dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8) < 0 ? 0 : (((dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8) > 255 ? 255 : (dstPixel[2] * dstFactorB - srcColor[2] * srcFactorB) >> 8);
-                break;
-            case BlendOperation::BitwiseAnd:
-                dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
-                dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
-                dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
                 break;
             default:
                 break;

@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 project(SoftRendererLib VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_BUILD_TYPE Release)
 
 
 # custom options
-option(SIMD_OPTIMIZED "SIMD OPTIMIZED" OFF)
+set(USE_NEON ON CACHE BOOL "use neon")
 
 
 # Include the sources from subdirectories
@@ -28,16 +29,20 @@ target_include_directories(SoftRendererLib PUBLIC
 
 # Set optimization flags based on build type
 if(CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_options(SoftRendererLib PRIVATE 
+    message("Building for release")
+    target_compile_options(SoftRendererLib PRIVATE
         -O3                      # Enable full optimization
         -funroll-loops           # Unroll loops for better performance
     )
 elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-    target_compile_options(SoftRendererLib PRIVATE 
+    target_compile_options(SoftRendererLib PRIVATE
         -O2                      # Enable standard optimization
         -g                       # Generate debug info
     )
 endif()
 
+if(USE_NEON)
+message("Arm NEON is used")
+endif()
 set_target_properties(SoftRendererLib PROPERTIES LINKER_LANGUAGE CXX)
 

@@ -81,6 +81,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif(WIN32)
     if(UNIX)
     target_compile_definitions(SoftRendererLinuxDemo PRIVATE DEBUG)
+    target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+    ${CMAKE_SYSROOT}/usr/lib/libdrm.so
+)
     endif(UNIX)
 else()
     message(STATUS "Configuring for Release build")

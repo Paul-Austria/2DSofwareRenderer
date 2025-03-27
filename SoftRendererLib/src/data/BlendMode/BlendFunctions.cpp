@@ -188,11 +188,6 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
                 dstARGB8888[2] = ((dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8) < 0 ? 0 : (((dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8) > 255 ? 255 : (dstARGB8888[2] * dstFactorG - srcARGB8888[2] * srcFactorG) >> 8);
                 dstARGB8888[3] = ((dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8) < 0 ? 0 : (((dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8) > 255 ? 255 : (dstARGB8888[3] * dstFactorB - srcARGB8888[3] * srcFactorB) >> 8);
                 break;
-            case BlendOperation::BitwiseAnd:
-                dstARGB8888[1] = (srcARGB8888[1] * srcFactorR & dstARGB8888[1] * dstFactorR) >> 8;
-                dstARGB8888[2] = (srcARGB8888[2] * srcFactorG & dstARGB8888[2] * dstFactorG) >> 8;
-                dstARGB8888[3] = (srcARGB8888[3] * srcFactorB & dstARGB8888[3] * dstFactorB) >> 8;
-                break;
             default:
                 break;
         }
@@ -207,57 +202,3 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
 
 
 
-// ONLY SOURCEALPHA, INVERSESOURCEALPHA, ADD ONE ZERO ADD
-void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
-    const uint8_t *srcRow,
-    size_t rowLength,
-    const PixelFormatInfo &targetInfo,
-    const PixelFormatInfo &sourceInfo,
-    Coloring coloring,
-    bool useSolidColor,
-    BlendContext& context)
-{
-    PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
-    PixelConverter::ConvertFunc convertColorToRGB24 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
-
-    // Temporary storage for source pixel in RGB24
-    alignas(16) uint8_t srcRGB24[1024 * 3];
-    alignas(16) uint8_t colorDataAsRGB[3];
-
-    convertToRGB24(srcRow, srcRGB24, rowLength);
-
-    const uint8_t *srcPixel = srcRow;
-    uint8_t *dstPixel = dstRow;
-
-    uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
-    uint8_t inverseColorFactor = 255 - colorFactor;
-
-    for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel += targetInfo.bytesPerPixel)
-    {
-        uint8_t grayValue = srcPixel[0];
-        uint8_t alpha = (grayValue == 0) ? 0 : 255;
-
-        if (alpha == 0)
-        {
-        continue;
-        }
-
-        uint8_t *srcColor = &srcRGB24[i * 3];
-
-        // Apply coloring if needed
-        if (coloring.colorEnabled)
-        {
-            srcColor[0] = (srcColor[0] * colorDataAsRGB[0]) >> 8;
-            srcColor[1] = (srcColor[1] * colorDataAsRGB[1]) >> 8;
-            srcColor[2] = (srcColor[2] * colorDataAsRGB[2]) >> 8;
-            alpha = (alpha * coloring.color.data[0]) >> 8;
-        }
-
-        uint8_t invAlpha = 255 - alpha;
-
-        // Blend the source and destination pixels
-        dstPixel[0] = (srcColor[0] * alpha + dstPixel[0] * invAlpha) >> 8;
-        dstPixel[1] = (srcColor[1] * alpha + dstPixel[1] * invAlpha) >> 8;
-        dstPixel[2] = (srcColor[2] * alpha + dstPixel[2] * invAlpha) >> 8;
-    }
-}
