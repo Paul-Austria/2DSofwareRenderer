@@ -6,7 +6,7 @@
         "type": "cppdbg",
         "request": "launch",
         "targetArchitecture": "arm",
-        "program": "build-stm32/bin/SoftRendererLinuxDemo",
+        "program": "build-linux/bin/SoftRendererLinuxDemo",
         "miDebuggerPath": "/opt/st/stm32mp1/5.0.3-openstlinux-6.6-yocto-scarthgap-mpu-v24.11.06/sysroots/x86_64-ostl_sdk-linux/usr/bin/arm-ostl-linux-gnueabi/arm-ostl-linux-gnueabi-gdb",
         "miDebuggerServerAddress": "192.168.7.1:1234",
         "cwd": "${workspaceFolder}",
@@ -26,4 +26,3 @@
       }
     ]
   }
-  

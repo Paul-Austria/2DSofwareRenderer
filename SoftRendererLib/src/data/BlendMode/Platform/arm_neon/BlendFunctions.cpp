@@ -6,13 +6,9 @@
 
 #include "../../../PixelFormat/PixelFormatInfo.h"
 
+#include <arm_neon.h>
+
 using namespace Tergos2D;
-
-#include <arm_neon.h>
-
-#include <arm_neon.h>
-
-#include <arm_neon.h>
 
 void BlendFunctions::BlendSolidRowRGB24(uint8_t * dstRow,
     const uint8_t * srcRow,
@@ -72,170 +68,176 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t * dstRow,
     // Process 8 pixels at a time
     size_t vectorized_length = (rowLength / 8) * 8;
     size_t i = 0;
-    if (context.colorBlendOperation == BlendOperation::Add) {
-        for (i = 0; i < vectorized_length * 3; i += 24) // 8 pixels * 3 bytes
-        {
-            // Load 8 pixels of destination data
-            uint8x8x3_t dst_neon = vld3_u8( & dstRow[i]);
-            uint8x8x3_t src_factor, dst_factor;
+    for (i = 0; i < vectorized_length * 3; i += 24) // 8 pixels * 3 bytes
+    {
+        // Load 8 pixels of destination data
+        uint8x8x3_t dst_neon = vld3_u8( & dstRow[i]);
+        uint8x8x3_t src_factor, dst_factor;
 
-            // Calculate source blend factors
-            switch (context.colorBlendFactorSrc) {
-            case BlendFactor::Zero:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = zero_vec;
-                break;
-            case BlendFactor::One:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
-                break;
-            case BlendFactor::SourceAlpha:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = alpha_vec;
-                break;
-            case BlendFactor::InverseSourceAlpha:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = inv_alpha_vec;
-                break;
-            case BlendFactor::DestAlpha:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
-                break;
-            case BlendFactor::InverseDestAlpha:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = zero_vec;
-                break;
-            case BlendFactor::SourceColor:
-                src_factor.val[0] = src_neon.val[0];
-                src_factor.val[1] = src_neon.val[1];
-                src_factor.val[2] = src_neon.val[2];
-                break;
-            case BlendFactor::DestColor:
-                src_factor.val[0] = dst_neon.val[0];
-                src_factor.val[1] = dst_neon.val[1];
-                src_factor.val[2] = dst_neon.val[2];
-                break;
-            case BlendFactor::InverseSourceColor:
-                src_factor.val[0] = vsub_u8(full_vec, src_neon.val[0]);
-                src_factor.val[1] = vsub_u8(full_vec, src_neon.val[1]);
-                src_factor.val[2] = vsub_u8(full_vec, src_neon.val[2]);
-                break;
-            case BlendFactor::InverseDestColor:
-                src_factor.val[0] = vsub_u8(full_vec, dst_neon.val[0]);
-                src_factor.val[1] = vsub_u8(full_vec, dst_neon.val[1]);
-                src_factor.val[2] = vsub_u8(full_vec, dst_neon.val[2]);
-                break;
-            default:
-                src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
-                break;
-            }
-
-            // Calculate destination blend factors
-            switch (context.colorBlendFactorDst) {
-            case BlendFactor::Zero:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = zero_vec;
-                break;
-            case BlendFactor::One:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
-                break;
-            case BlendFactor::SourceAlpha:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = alpha_vec;
-                break;
-            case BlendFactor::InverseSourceAlpha:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = inv_alpha_vec;
-                break;
-            case BlendFactor::DestAlpha:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
-                break;
-            case BlendFactor::InverseDestAlpha:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = zero_vec;
-                break;
-            case BlendFactor::SourceColor:
-                dst_factor.val[0] = src_neon.val[0];
-                dst_factor.val[1] = src_neon.val[1];
-                dst_factor.val[2] = src_neon.val[2];
-                break;
-            case BlendFactor::DestColor:
-                dst_factor.val[0] = dst_neon.val[0];
-                dst_factor.val[1] = dst_neon.val[1];
-                dst_factor.val[2] = dst_neon.val[2];
-                break;
-            case BlendFactor::InverseSourceColor:
-                dst_factor.val[0] = vsub_u8(full_vec, src_neon.val[0]);
-                dst_factor.val[1] = vsub_u8(full_vec, src_neon.val[1]);
-                dst_factor.val[2] = vsub_u8(full_vec, src_neon.val[2]);
-                break;
-            case BlendFactor::InverseDestColor:
-                dst_factor.val[0] = vsub_u8(full_vec, dst_neon.val[0]);
-                dst_factor.val[1] = vsub_u8(full_vec, dst_neon.val[1]);
-                dst_factor.val[2] = vsub_u8(full_vec, dst_neon.val[2]);
-                break;
-            default:
-                dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
-                break;
-            }
-
-            uint8x8x3_t result_neon;
-
-            // Perform blend operation
-            switch (context.colorBlendOperation) {
-            case BlendOperation::Add: {
-                // Multiply and add with proper scaling
-                uint16x8_t temp_r = vmull_u8(src_neon.val[0], src_factor.val[0]);
-                uint16x8_t temp_g = vmull_u8(src_neon.val[1], src_factor.val[1]);
-                uint16x8_t temp_b = vmull_u8(src_neon.val[2], src_factor.val[2]);
-
-                uint16x8_t dst_r = vmull_u8(dst_neon.val[0], dst_factor.val[0]);
-                uint16x8_t dst_g = vmull_u8(dst_neon.val[1], dst_factor.val[1]);
-                uint16x8_t dst_b = vmull_u8(dst_neon.val[2], dst_factor.val[2]);
-
-                temp_r = vaddq_u16(temp_r, dst_r);
-                temp_g = vaddq_u16(temp_g, dst_g);
-                temp_b = vaddq_u16(temp_b, dst_b);
-
-                result_neon.val[0] = vshrn_n_u16(temp_r, 8);
-                result_neon.val[1] = vshrn_n_u16(temp_g, 8);
-                result_neon.val[2] = vshrn_n_u16(temp_b, 8);
-                break;
-            }
-            case BlendOperation::Subtract: {
-                uint16x8_t temp_r = vmull_u8(src_neon.val[0], src_factor.val[0]);
-                uint16x8_t temp_g = vmull_u8(src_neon.val[1], src_factor.val[1]);
-                uint16x8_t temp_b = vmull_u8(src_neon.val[2], src_factor.val[2]);
-
-                uint16x8_t dst_r = vmull_u8(dst_neon.val[0], dst_factor.val[0]);
-                uint16x8_t dst_g = vmull_u8(dst_neon.val[1], dst_factor.val[1]);
-                uint16x8_t dst_b = vmull_u8(dst_neon.val[2], dst_factor.val[2]);
-
-                int16x8_t diff_r = vsubq_s16(vreinterpretq_s16_u16(temp_r), vreinterpretq_s16_u16(dst_r));
-                int16x8_t diff_g = vsubq_s16(vreinterpretq_s16_u16(temp_g), vreinterpretq_s16_u16(dst_g));
-                int16x8_t diff_b = vsubq_s16(vreinterpretq_s16_u16(temp_b), vreinterpretq_s16_u16(dst_b));
-
-                result_neon.val[0] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_r), 8), full_vec), zero_vec);
-                result_neon.val[1] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_g), 8), full_vec), zero_vec);
-                result_neon.val[2] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_b), 8), full_vec), zero_vec);
-                break;
-            }
-            case BlendOperation::ReverseSubtract: {
-                uint16x8_t temp_r = vmull_u8(src_neon.val[0], src_factor.val[0]);
-                uint16x8_t temp_g = vmull_u8(src_neon.val[1], src_factor.val[1]);
-                uint16x8_t temp_b = vmull_u8(src_neon.val[2], src_factor.val[2]);
-
-                uint16x8_t dst_r = vmull_u8(dst_neon.val[0], dst_factor.val[0]);
-                uint16x8_t dst_g = vmull_u8(dst_neon.val[1], dst_factor.val[1]);
-                uint16x8_t dst_b = vmull_u8(dst_neon.val[2], dst_factor.val[2]);
-
-                int16x8_t diff_r = vsubq_s16(vreinterpretq_s16_u16(dst_r), vreinterpretq_s16_u16(temp_r));
-                int16x8_t diff_g = vsubq_s16(vreinterpretq_s16_u16(dst_g), vreinterpretq_s16_u16(temp_g));
-                int16x8_t diff_b = vsubq_s16(vreinterpretq_s16_u16(dst_b), vreinterpretq_s16_u16(temp_b));
-
-                result_neon.val[0] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_r), 8), full_vec), zero_vec);
-                result_neon.val[1] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_g), 8), full_vec), zero_vec);
-                result_neon.val[2] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(diff_b), 8), full_vec), zero_vec);
-                break;
-            }
-            default:
-                result_neon = dst_neon;
-                break;
-            }
-
-            // Store the result back to memory
-            vst3_u8( & dstRow[i], result_neon);
+        // Calculate source blend factors
+        switch (context.colorBlendFactorSrc) {
+        case BlendFactor::Zero:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = zero_vec;
+            break;
+        case BlendFactor::One:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
+            break;
+        case BlendFactor::SourceAlpha:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = alpha_vec;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = inv_alpha_vec;
+            break;
+        case BlendFactor::DestAlpha:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
+            break;
+        case BlendFactor::InverseDestAlpha:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = zero_vec;
+            break;
+        case BlendFactor::SourceColor:
+            src_factor.val[0] = src_neon.val[0];
+            src_factor.val[1] = src_neon.val[1];
+            src_factor.val[2] = src_neon.val[2];
+            break;
+        case BlendFactor::DestColor:
+            src_factor.val[0] = dst_neon.val[0];
+            src_factor.val[1] = dst_neon.val[1];
+            src_factor.val[2] = dst_neon.val[2];
+            break;
+        case BlendFactor::InverseSourceColor:
+            src_factor.val[0] = vsub_u8(full_vec, src_neon.val[0]);
+            src_factor.val[1] = vsub_u8(full_vec, src_neon.val[1]);
+            src_factor.val[2] = vsub_u8(full_vec, src_neon.val[2]);
+            break;
+        case BlendFactor::InverseDestColor:
+            src_factor.val[0] = vsub_u8(full_vec, dst_neon.val[0]);
+            src_factor.val[1] = vsub_u8(full_vec, dst_neon.val[1]);
+            src_factor.val[2] = vsub_u8(full_vec, dst_neon.val[2]);
+            break;
+        default:
+            src_factor.val[0] = src_factor.val[1] = src_factor.val[2] = full_vec;
+            break;
         }
+
+        // Calculate destination blend factors
+        switch (context.colorBlendFactorDst) {
+        case BlendFactor::Zero:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = zero_vec;
+            break;
+        case BlendFactor::One:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
+            break;
+        case BlendFactor::SourceAlpha:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = alpha_vec;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = inv_alpha_vec;
+            break;
+        case BlendFactor::DestAlpha:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
+            break;
+        case BlendFactor::InverseDestAlpha:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = zero_vec;
+            break;
+        case BlendFactor::SourceColor:
+            dst_factor.val[0] = src_neon.val[0];
+            dst_factor.val[1] = src_neon.val[1];
+            dst_factor.val[2] = src_neon.val[2];
+            break;
+        case BlendFactor::DestColor:
+            dst_factor.val[0] = dst_neon.val[0];
+            dst_factor.val[1] = dst_neon.val[1];
+            dst_factor.val[2] = dst_neon.val[2];
+            break;
+        case BlendFactor::InverseSourceColor:
+            dst_factor.val[0] = vsub_u8(full_vec, src_neon.val[0]);
+            dst_factor.val[1] = vsub_u8(full_vec, src_neon.val[1]);
+            dst_factor.val[2] = vsub_u8(full_vec, src_neon.val[2]);
+            break;
+        case BlendFactor::InverseDestColor:
+            dst_factor.val[0] = vsub_u8(full_vec, dst_neon.val[0]);
+            dst_factor.val[1] = vsub_u8(full_vec, dst_neon.val[1]);
+            dst_factor.val[2] = vsub_u8(full_vec, dst_neon.val[2]);
+            break;
+        default:
+            dst_factor.val[0] = dst_factor.val[1] = dst_factor.val[2] = full_vec;
+            break;
+        }
+
+        uint8x8x3_t result_neon;
+
+        // Perform blend operation
+        switch (context.colorBlendOperation) {
+        case BlendOperation::Add: {
+            // Multiply and add with proper scaling
+            uint16x8_t temp_r = vmull_u8(src_neon.val[0], src_factor.val[0]);
+            uint16x8_t temp_g = vmull_u8(src_neon.val[1], src_factor.val[1]);
+            uint16x8_t temp_b = vmull_u8(src_neon.val[2], src_factor.val[2]);
+
+            uint16x8_t dst_r = vmull_u8(dst_neon.val[0], dst_factor.val[0]);
+            uint16x8_t dst_g = vmull_u8(dst_neon.val[1], dst_factor.val[1]);
+            uint16x8_t dst_b = vmull_u8(dst_neon.val[2], dst_factor.val[2]);
+
+            temp_r = vaddq_u16(temp_r, dst_r);
+            temp_g = vaddq_u16(temp_g, dst_g);
+            temp_b = vaddq_u16(temp_b, dst_b);
+
+            result_neon.val[0] = vshrn_n_u16(temp_r, 8);
+            result_neon.val[1] = vshrn_n_u16(temp_g, 8);
+            result_neon.val[2] = vshrn_n_u16(temp_b, 8);
+            break;
+        }
+        case BlendOperation::Subtract: {
+            uint8x8_t resultR = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[0], src_factor.val[0]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[0], dst_factor.val[0]), 8))
+            ));
+
+            uint8x8_t resultG = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[1], src_factor.val[1]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[1], dst_factor.val[1]), 8))
+            ));
+
+            uint8x8_t resultB = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[2], src_factor.val[2]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[2], dst_factor.val[2]), 8))
+            ));
+
+            result_neon.val[0] = resultR;
+            result_neon.val[1] = resultG;
+            result_neon.val[2] = resultB;
+            vst3_u8(&dstRow[i], result_neon);
+            break;
+        }
+        case BlendOperation::ReverseSubtract: {
+            uint8x8_t resultR = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[0], dst_factor.val[0]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[0], src_factor.val[0]), 8))
+            ));
+
+            uint8x8_t resultG = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[1], dst_factor.val[1]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[1], src_factor.val[1]), 8))
+            ));
+
+            uint8x8_t resultB = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_neon.val[2], dst_factor.val[2]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_neon.val[2], src_factor.val[2]), 8))
+            ));
+
+            result_neon.val[0] = resultR;
+            result_neon.val[1] = resultG;
+            result_neon.val[2] = resultB;
+            vst3_u8(&dstRow[i], result_neon);
+            break;
+        }
+        default:
+            result_neon = dst_neon;
+            break;
+        }
+
+        // Store the result back to memory
+        vst3_u8( & dstRow[i], result_neon);
     }
     // Handle remaining pixels using scalar code
     for (; i < rowLength * 3; i += 3) {
@@ -341,13 +343,25 @@ void BlendFunctions::BlendSolidRowRGB24(uint8_t * dstRow,
             dstRow[i + 2] = (srcRGB24[2] * srcFactorB + dstRow[i + 2] * dstFactorB) >> 8;
             break;
         case BlendOperation::Subtract: {
-            int tempR = (srcRGB24[0] * srcFactorR - dstRow[i] * dstFactorR) >> 8;
-            int tempG = (srcRGB24[1] * srcFactorG - dstRow[i + 1] * dstFactorG) >> 8;
-            int tempB = (srcRGB24[2] * srcFactorB - dstRow[i + 2] * dstFactorB) >> 8;
+            int srcRedComponent = srcRGB24[0] * srcFactorR;
+            int srcGreenComponent = srcRGB24[1] * srcFactorG;
+            int srcBlueComponent = srcRGB24[2] * srcFactorB;
 
-            dstRow[i] = tempR < 0 ? 0 : (tempR > 255 ? 255 : tempR);
-            dstRow[i + 1] = tempG < 0 ? 0 : (tempG > 255 ? 255 : tempG);
-            dstRow[i + 2] = tempB < 0 ? 0 : (tempB > 255 ? 255 : tempB);
+            int dstRedComponent = dstRow[i] * dstFactorR;
+            int dstGreenComponent = dstRow[i + 1] * dstFactorG;
+            int dstBlueComponent = dstRow[i + 2] * dstFactorB;
+
+            int tempR = (srcRedComponent - dstRedComponent) >> 8;
+            int tempG = (srcGreenComponent - dstGreenComponent) >> 8;
+            int tempB = (srcBlueComponent - dstBlueComponent) >> 8;
+
+            int finalR = tempR < 0 ? 0 : (tempR > 255 ? 255 : tempR);
+            int finalG = tempG < 0 ? 0 : (tempG > 255 ? 255 : tempG);
+            int finalB = tempB < 0 ? 0 : (tempB > 255 ? 255 : tempB);
+
+            dstRow[i] = finalR;
+            dstRow[i + 1] = finalG;
+            dstRow[i + 2] = finalB;
             break;
         }
         case BlendOperation::ReverseSubtract: {
@@ -377,7 +391,6 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t * dstRow,
     PixelConverter::ConvertFunc convertToRGB24 = PixelConverter::GetConversionFunction(sourceInfo.format, targetInfo.format);
     PixelConverter::ConvertFunc convertColorToRGB24 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
-    // Temporary storage for source pixel in RGB24
     alignas(16) uint8_t srcRGB24[1024 * 3];
     alignas(16) uint8_t colorDataAsRGB[3];
 
@@ -386,7 +399,6 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t * dstRow,
     uint8_t colorFactor = coloring.colorEnabled * coloring.color.data[0];
     uint8_t inverseColorFactor = 255 - colorFactor;
 
-    // NEON vectors for color data
     uint8x8x3_t color_neon;
     if (coloring.colorEnabled) {
         color_neon.val[0] = vdup_n_u8(colorDataAsRGB[0]);
@@ -394,7 +406,6 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t * dstRow,
         color_neon.val[2] = vdup_n_u8(colorDataAsRGB[2]);
     }
 
-    // Process 8 pixels at a time
     size_t vectorized_length = (rowLength / 8) * 8;
     size_t i;
 
@@ -404,17 +415,15 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t * dstRow,
 
         // Create alpha mask based on gray values
         uint8x8_t alpha = vceq_u8(gray_values, vdup_n_u8(0));
-        alpha = vmvn_u8(alpha); // Invert the mask (0 becomes 255, 255 becomes 0)
+        alpha = vmvn_u8(alpha); // Invert the mask
 
         // Early skip if all pixels are transparent
         if (vget_lane_u64(vreinterpret_u64_u8(alpha), 0) == 0) {
             continue;
         }
 
-        // Load source RGB data
         uint8x8x3_t src_neon = vld3_u8( & srcRGB24[i * 3]);
 
-        // Apply coloring if enabled
         if (coloring.colorEnabled) {
             // Multiply RGB components with color
             uint16x8_t temp_r = vmull_u8(src_neon.val[0], color_neon.val[0]);
@@ -608,7 +617,32 @@ void BlendFunctions::BlendRGB24(uint8_t* dstRow,
             case BlendFactor::InverseSourceAlpha:
                 src_factor_r = src_factor_g = src_factor_b = inv_alpha;
                 break;
-            // ... Add other cases as needed
+            case BlendFactor::DestAlpha:
+                src_factor_r = src_factor_g = src_factor_b = v_255;
+                break;
+            case BlendFactor::InverseDestAlpha:
+                src_factor_r = src_factor_g = src_factor_b = vdup_n_u8(0);
+                break;
+            case BlendFactor::SourceColor:
+                src_factor_r = src_rgb.val[0];
+                src_factor_g = src_rgb.val[1];
+                src_factor_b = src_rgb.val[2];
+                break;
+            case BlendFactor::DestColor:
+                src_factor_r = dst_rgb.val[0];
+                src_factor_g = dst_rgb.val[1];
+                src_factor_b = dst_rgb.val[2];
+                break;
+            case BlendFactor::InverseSourceColor:
+                src_factor_r = vsub_u8(v_255, src_rgb.val[0]);
+                src_factor_g = vsub_u8(v_255, src_rgb.val[1]);
+                src_factor_b = vsub_u8(v_255, src_rgb.val[2]);
+                break;
+            case BlendFactor::InverseDestColor:
+                src_factor_r = vsub_u8(v_255, dst_rgb.val[0]);
+                src_factor_g = vsub_u8(v_255, dst_rgb.val[1]);
+                src_factor_b = vsub_u8(v_255, dst_rgb.val[2]);
+                break;
             default:
                 src_factor_r = src_factor_g = src_factor_b = v_255;
                 break;
@@ -628,7 +662,32 @@ void BlendFunctions::BlendRGB24(uint8_t* dstRow,
             case BlendFactor::InverseSourceAlpha:
                 dst_factor_r = dst_factor_g = dst_factor_b = inv_alpha;
                 break;
-            // ... Add other cases as needed
+            case BlendFactor::DestAlpha:
+                dst_factor_r = dst_factor_g = dst_factor_b = v_255;
+                break;
+            case BlendFactor::InverseDestAlpha:
+                dst_factor_r = dst_factor_g = dst_factor_b = vdup_n_u8(0);
+                break;
+            case BlendFactor::SourceColor:
+                dst_factor_r = src_rgb.val[0];
+                dst_factor_g = src_rgb.val[1];
+                dst_factor_b = src_rgb.val[2];
+                break;
+            case BlendFactor::DestColor:
+                dst_factor_r = dst_rgb.val[0];
+                dst_factor_g = dst_rgb.val[1];
+                dst_factor_b = dst_rgb.val[2];
+                break;
+            case BlendFactor::InverseSourceColor:
+                dst_factor_r = vsub_u8(v_255, src_rgb.val[0]);
+                dst_factor_g = vsub_u8(v_255, src_rgb.val[1]);
+                dst_factor_b = vsub_u8(v_255, src_rgb.val[2]);
+                break;
+            case BlendFactor::InverseDestColor:
+                dst_factor_r = vsub_u8(v_255, dst_rgb.val[0]);
+                dst_factor_g = vsub_u8(v_255, dst_rgb.val[1]);
+                dst_factor_b = vsub_u8(v_255, dst_rgb.val[2]);
+                break;
             default:
                 dst_factor_r = dst_factor_g = dst_factor_b = v_255;
                 break;
@@ -650,29 +709,37 @@ void BlendFunctions::BlendRGB24(uint8_t* dstRow,
                 break;
             }
             case BlendOperation::Subtract: {
-                uint16x8_t blend_r = vsubq_u16(vmull_u8(src_rgb.val[0], src_factor_r),
-                                              vmull_u8(dst_rgb.val[0], dst_factor_r));
-                uint16x8_t blend_g = vsubq_u16(vmull_u8(src_rgb.val[1], src_factor_g),
-                                              vmull_u8(dst_rgb.val[1], dst_factor_g));
-                uint16x8_t blend_b = vsubq_u16(vmull_u8(src_rgb.val[2], src_factor_b),
-                                              vmull_u8(dst_rgb.val[2], dst_factor_b));
+                dst_rgb.val[0] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[0], src_factor_r), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[0], dst_factor_r), 8))
+                ));
 
-                dst_rgb.val[0] = vmin_u8(vmax_u8(vshrn_n_u16(blend_r, 8), vdup_n_u8(0)), v_255);
-                dst_rgb.val[1] = vmin_u8(vmax_u8(vshrn_n_u16(blend_g, 8), vdup_n_u8(0)), v_255);
-                dst_rgb.val[2] = vmin_u8(vmax_u8(vshrn_n_u16(blend_b, 8), vdup_n_u8(0)), v_255);
+                dst_rgb.val[1] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[1], src_factor_g), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[1], dst_factor_g), 8))
+                ));
+
+                dst_rgb.val[2] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[2], src_factor_b), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[2], dst_factor_b), 8))
+                ));
                 break;
             }
             case BlendOperation::ReverseSubtract: {
-                uint16x8_t blend_r = vsubq_u16(vmull_u8(dst_rgb.val[0], dst_factor_r),
-                                              vmull_u8(src_rgb.val[0], src_factor_r));
-                uint16x8_t blend_g = vsubq_u16(vmull_u8(dst_rgb.val[1], dst_factor_g),
-                                              vmull_u8(src_rgb.val[1], src_factor_g));
-                uint16x8_t blend_b = vsubq_u16(vmull_u8(dst_rgb.val[2], dst_factor_b),
-                                              vmull_u8(src_rgb.val[2], src_factor_b));
+                dst_rgb.val[0] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[0], dst_factor_r), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[0], src_factor_r), 8))
+                ));
 
-                dst_rgb.val[0] = vmin_u8(vmax_u8(vshrn_n_u16(blend_r, 8), vdup_n_u8(0)), v_255);
-                dst_rgb.val[1] = vmin_u8(vmax_u8(vshrn_n_u16(blend_g, 8), vdup_n_u8(0)), v_255);
-                dst_rgb.val[2] = vmin_u8(vmax_u8(vshrn_n_u16(blend_b, 8), vdup_n_u8(0)), v_255);
+                dst_rgb.val[1] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[1], dst_factor_g), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[1], src_factor_g), 8))
+                ));
+
+                dst_rgb.val[2] = vqmovun_s16(vsubq_s16(
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[2], dst_factor_b), 8)),
+                    vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[2], src_factor_b), 8))
+                ));
                 break;
             }
         }
@@ -681,11 +748,8 @@ void BlendFunctions::BlendRGB24(uint8_t* dstRow,
         vst3_u8(&dstPixel[i * targetInfo.bytesPerPixel], dst_rgb);
     }
 
-    // Handle remaining pixels
-    // Handle remaining pixels
     for (; i < rowLength; ++i)
     {
-        // Correct pointer arithmetic
         const uint8_t* srcPixel = &srcRow[i * sourceInfo.bytesPerPixel];
         uint8_t* dstPixel = &dstRow[i * targetInfo.bytesPerPixel];
         uint8_t* srcColor = &srcRGB24[i * 3];
@@ -703,7 +767,6 @@ void BlendFunctions::BlendRGB24(uint8_t* dstRow,
         }
         else
         {
-            // Fix: Correct alpha extraction without pointer arithmetic error
             alpha = (*reinterpret_cast<const uint32_t*>(srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
         }
 
@@ -1021,53 +1084,37 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t * dstRow,
             break;
         }
         case BlendOperation::Subtract: {
-            int16x8_t src_r = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[0], src_factor.val[0]));
-            int16x8_t src_g = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[1], src_factor.val[1]));
-            int16x8_t src_b = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[2], src_factor.val[2]));
+            result.val[0] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[0], src_factor.val[0]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[0], dst_factor.val[0]), 8))
+            ));
 
-            int16x8_t dst_r = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[0], dst_factor.val[0]));
-            int16x8_t dst_g = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[1], dst_factor.val[1]));
-            int16x8_t dst_b = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[2], dst_factor.val[2]));
+            result.val[1] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[1], src_factor.val[1]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[1], dst_factor.val[1]), 8))
+            ));
 
-            src_r = vsubq_s16(src_r, dst_r);
-            src_g = vsubq_s16(src_g, dst_g);
-            src_b = vsubq_s16(src_b, dst_b);
-
-            result.val[0] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_r), 8), vec_255), vec_0);
-            result.val[1] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_g), 8), vec_255), vec_0);
-            result.val[2] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_b), 8), vec_255), vec_0);
+            result.val[2] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[2], src_factor.val[2]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[2], dst_factor.val[2]), 8))
+            ));
             break;
         }
         case BlendOperation::ReverseSubtract: {
-            int16x8_t src_r = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[0], dst_factor.val[0]));
-            int16x8_t src_g = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[1], dst_factor.val[1]));
-            int16x8_t src_b = vreinterpretq_s16_u16(vmull_u8(dst_rgb.val[2], dst_factor.val[2]));
+            result.val[0] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[0], dst_factor.val[0]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[0], src_factor.val[0]), 8))
+            ));
 
-            int16x8_t dst_r = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[0], src_factor.val[0]));
-            int16x8_t dst_g = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[1], src_factor.val[1]));
-            int16x8_t dst_b = vreinterpretq_s16_u16(vmull_u8(src_rgb.val[2], src_factor.val[2]));
+            result.val[1] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[1], dst_factor.val[1]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[1], src_factor.val[1]), 8))
+            ));
 
-            src_r = vsubq_s16(src_r, dst_r);
-            src_g = vsubq_s16(src_g, dst_g);
-            src_b = vsubq_s16(src_b, dst_b);
-
-            result.val[0] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_r), 8), vec_255), vec_0);
-            result.val[1] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_g), 8), vec_255), vec_0);
-            result.val[2] = vmax_u8(vmin_u8(vshrn_n_u16(vreinterpretq_u16_s16(src_b), 8), vec_255), vec_0);
-            break;
-        }
-        case BlendOperation::BitwiseAnd: {
-            uint16x8_t src_r = vmull_u8(src_rgb.val[0], src_factor.val[0]);
-            uint16x8_t src_g = vmull_u8(src_rgb.val[1], src_factor.val[1]);
-            uint16x8_t src_b = vmull_u8(src_rgb.val[2], src_factor.val[2]);
-
-            uint16x8_t dst_r = vmull_u8(dst_rgb.val[0], dst_factor.val[0]);
-            uint16x8_t dst_g = vmull_u8(dst_rgb.val[1], dst_factor.val[1]);
-            uint16x8_t dst_b = vmull_u8(dst_rgb.val[2], dst_factor.val[2]);
-
-            result.val[0] = vshrn_n_u16(vandq_u16(src_r, dst_r), 8);
-            result.val[1] = vshrn_n_u16(vandq_u16(src_g, dst_g), 8);
-            result.val[2] = vshrn_n_u16(vandq_u16(src_b, dst_b), 8);
+            result.val[2] = vqmovun_s16(vsubq_s16(
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(dst_rgb.val[2], dst_factor.val[2]), 8)),
+                vreinterpretq_s16_u16(vshrq_n_u16(vmull_u8(src_rgb.val[2], src_factor.val[2]), 8))
+            ));
             break;
         }
         default:
@@ -1215,11 +1262,6 @@ void BlendFunctions::BlendRGBA32ToRGB24(uint8_t * dstRow,
             dstPixel[2] = tempB < 0 ? 0 : (tempB > 255 ? 255 : tempB);
             break;
         }
-        case BlendOperation::BitwiseAnd:
-            dstPixel[0] = (srcColor[0] * srcFactorR & dstPixel[0] * dstFactorR) >> 8;
-            dstPixel[1] = (srcColor[1] * srcFactorG & dstPixel[1] * dstFactorG) >> 8;
-            dstPixel[2] = (srcColor[2] * srcFactorB & dstPixel[2] * dstFactorB) >> 8;
-            break;
         default:
             break;
         }

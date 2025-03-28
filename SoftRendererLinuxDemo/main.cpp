@@ -87,7 +87,9 @@ double getCurrentTime()
     auto duration = std::chrono::duration<double>(currentTime - startTime);
     return duration.count(); // Return time in seconds
 }
-
+#include <iostream>
+#include <chrono>
+#include <thread>
 int main()
 {
     int drm_fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
@@ -188,6 +190,7 @@ int main()
     {
         std::cerr << "Failed to open testrgb565.bin" << std::endl;
     }
+    context.EnableClipping(false);
 
  //   context.SetBlendMode(BlendMode::BLEND);
     double previousTime = 0.0;
@@ -202,39 +205,29 @@ int main()
         Texture texture = Texture(width, height, framebuffer[next], PixelFormat::BGR24, pitch[next]);
         context.SetTargetTexture(&texture);
         // Clear and draw using RenderContext2D
-        context.SetClipping(80, 30, 170, 290);
-        context.EnableClipping(false);
-        context.ClearTarget(Color(150, 150, 150));
-        Coloring st = {false, Color(155, 0, 255, 0)};
-        context.SetColoringSettings(st);
+       // std::this_thread::sleep_for(std::chrono::milliseconds(23));
+        context.ClearTarget(Color(0, 0, 0));
 
-        for (size_t i = 0; i < 1; i++)
-        {
 
-            for (size_t y = 0; y < 5; y++)
-            {
-
-                for (int16_t x = 0; x < 10; x++)
-                {
-                    context.scaleTextureRenderer.DrawTexture(text5, x * 51, y * 52, 1, 1);
-                }
-            }
-            /* code */
-        }
-
-        context.GetColoring().colorEnabled = false;
-        //  context.basicTextureRenderer.DrawTexture(text4, 400, 130);
+        context.primitivesRenderer.DrawRect(Color(255,0,255,0),141,104, 50,50);
         context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
-        context.primitivesRenderer.DrawRect(Color(130, 90, 90, 90), 0, 0, width, height);
-        context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
-        context.transformedTextureRenderer.DrawTexture(text2, 10, 10, 0);
-        context.SetBlendFunc(BlendFunctions::BlendRow);
+        BlendContext contextBlend;
+        contextBlend.mode = BlendMode::BLEND;
+        contextBlend.colorBlendOperation = BlendOperation::Subtract;
+        contextBlend.colorBlendFactorDst = BlendFactor::SourceColor;
+        contextBlend.colorBlendFactorSrc = BlendFactor::SourceAlpha;
+        context.SetBlendContext(contextBlend);
+        context.primitivesRenderer.DrawRect(Color(168,251,255,0),141,138, 50,50);
+
+
         // Perform a page flip to show the back buffer
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 
-        // Wait for the page flip event to complete
+        auto start = std::chrono::high_resolution_clock::now();
         handle_drm_events(drm_fd);
-
+        auto end = std::chrono::high_resolution_clock::now();
+        // Calculate duration in microseconds for more precise measurement
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
         x += 0.5f;
         // Switch buffers
         current = next;

@@ -99,5 +99,5 @@ endif()
 
 # Optionally, set default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    set(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Build type" FORCE)
 endif()
