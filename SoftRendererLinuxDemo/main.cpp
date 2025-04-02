@@ -10,9 +10,9 @@
 #include <sys/mman.h>
 #include <chrono>
 #include <thread>
+#include <linux/input.h>
 #include <SoftRendererLib/src/include/SoftRenderer.h>
 #include <SoftRendererLib/src/data/PixelFormat/PixelFormatInfo.h>
-#include <chrono>
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -28,7 +28,6 @@ using namespace Tergos2D;
         exit(EXIT_FAILURE);  \
     }
 
-// Helper function to handle DRM events
 void handle_drm_events(int drm_fd)
 {
     drmEventContext evctx = {
@@ -51,7 +50,6 @@ void handle_drm_events(int drm_fd)
     }
 }
 
-// Helper function to create a framebuffer
 uint8_t *create_framebuffer(int drm_fd, uint32_t width, uint32_t height, uint32_t bpp, uint32_t &fb_id, uint32_t &handle, uint32_t &pitch, uint64_t &size)
 {
     struct drm_mode_create_dumb create_dumb = {0};
@@ -64,7 +62,6 @@ uint8_t *create_framebuffer(int drm_fd, uint32_t width, uint32_t height, uint32_
     pitch = create_dumb.pitch;
     size = create_dumb.size;
 
-    // Map the dumb buffer to memory
     struct drm_mode_map_dumb map_dumb = {0};
     map_dumb.handle = handle;
     CHECK_ERR(drmIoctl(drm_fd, DRM_IOCTL_MODE_MAP_DUMB, &map_dumb) < 0, "Failed to map dumb buffer");
@@ -72,7 +69,6 @@ uint8_t *create_framebuffer(int drm_fd, uint32_t width, uint32_t height, uint32_
     uint8_t *pixels = (uint8_t *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, drm_fd, map_dumb.offset);
     CHECK_ERR(pixels == MAP_FAILED, "Failed to mmap dumb buffer");
 
-    // Create framebuffer object
     CHECK_ERR(drmModeAddFB(drm_fd, width, height, 24, 24, pitch, handle, &fb_id) < 0, "Failed to create framebuffer");
 
     return pixels;
@@ -80,26 +76,40 @@ uint8_t *create_framebuffer(int drm_fd, uint32_t width, uint32_t height, uint32_
 
 double getCurrentTime()
 {
-    // Get the current time since epoch in seconds as a floating-point value
-    using Clock = std::chrono::steady_clock; // Use steady_clock for consistent timing
-    static auto startTime = Clock::now();    // Store the starting time point
-    auto currentTime = Clock::now();         // Get the current time point
+    using Clock = std::chrono::steady_clock;
+    static auto startTime = Clock::now();
+    auto currentTime = Clock::now();
     auto duration = std::chrono::duration<double>(currentTime - startTime);
-    return duration.count(); // Return time in seconds
+    return duration.count();
 }
-#include <iostream>
-#include <chrono>
-#include <thread>
+
+void handle_touch_events(int touch_fd)
+{
+    struct input_event ev;
+    while (read(touch_fd, &ev, sizeof(ev)) > 0)
+    {
+        if (ev.type == EV_ABS)
+        {
+            if (ev.code == ABS_MT_POSITION_X)
+            {
+                printf("Touch X: %d\n", ev.value);
+            }
+            else if (ev.code == ABS_MT_POSITION_Y)
+            {
+                printf("Touch Y: %d\n", ev.value);
+            }
+        }
+    }
+}
+
 int main()
 {
     int drm_fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
     CHECK_ERR(drm_fd < 0, "Failed to open /dev/dri/card0");
 
-    // Get DRM resources
     drmModeRes *resources = drmModeGetResources(drm_fd);
     CHECK_ERR(!resources, "Failed to get DRM resources");
 
-    // Select the first connected connector
     drmModeConnector *connector = nullptr;
     uint32_t connector_id = 0;
     for (int i = 0; i < resources->count_connectors; i++)
@@ -114,19 +124,15 @@ int main()
     }
     CHECK_ERR(connector_id == 0, "No connected connector found");
 
-    // Choose the first valid mode (resolution)
     drmModeModeInfo mode = connector->modes[0];
     uint32_t width = mode.hdisplay;
     uint32_t height = mode.vdisplay;
 
-    // Get encoder
     drmModeEncoder *encoder = drmModeGetEncoder(drm_fd, connector->encoder_id);
     CHECK_ERR(!encoder, "Failed to get encoder");
 
-    // Get CRTC
     drmModeCrtc *crtc = drmModeGetCrtc(drm_fd, encoder->crtc_id);
 
-    // Create double buffers
     uint32_t fb_id[2], handle[2], pitch[2];
     uint64_t size[2];
     uint8_t *framebuffer[2];
@@ -136,13 +142,11 @@ int main()
         framebuffer[i] = create_framebuffer(drm_fd, width, height, 24, fb_id[i], handle[i], pitch[i], size[i]);
     }
 
-    // Set up the rendering context
     RenderContext2D context;
 
     bool running = true;
     int current = 0;
 
-    // Set initial CRTC
     CHECK_ERR(drmModeSetCrtc(drm_fd, crtc->crtc_id, fb_id[current], 0, 0, &connector_id, 1, &mode) < 0, "Failed to set CRTC");
 
     Texture text;
@@ -167,7 +171,7 @@ int main()
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
     data5 = stbi_load("data/images_small.png", &imgwidth, &imgheight, &nrChannels, 3);
     text5 = Texture(imgwidth, imgheight, data5, PixelFormat::RGB24, 0);
-    // Load the binary file
+
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
     if (file)
     {
@@ -177,7 +181,6 @@ int main()
         data4 = new uint8_t[size];
         if (file.read(reinterpret_cast<char *>(data4), size))
         {
-            // Successfully read binary data
             text4 = Texture(imgwidth4, imgheight4, data4, PixelFormat::RGB565, 0);
         }
         else
@@ -192,63 +195,65 @@ int main()
     }
     context.EnableClipping(false);
 
- //   context.SetBlendMode(BlendMode::BLEND);
     double previousTime = 0.0;
     int frameCount = 0;
     float x = 0.0f;
+
+    int touch_fd = open("/dev/input/event0", O_RDONLY);
+    CHECK_ERR(touch_fd < 0, "Failed to open /dev/input/event0");
+
+    struct pollfd fds[2];
+    fds[0].fd = drm_fd;
+    fds[0].events = POLLIN;
+    fds[1].fd = touch_fd;
+    fds[1].events = POLLIN;
+
     while (running)
     {
-        // Render to the back buffer
         int next = 1 - current;
 
-        // Use the framebuffer directly as the texture
         Texture texture = Texture(width, height, framebuffer[next], PixelFormat::BGR24, pitch[next]);
         context.SetTargetTexture(&texture);
-        // Clear and draw using RenderContext2D
-       // std::this_thread::sleep_for(std::chrono::milliseconds(23));
+
         context.ClearTarget(Color(0, 0, 0));
 
-
-        context.primitivesRenderer.DrawRect(Color(255,0,255,0),141,104, 50,50);
-        context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
-        BlendContext contextBlend;
-        contextBlend.mode = BlendMode::BLEND;
-        contextBlend.colorBlendOperation = BlendOperation::Subtract;
-        contextBlend.colorBlendFactorDst = BlendFactor::SourceColor;
-        contextBlend.colorBlendFactorSrc = BlendFactor::SourceAlpha;
-        context.SetBlendContext(contextBlend);
-        context.primitivesRenderer.DrawRect(Color(168,251,255,0),141,138, 50,50);
+        context.transformedTextureRenderer.DrawTextureAndScale(text5,120,120,1.0f,1.0f,x, text5.GetWidth()/2,text5.GetHeight()/2);
+        context.primitivesRenderer.DrawRect(Color(0,0,255),120,120,5,5);
 
 
-        // Perform a page flip to show the back buffer
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 
-        auto start = std::chrono::high_resolution_clock::now();
-        handle_drm_events(drm_fd);
-        auto end = std::chrono::high_resolution_clock::now();
-        // Calculate duration in microseconds for more precise measurement
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        poll(fds, 2, -1);
+
+        if (fds[0].revents & POLLIN)
+        {
+            handle_drm_events(drm_fd);
+        }
+
+        if (fds[1].revents & POLLIN)
+        {
+            handle_touch_events(touch_fd);
+        }
+
         x += 0.5f;
-        // Switch buffers
         current = next;
 
         double currentTime = getCurrentTime();
         frameCount++;
 
-        // Check if a second has passed
         if (currentTime - previousTime >= 1.0)
         {
             double fps = frameCount / (currentTime - previousTime);
-            double timePerFrame = 1000.0 / fps; // Convert to milliseconds
+            double timePerFrame = 1000.0 / fps;
             std::cout << "FPS: " << fps << " | Time per frame: " << timePerFrame << " ms" << std::endl;
 
-            // Reset counters
             previousTime = currentTime;
             frameCount = 0;
         }
     }
 
-    // Cleanup
+    close(touch_fd);
+
     for (int i = 0; i < 2; ++i)
     {
         munmap(framebuffer[i], size[i]);

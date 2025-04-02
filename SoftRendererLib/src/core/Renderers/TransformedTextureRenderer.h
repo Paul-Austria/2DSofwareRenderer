@@ -16,11 +16,12 @@ namespace Tergos2D
 
 
         void DrawTexture(Texture &texture, int16_t x, int16_t y, float angle, int16_t offsetX = 0, int16_t offsetY = 0);
-        
-        void DrawTexture(Texture &texture, int16_t x, int16_t y,
+
+        void DrawTextureAndScale(Texture &texture, int16_t x, int16_t y,
                          float scaleX, float scaleY, float angle,
                          int16_t offsetX = 0, int16_t offsetY = 0);
 
+        void DrawTexture(Texture &texture,  const float transformationMatrix[3][3]);
 
     private:
     };

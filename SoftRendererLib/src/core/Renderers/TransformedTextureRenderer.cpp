@@ -64,145 +64,8 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     int offY = (y + centerY - sourceWidth / 2);
 
     ClippingArea clippingArea = context.GetClippingArea();
-    if (offsetX == 0 && offsetY == 0 && normalizedAngle % 90 == 0)
+    if (false)
     {
-        switch (normalizedAngle)
-        {
-        case 90:
-
-            for (uint16_t j = 0; j < sourceHeight; ++j)
-            {
-                uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                uint8_t *bufferPointer = nullptr;
-                switch (bc.mode)
-                {
-                case BlendMode::NOBLEND:
-                    convertFunc(sourceRow, buffer, sourceWidth);
-                    bufferPointer = buffer;
-                    break;
-
-                default:
-                    bufferPointer = sourceRow;
-                    break;
-                }
-
-                for (uint16_t i = 0; i < sourceWidth; ++i)
-                {
-                    int targetX = offX + sourceHeight - 1 - j;
-                    int targetY = offY + i;
-
-                    if (context.IsClippingEnabled())
-                    {
-                        if (targetX < clippingArea.startX || targetX >= clippingArea.endX || targetY < clippingArea.startY || targetY >= clippingArea.endY)
-                            continue;
-                    }
-
-                    if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
-                        continue;
-
-                    uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    switch (bc.mode)
-                    {
-                    case BlendMode::NOBLEND:
-                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
-                        break;
-                    default:
-                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false,bc);
-                        break;
-                    }
-                }
-            }
-            break;
-
-        case 180:
-            for (uint16_t j = 0; j < sourceHeight; ++j)
-            {
-                uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                uint8_t *bufferPointer = nullptr;
-                switch (bc.mode)
-                {
-                case BlendMode::NOBLEND:
-                    convertFunc(sourceRow, buffer, sourceWidth);
-                    bufferPointer = buffer;
-                    break;
-
-                default:
-                    bufferPointer = sourceRow;
-                    break;
-                }
-
-                for (uint16_t i = 0; i < sourceWidth; ++i)
-                {
-                    int targetX = x + sourceWidth - 1 - i;
-                    int targetY = y + sourceHeight - 1 - j;
-
-                    if (context.IsClippingEnabled())
-                    {
-                        if (targetX < clippingArea.startX || targetX >= clippingArea.endX || targetY < clippingArea.startY || targetY >= clippingArea.endY)
-                            continue;
-                    }
-
-                    if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
-                        continue;
-
-                    uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    switch (bc.mode)
-                    {
-                    case BlendMode::NOBLEND:
-                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
-                        break;
-                    default:
-                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false, bc);
-                        break;
-                    }
-                }
-            }
-            break;
-
-        case 270:
-            for (uint16_t j = 0; j < sourceHeight; ++j)
-            {
-                uint8_t *sourceRow = sourceData + (j * sourcePitch);
-                uint8_t *bufferPointer = nullptr;
-                switch (bc.mode)
-                {
-                case BlendMode::NOBLEND:
-                    convertFunc(sourceRow, buffer, sourceWidth);
-                    bufferPointer = buffer;
-                    break;
-
-                default:
-                    bufferPointer = sourceRow;
-                    break;
-                }
-                for (uint16_t i = 0; i < sourceWidth; ++i)
-                {
-                    int targetX = offX + j;
-                    int targetY = offY + sourceWidth - 1 - i;
-
-                    if (context.IsClippingEnabled())
-                    {
-                        if (targetX < clippingArea.startX || targetX >= clippingArea.endX || targetY < clippingArea.startY || targetY >= clippingArea.endY)
-                            continue;
-                    }
-
-                    if (targetX < 0 || targetX >= targetWidth || targetY < 0 || targetY >= targetHeight)
-                        continue;
-
-                    uint8_t *targetPixel = targetData + (targetY * targetPitch) + (targetX * targetInfo.bytesPerPixel);
-                    switch (bc.mode)
-                    {
-                    case BlendMode::NOBLEND:
-                        memcpy(targetPixel, bufferPointer + (i * targetInfo.bytesPerPixel), targetInfo.bytesPerPixel);
-                        break;
-                    default:
-                        context.GetBlendFunc()(targetPixel, bufferPointer + (i * sourceInfo.bytesPerPixel), 1, targetInfo, sourceInfo, context.GetColoring(),false,bc);
-                        break;
-                    }
-                }
-            }
-            break;
-        }
     }
     else
     {
@@ -210,8 +73,8 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
         float cosAngle = cos(radians);
         float sinAngle = sin(radians);
 
-        offsetX = sourceWidth / 2 + offsetX;
-        offsetY = sourceHeight / 2 + offsetY;
+        offsetX =  offsetX;
+        offsetY =  offsetY;
 
         float pivotX = x + offsetX;
         float pivotY = y + offsetY;
@@ -305,7 +168,7 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     // Rotation-specific loops
 }
 
-void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
+void TransformedTextureRenderer::DrawTextureAndScale(Texture &texture, int16_t x, int16_t y,
                                              float scaleX, float scaleY, float angle,
                                              int16_t offsetX, int16_t offsetY)
 {
@@ -330,13 +193,6 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     if (normalizedAngle < 0)
         normalizedAngle += 360;
 
-    // If no rotation, use the scaling-only function
-    if (normalizedAngle == 0)
-    {
-        context.scaleTextureRenderer.DrawTexture(texture, x, y, scaleX, scaleY);
-        return;
-    }
-
     // Get target texture information
     PixelFormat targetFormat = targetTexture->GetFormat();
     PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
@@ -354,8 +210,8 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     float centerY = scaledHeight / 2.0f;
 
     // Calculate the pivot point including offset
-    float pivotX = x + centerX + offsetX;
-    float pivotY = y + centerY + offsetY;
+    float pivotX = centerX + offsetX;
+    float pivotY = centerY + offsetY;
 
     float radians = normalizedAngle * 3.14159265358979f / 180.0f;
     float cosAngle = cos(radians);
@@ -390,6 +246,10 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
     int boundMaxX = static_cast<int>(ceil(maxX)) + 1;
     int boundMaxY = static_cast<int>(ceil(maxY)) + 1;
 
+    // Adjust pivot to the new bounds min point
+    float newPivotX = x - boundMinX;
+    float newPivotY = y - boundMinY;
+
     // Clamp bounds to target texture and clipping region
     if (context.IsClippingEnabled())
     {
@@ -416,8 +276,8 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
         for (int destX = boundMinX; destX < boundMaxX; destX++)
         {
             // Calculate source position with rotation and scaling
-            float dx = destX - pivotX;
-            float dy = destY - pivotY;
+            float dx = destX - newPivotX;
+            float dy = destY - newPivotY;
 
             // Apply inverse rotation
             float rotX = dx * invCosAngle - dy * invSinAngle;
@@ -475,13 +335,160 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_
 
                 if (bc.mode != BlendMode::NOBLEND)
                 {
-                    context.GetBlendFunc()(targetPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(),false,context.GetBlendContext());
+                    context.GetBlendFunc()(targetPixel, dstBuffer, 1, targetInfo, sourceInfo, context.GetColoring(), false, context.GetBlendContext());
                 }
                 else
                 {
                     MemHandler::MemCopy(targetPixel, dstBuffer, targetInfo.bytesPerPixel);
                 }
             }
+        }
+    }
+}
+
+
+
+void TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3])
+{
+    auto targetTexture = context.GetTargetTexture();
+    if (!targetTexture || !texture.GetData())
+    {
+        return;
+    }
+
+    // Get source texture information
+    PixelFormat sourceFormat = texture.GetFormat();
+    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+    uint8_t *sourceData = texture.GetData();
+    uint16_t sourceWidth = texture.GetWidth();
+    uint16_t sourceHeight = texture.GetHeight();
+    size_t sourcePitch = texture.GetPitch();
+
+    // Get target texture information
+    PixelFormat targetFormat = targetTexture->GetFormat();
+    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+    uint8_t *targetData = targetTexture->GetData();
+    uint16_t targetWidth = targetTexture->GetWidth();
+    uint16_t targetHeight = targetTexture->GetHeight();
+    size_t targetPitch = targetTexture->GetPitch();
+
+    // Calculate the bounding box of the transformed source texture
+    float minX = std::numeric_limits<float>::max();
+    float minY = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float maxY = std::numeric_limits<float>::min();
+
+    std::vector<std::pair<float, float>> corners = {
+        {0, 0},
+        {static_cast<float>(sourceWidth), 0},
+        {0, static_cast<float>(sourceHeight)},
+        {static_cast<float>(sourceWidth), static_cast<float>(sourceHeight)}
+    };
+
+    for (const auto& corner : corners)
+    {
+        float x = transformationMatrix[0][0] * corner.first + transformationMatrix[0][1] * corner.second + transformationMatrix[0][2];
+        float y = transformationMatrix[1][0] * corner.first + transformationMatrix[1][1] * corner.second + transformationMatrix[1][2];
+
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+
+    // Clamp the bounding box to the target texture's dimensions
+    int16_t startX = std::max(static_cast<int16_t>(std::floor(minX)), static_cast<int16_t>(0));
+    int16_t startY = std::max(static_cast<int16_t>(std::floor(minY)), static_cast<int16_t>(0));
+    int16_t endX = std::min(static_cast<int16_t>(std::ceil(maxX)), static_cast<int16_t>(targetWidth));
+    int16_t endY = std::min(static_cast<int16_t>(std::ceil(maxY)), static_cast<int16_t>(targetHeight));
+
+
+    if (context.IsClippingEnabled())
+    {
+        auto clippingArea = context.GetClippingArea();
+        startX = std::max(startX, static_cast<int16_t>(clippingArea.startX));
+        startY = std::max(startY, static_cast<int16_t>(clippingArea.startY));
+        endX = std::min(endX, static_cast<int16_t>(clippingArea.endX));
+        endY = std::min(endY, static_cast<int16_t>(clippingArea.endY));
+    }
+
+    // Define the inverse transformation matrix
+    float invMatrix[3][3];
+    float det = transformationMatrix[0][0] * (transformationMatrix[1][1] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][1]) -
+                transformationMatrix[0][1] * (transformationMatrix[1][0] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][0]) +
+                transformationMatrix[0][2] * (transformationMatrix[1][0] * transformationMatrix[2][1] - transformationMatrix[1][1] * transformationMatrix[2][0]);
+
+    if (det == 0.0f)
+        return; // Transformation matrix is not invertible
+
+    float invDet = 1.0f / det;
+
+    // Calculate the inverse matrix
+    invMatrix[0][0] = (transformationMatrix[1][1] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][1]) * invDet;
+    invMatrix[0][1] = (transformationMatrix[0][2] * transformationMatrix[2][1] - transformationMatrix[0][1] * transformationMatrix[2][2]) * invDet;
+    invMatrix[0][2] = (transformationMatrix[0][1] * transformationMatrix[1][2] - transformationMatrix[0][2] * transformationMatrix[1][1]) * invDet;
+    invMatrix[1][0] = (transformationMatrix[1][2] * transformationMatrix[2][0] - transformationMatrix[1][0] * transformationMatrix[2][2]) * invDet;
+    invMatrix[1][1] = (transformationMatrix[0][0] * transformationMatrix[2][2] - transformationMatrix[0][2] * transformationMatrix[2][0]) * invDet;
+    invMatrix[1][2] = (transformationMatrix[0][2] * transformationMatrix[1][0] - transformationMatrix[0][0] * transformationMatrix[1][2]) * invDet;
+    invMatrix[2][0] = (transformationMatrix[1][0] * transformationMatrix[2][1] - transformationMatrix[1][1] * transformationMatrix[2][0]) * invDet;
+    invMatrix[2][1] = (transformationMatrix[0][1] * transformationMatrix[2][0] - transformationMatrix[0][0] * transformationMatrix[2][1]) * invDet;
+    invMatrix[2][2] = (transformationMatrix[0][0] * transformationMatrix[1][1] - transformationMatrix[0][1] * transformationMatrix[1][0]) * invDet;
+
+    BlendContext bc = context.GetBlendContext();
+    bc.mode = context.BlendModeToUse(sourceInfo);
+
+    // Iterate over the bounding box in the target texture
+    uint8_t buffer[100*4];
+    int pos = 0;
+
+    const int maxPos = 10;
+    uint8_t *targetPixel = nullptr;
+    PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+    if(!convertFunc) return;
+    for (int16_t y = startY; y < endY; ++y)
+    {
+        for (int16_t x = startX; x < endX; ++x)
+        {
+            // Apply the inverse transformation to find the corresponding source pixel
+            float srcX = invMatrix[0][0] * x + invMatrix[0][1] * y + invMatrix[0][2];
+            float srcY = invMatrix[1][0] * x + invMatrix[1][1] * y + invMatrix[1][2];
+
+            // Check if the source pixel is within bounds
+            if (srcX >= 0 && srcX < sourceWidth && srcY >= 0 && srcY < sourceHeight)
+            {
+                uint16_t intSrcX = static_cast<uint16_t>(srcX);
+                uint16_t intSrcY = static_cast<uint16_t>(srcY);
+                if(pos == 0)
+                {
+                    targetPixel = targetData + y * targetPitch + x * targetInfo.bytesPerPixel;
+                }
+                const uint8_t *sourcePixel = sourceData + intSrcY * sourcePitch + intSrcX * sourceInfo.bytesPerPixel;
+                std::memcpy(buffer + sourceInfo.bytesPerPixel*pos, sourcePixel,sourceInfo.bytesPerPixel);
+                pos++;
+
+                if (pos == maxPos)
+                {
+
+                    if(bc.mode == BlendMode::NOBLEND){
+                        convertFunc(buffer, targetPixel, pos);
+                    }
+                    else{
+                        context.GetBlendFunc()(targetPixel, buffer, pos, targetInfo, sourceInfo, context.GetColoring(),false,bc);
+                    }
+                    pos = 0;
+                }
+
+            }
+        }
+        if(pos != 0)
+        {
+            if(bc.mode == BlendMode::NOBLEND){
+                convertFunc(buffer, targetPixel, pos);
+            }
+            else{
+                context.GetBlendFunc()(targetPixel, buffer, pos, targetInfo, sourceInfo, context.GetColoring(),false,bc);
+            }
+            pos = 0;
         }
     }
 }

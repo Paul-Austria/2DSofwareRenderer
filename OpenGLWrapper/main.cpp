@@ -321,57 +321,11 @@ void TestingFunction()
     x += 0.5f;
     context.SetBlendFunc(BlendFunctions::BlendRow);
     context.ClearTarget(Color(150, 150, 150));
-    context.SetClipping(80, 30, 370, 290);
-    context.EnableClipping(false);
-    context.primitivesRenderer.DrawLine(Color(255, 0, 0), 0, 0, 255, 33);
-    context.primitivesRenderer.DrawLine(Color(0, 0, 255), 0, 33, 10, 33);
-    context.SetClipping(80, 30, 370, 290);
-    context.EnableClipping(false);
-    context.SetSamplingMethod(SamplingMethod::NEAREST);
-    context.primitivesRenderer.DrawRect(Color(255, 255, 255), 80, 30, 370, 290);
-    // context.DrawTexture(text, 40, 40);
-    context.basicTextureRenderer.DrawTexture(text2, -50, -30);
-    //  context.DrawTexture(text5, 550, 190,0.2,2, SamplingMethod::NEAREST);
-    context.transformedTextureRenderer.DrawTexture(text5, -1, 190, 2, 2, 0, 0, 0);
-    //  context.transformedTextureRenderer.DrawTexture(text5, 350, 190,0.2,2);
-    context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
-    context.basicTextureRenderer.DrawTexture(text3, 50, 90);
-    context.SetBlendFunc(BlendFunctions::BlendSolidRowRGB24);
-    context.primitivesRenderer.DrawRect(Color(130, 90, 90, 90), 0, 0, WIDTH, HEIGHT);
-    context.SetBlendFunc(BlendFunctions::BlendRow);
 
-    context.primitivesRenderer.DrawRect(Color(0, 40, 150), 0, 0, 3000, 60);
-    context.primitivesRenderer.DrawRotatedRect(Color(0, 150, 40), 0, 0, 400, 40, x);
+    context.ClearTarget(Color(0, 0, 0));
 
-    context.primitivesRenderer.DrawRect(Color(150, 200, 0, 0), 120, 0, 300, 90);
-
-    context.primitivesRenderer.DrawRect(Color(150, 200, 100, 0), 0, 0, 100, 300);
-    // context.primitivesRenderer.DrawRotatedRect(Color(255,200, 100, 255), 250, 250, 100, 300,x);
-
-    // context.SetBlendMode(BlendMode::NOBLEND);
-    Coloring st = {true, Color(155, 0, 255, 0)};
-    context.SetColoringSettings(st);
-    context.basicTextureRenderer.DrawTexture(logo8Texture, 90, 90 + 150);
-    context.SetBlendFunc(BlendFunctions::BlendRGBA32ToRGB24);
-    context.transformedTextureRenderer.DrawTexture(text5, 550, 150, 0.5, 0.5, x);
-    context.SetBlendFunc(BlendFunctions::BlendRow);
-
-    context.GetColoring().colorEnabled = false;
-    /*
-        for (size_t i = 0; i < 1; i++)
-        {
-
-            for (size_t y = 0; y < 30; y++)
-            {
-
-                for (int16_t x = 0; x < 40; x++)
-                {
-                    context.basicTextureRenderer.DrawTexture(text, x * 51, y * 52);
-                }
-            }
-        }
-
-        */
+    context.transformedTextureRenderer.DrawTexture(text5,120,120,x, text5.GetWidth()/2,text5.GetHeight()/2);
+    context.primitivesRenderer.DrawRect(Color(0,0,255),120,120,5,5);
 }
 
 #include <iomanip>
