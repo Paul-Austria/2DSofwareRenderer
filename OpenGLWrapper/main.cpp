@@ -303,8 +303,8 @@ void SetupFunc()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
-    data4 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 3);
-    text5 = Texture(imgwidth, imgheight, data4, PixelFormat::RGB24, 0);
+    data4 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 4);
+    text5 = Texture(imgwidth, imgheight, data4, PixelFormat::RGBA8888, 0);
 
     // Load the binary file
     loadTexture("data/testrgb565.bin", PixelFormat::RGB565, text4, 234, 243);
@@ -313,62 +313,40 @@ void SetupFunc()
 }
 static float x = 0;
 
-void TestRotationWithOffset(RenderContext2D &context, Texture &texture, int xOffset = 0, int yOffset = 0);
-
 // Function used for testing, updates the texture data
 void TestingFunction()
 {
-    x += 0.5f;
-    context.SetBlendFunc(BlendFunctions::BlendRow);
+    x += 0.01f;
     context.ClearTarget(Color(150, 150, 150));
+    context.SetClipping(80, 30, 370, 290);
+    context.EnableClipping(false);
 
-    context.ClearTarget(Color(0, 0, 0));
 
-    context.transformedTextureRenderer.DrawTexture(text5,120,120,x, text5.GetWidth()/2,text5.GetHeight()/2);
-    context.primitivesRenderer.DrawRect(Color(0,0,255),120,120,5,5);
-}
+    // Define the scaling factors
+    float scaleX = 0.5f;
+    float scaleY = 0.5f;
 
-#include <iomanip>
+    // Define the rotation angle in degrees
+    float angle = 45.0f;
+    float radians = x * 3.14159265358979f / 180.0f;
+    float shearX = 0.0f;  // Example shear factor along the X-axis
+    float shearY = 0.0f;  // Example shear factor along the Y-axis
 
-void TestRotationWithOffset(RenderContext2D &context, Texture &texture, int xOffset, int yOffset)
-{
-    // Constants
-    const int screenWidth = 800;
-    const int screenHeight = 400;
-    const int textureWidth = 60;
-    const int textureHeight = 51;
-    const int redSquareSize = 5;
+    float xPos = 120;
+    float yPos = 120;
+    // Calculate the transformation matrix for scaling and rotation
+    // Calculate cosine and sine for rotation
+    float cosAngle = cos(radians);
+    float sinAngle = sin(radians);
 
-    // Clear the screen
-    context.ClearTarget(Color(150, 150, 150));
+    // Calculate the transformation matrix for scaling, rotation, and shearing
+    float transformationMatrix[3][3] = {
+        {scaleX * cosAngle + shearY * sinAngle, -scaleY * sinAngle + shearX * cosAngle, xPos},
+        {scaleX * sinAngle + shearY * cosAngle, scaleY * cosAngle + shearX * sinAngle, yPos},
+        {0.0f, 0.0f, 1.0f}
+    };
 
-    // Rotation and Offset info grid
-    std::cout << "Rotation Grid with Offsets (Degrees):\n";
-    int rows = screenHeight / (20 + textureHeight);
-    int cols = screenWidth / (20 + textureWidth);
-    int rotation = -5;
-
-    // Fill the screen with rotated textures
-    for (int y = 0; y < screenHeight; y += textureHeight + 20)
-    {
-        for (int x = 0; x < screenWidth; x += textureWidth + 20)
-        {
-            // Compute rotation angle
-            rotation += 5;
-
-            rotation = rotation % 360;
-
-            // Draw the texture with rotation
-            //           context.transformedTextureRenderer.DrawTexture(texture, x, y, rotation, xOffset, yOffset);
-
-            // Draw a red square at the same location as the center of the texture
-            int squareX = x;
-            int squareY = y;
-            //  context.DrawRect(Color(255, 0, 0), squareX, squareY, redSquareSize, redSquareSize);
-
-            // Print rotation angle and offsets in grid format
-            std::cout << std::setw(6) << rotation;
-        }
-        std::cout << '\n'; // New line at the end of each row
-    }
+    context.SetSamplingMethod(SamplingMethod::LINEAR);
+    context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTextureSamplingSupp);
+    context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
 }

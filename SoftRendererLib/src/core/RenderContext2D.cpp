@@ -115,7 +115,8 @@ Coloring &Tergos2D::RenderContext2D::GetColoring()
 
 void Tergos2D::RenderContext2D::SetBlendFunc(BlendFunc blendFunc)
 {
-    this->blendFunc = blendFunc;
+    if(blendFunc != nullptr)
+        this->blendFunc = blendFunc;
 }
 
 BlendFunc Tergos2D::RenderContext2D::GetBlendFunc()

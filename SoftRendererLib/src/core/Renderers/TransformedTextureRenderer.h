@@ -8,6 +8,10 @@
 
 namespace Tergos2D
 {
+
+    using DrawTexturePointer = void (*)(Texture &texture,  const float transformationMatrix[3][3], RenderContext2D& context);
+
+
     class TransformedTextureRenderer : RendererBase
     {
     public:
@@ -15,15 +19,26 @@ namespace Tergos2D
         ~TransformedTextureRenderer() = default;
 
 
-        void DrawTexture(Texture &texture, int16_t x, int16_t y, float angle, int16_t offsetX = 0, int16_t offsetY = 0);
-
-        void DrawTextureAndScale(Texture &texture, int16_t x, int16_t y,
-                         float scaleX, float scaleY, float angle,
-                         int16_t offsetX = 0, int16_t offsetY = 0);
-
         void DrawTexture(Texture &texture,  const float transformationMatrix[3][3]);
 
+        /// @brief generic implementation without sampling support
+        /// @param texture
+        /// @param transformationMatrix
+        /// @param context
+        static void DrawTexture(Texture &texture,  const float transformationMatrix[3][3], RenderContext2D& context);
+
+
+        /// @brief  Implementation with Sampling Support supports any BytePixel format (RGBA32,RGB24,Grayscale8, etc ..) not formats like rgb565
+        /// @param texture
+        /// @param transformationMatrix
+        /// @param context
+        static void DrawTextureSamplingSupp(Texture &texture,  const float transformationMatrix[3][3], RenderContext2D& context);
+
+        DrawTexturePointer GetDrawTexture();
+        void SetDrawTexture(DrawTexturePointer drawTexture);
     private:
+
+        	DrawTexturePointer m_drawTexture = DrawTexture;
     };
 
 } // namespace Tergos2D
