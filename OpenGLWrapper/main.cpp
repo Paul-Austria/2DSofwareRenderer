@@ -327,7 +327,6 @@ void TestingFunction()
     float scaleY = 0.5f;
 
     // Define the rotation angle in degrees
-    float angle = 45.0f;
     float radians = x * 3.14159265358979f / 180.0f;
     float shearX = 0.0f;  // Example shear factor along the X-axis
     float shearY = 0.0f;  // Example shear factor along the Y-axis
@@ -346,7 +345,10 @@ void TestingFunction()
         {0.0f, 0.0f, 1.0f}
     };
 
-    context.SetSamplingMethod(SamplingMethod::LINEAR);
+    context.SetSamplingMethod(SamplingMethod::NEAREST);
     context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTextureSamplingSupp);
-    context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
+   // context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
+
+
+    context.primitivesRenderer.DrawTransformedRect(Color(255,0,0),255,50,transformationMatrix);
 }

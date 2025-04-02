@@ -6,6 +6,7 @@
 #include "../RenderContext2D.h"
 #include <float.h>
 #include <math.h>
+#include <corecrt_math_defines.h>
 
 using namespace Tergos2D;
 
@@ -104,126 +105,6 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
         }
         break;
     }
-    }
-}
-
-void PrimitivesRenderer::DrawRotatedRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height, float angle, int16_t offsetX, int16_t offsetY)
-{
-    auto targetTexture = context.GetTargetTexture();
-    if (!targetTexture)
-        return;
-
-    PixelFormat format = targetTexture->GetFormat();
-    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
-
-    uint8_t *textureData = targetTexture->GetData();
-    uint16_t textureWidth = targetTexture->GetWidth();
-    uint16_t textureHeight = targetTexture->GetHeight();
-    uint32_t pitch = targetTexture->GetPitch(); // Get the pitch (bytes per row)
-
-    // Validate angle
-    int normalizedAngle = static_cast<int>(angle) % 360;
-    if (normalizedAngle < 0)
-        normalizedAngle += 360;
-
-    if (normalizedAngle == 0)
-    {
-        DrawRect(color, x, y, length, height);
-        return;
-    }
-
-    // Precompute sine and cosine values
-    float radians = normalizedAngle * 3.14159265358979f / 180.0f;
-    float cosAngle = cos(radians);
-    float sinAngle = sin(radians);
-
-    // Calculate the center of the rectangle
-    int centerX = length / 2;
-    int centerY = height / 2;
-
-    // Adjust offset
-    offsetX = centerX + offsetX;
-    offsetY = centerY + offsetY;
-
-    float pivotX = x + offsetX;
-    float pivotY = y + offsetY;
-
-    ClippingArea clippingArea = context.GetClippingArea();
-
-    // Calculate the bounds of the rotated rectangle by transforming all corners
-    float corners[4][2] = {
-        {-offsetX, -offsetY},                // Top-left
-        {length - offsetX, -offsetY},        // Top-right
-        {-offsetX, height - offsetY},        // Bottom-left
-        {length - offsetX, height - offsetY} // Bottom-right
-    };
-
-    // Find the min/max coordinates after rotation
-    float minX = FLT_MAX, minY = FLT_MAX;
-    float maxX = -FLT_MAX, maxY = -FLT_MAX;
-
-    for (int i = 0; i < 4; i++)
-    {
-        float rotX = corners[i][0] * cosAngle - corners[i][1] * sinAngle + pivotX;
-        float rotY = corners[i][0] * sinAngle + corners[i][1] * cosAngle + pivotY;
-
-        minX = std::min(minX, rotX);
-        minY = std::min(minY, rotY);
-        maxX = std::max(maxX, rotX);
-        maxY = std::max(maxY, rotY);
-    }
-
-    int boundMinX = static_cast<int>(floor(minX)) - 1;
-    int boundMinY = static_cast<int>(floor(minY)) - 1;
-    int boundMaxX = static_cast<int>(ceil(maxX)) + 1;
-    int boundMaxY = static_cast<int>(ceil(maxY)) + 1;
-    size_t rowLength = length * info.bytesPerPixel;
-    alignas(16) uint8_t buffer[MAXROWLENGTH * MAXBYTESPERPIXEL];
-
-    color.ConvertTo(format, buffer);
-
-    BlendContext bc = context.GetBlendContext();
-
-    if (color.GetAlpha() == 255)
-        bc.mode = BlendMode::NOBLEND;
-
-    for (int destY = boundMinY; destY <= boundMaxY; destY++)
-    {
-        // Skip rows outside the texture bounds
-        if (destY < 0 || destY >= textureHeight)
-            continue;
-
-        for (int destX = boundMinX; destX <= boundMaxX; destX++)
-        {
-            // Skip columns outside the texture bounds
-            if (destX < 0 || destX >= textureWidth)
-                continue;
-
-            if (context.IsClippingEnabled() && (destX < clippingArea.startX || destX >= clippingArea.endX || destY < clippingArea.startY || destY >= clippingArea.endY))
-                continue;
-
-            float dx = destX - pivotX;
-            float dy = destY - pivotY;
-
-            float srcXf = dx * cosAngle + dy * sinAngle + centerX;
-            float srcYf = -dx * sinAngle + dy * cosAngle + centerY;
-
-            int srcX = static_cast<int>(srcXf);
-            int srcY = static_cast<int>(srcYf);
-
-            if (srcX >= 0 && srcX < length && srcY >= 0 && srcY < height)
-            {
-                uint8_t *targetPixel = textureData + (destY * pitch) + (destX * info.bytesPerPixel);
-                if (bc.mode  != BlendMode::NOBLEND)
-                {
-                    context.GetBlendFunc()(targetPixel, color.data, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), false,context.GetBlendContext());
-                }
-                else
-                {
-                    MemHandler::MemCopy(targetPixel, buffer, info.bytesPerPixel);
-                }
-            }
-        }
     }
 }
 
@@ -374,6 +255,157 @@ void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x
         {
             err += dx;
             y0 += sy;
+        }
+    }
+}
+
+
+void PrimitivesRenderer::DrawTransformedRect(Color color, uint16_t length, uint16_t height, const float transformationMatrix[3][3])
+{
+    auto targetTexture = context.GetTargetTexture();
+    if (!targetTexture)
+        return;
+
+    PixelFormat format = targetTexture->GetFormat();
+    PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
+
+    uint8_t *textureData = targetTexture->GetData();
+    uint16_t textureWidth = targetTexture->GetWidth();
+    uint16_t textureHeight = targetTexture->GetHeight();
+    uint32_t pitch = targetTexture->GetPitch(); // Get the pitch (bytes per row)
+
+    // Identify rotation angle from the transformation matrix
+    float cosAngle = transformationMatrix[0][0];
+    float sinAngle = transformationMatrix[1][0];
+
+    float angle = std::atan2(sinAngle, cosAngle) * 180.0f / M_PI;
+    angle = std::fmod(angle, 360.0f);
+    if (angle < 0) angle += 360.0f;
+    //TODO FIX
+    if (angle == 90 || angle == 180 || angle == 270 || angle == 0)
+    {
+        float scaleX = std::sqrt(transformationMatrix[0][0] * transformationMatrix[0][0] + transformationMatrix[0][1] * transformationMatrix[0][1]);
+        float scaleY = std::sqrt(transformationMatrix[1][0] * transformationMatrix[1][0] + transformationMatrix[1][1] * transformationMatrix[1][1]);
+
+        uint16_t scaledLength = static_cast<uint16_t>(length * scaleX);
+        uint16_t scaledHeight = static_cast<uint16_t>(height * scaleY);
+
+        float xPos = transformationMatrix[0][2];
+        float yPos = transformationMatrix[1][2];
+
+        // Adjust position and dimensions based on rotation
+        switch (static_cast<int>(angle))
+        {
+        case 90:
+            DrawRect(color, static_cast<int16_t>(xPos - scaledHeight), static_cast<int16_t>(yPos), scaledHeight, scaledLength);
+            break;
+        case 180:
+            DrawRect(color, static_cast<int16_t>(xPos - scaledLength), static_cast<int16_t>(yPos - scaledHeight), scaledLength, scaledHeight);
+            break;
+        case 270:
+            DrawRect(color, static_cast<int16_t>(xPos), static_cast<int16_t>(yPos - scaledLength), scaledHeight, scaledLength);
+            break;
+        case 0:
+        default:
+            DrawRect(color, static_cast<int16_t>(xPos), static_cast<int16_t>(yPos), scaledLength, scaledHeight);
+            break;
+        }
+        return;
+    }
+
+
+    // Calculate the bounding box of the transformed rectangle
+    float minX = std::numeric_limits<float>::max();
+    float minY = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float maxY = std::numeric_limits<float>::min();
+
+    std::vector<std::pair<float, float>> corners = {
+        {0, 0},
+        {static_cast<float>(length), 0},
+        {0, static_cast<float>(height)},
+        {static_cast<float>(length), static_cast<float>(height)}
+    };
+
+    for (const auto& corner : corners)
+    {
+        float x = transformationMatrix[0][0] * corner.first + transformationMatrix[0][1] * corner.second + transformationMatrix[0][2];
+        float y = transformationMatrix[1][0] * corner.first + transformationMatrix[1][1] * corner.second + transformationMatrix[1][2];
+
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+
+    // Clamp the bounding box to the target texture's dimensions
+    int16_t startX = std::max(static_cast<int16_t>(std::floor(minX)), static_cast<int16_t>(0));
+    int16_t startY = std::max(static_cast<int16_t>(std::floor(minY)), static_cast<int16_t>(0));
+    int16_t endX = std::min(static_cast<int16_t>(std::ceil(maxX)), static_cast<int16_t>(textureWidth));
+    int16_t endY = std::min(static_cast<int16_t>(std::ceil(maxY)), static_cast<int16_t>(textureHeight));
+
+    if (context.IsClippingEnabled())
+    {
+        auto clippingArea = context.GetClippingArea();
+        startX = std::max(startX, static_cast<int16_t>(clippingArea.startX));
+        startY = std::max(startY, static_cast<int16_t>(clippingArea.startY));
+        endX = std::min(endX, static_cast<int16_t>(clippingArea.endX));
+        endY = std::min(endY, static_cast<int16_t>(clippingArea.endY));
+    }
+
+    // Define the inverse transformation matrix
+    float invMatrix[3][3];
+    float det = transformationMatrix[0][0] * (transformationMatrix[1][1] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][1]) -
+                transformationMatrix[0][1] * (transformationMatrix[1][0] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][0]) +
+                transformationMatrix[0][2] * (transformationMatrix[1][0] * transformationMatrix[2][1] - transformationMatrix[1][1] * transformationMatrix[2][0]);
+
+    if (det == 0.0f)
+        return; // Transformation matrix is not invertible
+
+    float invDet = 1.0f / det;
+
+    // Calculate the inverse matrix
+    invMatrix[0][0] = (transformationMatrix[1][1] * transformationMatrix[2][2] - transformationMatrix[1][2] * transformationMatrix[2][1]) * invDet;
+    invMatrix[0][1] = (transformationMatrix[0][2] * transformationMatrix[2][1] - transformationMatrix[0][1] * transformationMatrix[2][2]) * invDet;
+    invMatrix[0][2] = (transformationMatrix[0][1] * transformationMatrix[1][2] - transformationMatrix[0][2] * transformationMatrix[1][1]) * invDet;
+    invMatrix[1][0] = (transformationMatrix[1][2] * transformationMatrix[2][0] - transformationMatrix[1][0] * transformationMatrix[2][2]) * invDet;
+    invMatrix[1][1] = (transformationMatrix[0][0] * transformationMatrix[2][2] - transformationMatrix[0][2] * transformationMatrix[2][0]) * invDet;
+    invMatrix[1][2] = (transformationMatrix[0][2] * transformationMatrix[1][0] - transformationMatrix[0][0] * transformationMatrix[1][2]) * invDet;
+    invMatrix[2][0] = (transformationMatrix[1][0] * transformationMatrix[2][1] - transformationMatrix[1][1] * transformationMatrix[2][0]) * invDet;
+    invMatrix[2][1] = (transformationMatrix[0][1] * transformationMatrix[2][0] - transformationMatrix[0][0] * transformationMatrix[2][1]) * invDet;
+    invMatrix[2][2] = (transformationMatrix[0][0] * transformationMatrix[1][1] - transformationMatrix[0][1] * transformationMatrix[1][0]) * invDet;
+
+    BlendContext bc = context.GetBlendContext();
+    if (color.GetAlpha() == 255)
+        bc.mode = BlendMode::NOBLEND;
+
+    uint8_t pixelData[MAXBYTESPERPIXEL];
+    color.ConvertTo(format, pixelData);
+
+    // Iterate over the bounding box in the target texture
+    for (int16_t y = startY; y < endY; ++y)
+    {
+        for (int16_t x = startX; x < endX; ++x)
+        {
+            // Apply the inverse transformation to find the corresponding source pixel
+            float srcX = invMatrix[0][0] * x + invMatrix[0][1] * y + invMatrix[0][2];
+            float srcY = invMatrix[1][0] * x + invMatrix[1][1] * y + invMatrix[1][2];
+
+            // Check if the source pixel is within bounds
+            if (srcX >= 0 && srcX < length && srcY >= 0 && srcY < height)
+            {
+                uint8_t *dest = textureData + y * pitch + x * info.bytesPerPixel;
+
+                switch (bc.mode)
+                {
+                case BlendMode::NOBLEND:
+                    MemHandler::MemCopy(dest, pixelData, info.bytesPerPixel);
+                    break;
+                default:
+                    context.GetBlendFunc()(dest, pixelData, 1, info, PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888), context.GetColoring(), true, bc);
+                    break;
+                }
+            }
         }
     }
 }

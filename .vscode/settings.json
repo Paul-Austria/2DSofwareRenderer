@@ -84,6 +84,7 @@
         "cinttypes": "cpp",
         "variant": "cpp",
         "condition_variable": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "xmemory0": "cpp"
     }
 }

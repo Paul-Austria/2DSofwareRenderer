@@ -15,9 +15,11 @@ namespace Tergos2D
 
         void DrawLine(Color color, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
         void DrawRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height);
-        void DrawRotatedRect(Color color, int16_t x, int16_t y, uint16_t length, uint16_t height, float angle, int16_t offsetX = 0, int16_t offsetY = 0);
 
-    private:
+
+        void DrawTransformedRect(Color color, uint16_t length, uint16_t height, const float transformationMatrix[3][3]);
+
+        private:
     };
 
 } // namespace Tergos2D
