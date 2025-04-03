@@ -15,13 +15,13 @@ TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D &context)
 }
 
 
-void TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3])
+void TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3], int startX, int StartY, int endX, int endY)
 {
     if(m_drawTexture == nullptr) return;
-    m_drawTexture(texture,transformationMatrix, context);
+    m_drawTexture(texture,transformationMatrix, context,startX,StartY,endX,endY);
 }
 
-void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3], RenderContext2D &context)
+void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3], RenderContext2D &context, int tstartX, int tStartY, int tendX, int tendY)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture || !texture.GetData())
@@ -126,6 +126,9 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
             float srcX = invMatrix[0][0] * x + invMatrix[0][1] * y + invMatrix[0][2];
             float srcY = invMatrix[1][0] * x + invMatrix[1][1] * y + invMatrix[1][2];
 
+            // in case we don't want to render the entire texture we need to clip it again
+            if (srcX < tstartX || srcX > tendX || srcY < tStartY || srcY > tendY)
+                continue;
             // Check if the source pixel is within bounds
             if (srcX >= 0 && srcX < sourceWidth && srcY >= 0 && srcY < sourceHeight)
             {
@@ -166,7 +169,7 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
     }
 }
 
-void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &texture, const float transformationMatrix[3][3], RenderContext2D &context)
+void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &texture, const float transformationMatrix[3][3], RenderContext2D &context, int tstartX, int tStartY, int tendX, int tendY)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture || !texture.GetData())
@@ -270,6 +273,12 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
             // Apply the inverse transformation to find the corresponding source pixel
             float srcX = invMatrix[0][0] * x + invMatrix[0][1] * y + invMatrix[0][2];
             float srcY = invMatrix[1][0] * x + invMatrix[1][1] * y + invMatrix[1][2];
+
+
+            // in case we don't want to render the entire texture we need to clip it again
+            if (srcX < tstartX || srcX > tendX || srcY < tStartY || srcY > tendY)
+                continue;
+
 
             // Check if the source pixel is within bounds
             if (srcX >= 0 && srcX < sourceWidth && srcY >= 0 && srcY < sourceHeight)

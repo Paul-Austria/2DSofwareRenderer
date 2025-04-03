@@ -6,7 +6,6 @@
 #include "../RenderContext2D.h"
 #include <float.h>
 #include <math.h>
-#include <corecrt_math_defines.h>
 
 using namespace Tergos2D;
 
@@ -277,41 +276,6 @@ void PrimitivesRenderer::DrawTransformedRect(Color color, uint16_t length, uint1
     // Identify rotation angle from the transformation matrix
     float cosAngle = transformationMatrix[0][0];
     float sinAngle = transformationMatrix[1][0];
-
-    float angle = std::atan2(sinAngle, cosAngle) * 180.0f / M_PI;
-    angle = std::fmod(angle, 360.0f);
-    if (angle < 0) angle += 360.0f;
-    //TODO FIX
-    if (angle == 90 || angle == 180 || angle == 270 || angle == 0)
-    {
-        float scaleX = std::sqrt(transformationMatrix[0][0] * transformationMatrix[0][0] + transformationMatrix[0][1] * transformationMatrix[0][1]);
-        float scaleY = std::sqrt(transformationMatrix[1][0] * transformationMatrix[1][0] + transformationMatrix[1][1] * transformationMatrix[1][1]);
-
-        uint16_t scaledLength = static_cast<uint16_t>(length * scaleX);
-        uint16_t scaledHeight = static_cast<uint16_t>(height * scaleY);
-
-        float xPos = transformationMatrix[0][2];
-        float yPos = transformationMatrix[1][2];
-
-        // Adjust position and dimensions based on rotation
-        switch (static_cast<int>(angle))
-        {
-        case 90:
-            DrawRect(color, static_cast<int16_t>(xPos - scaledHeight), static_cast<int16_t>(yPos), scaledHeight, scaledLength);
-            break;
-        case 180:
-            DrawRect(color, static_cast<int16_t>(xPos - scaledLength), static_cast<int16_t>(yPos - scaledHeight), scaledLength, scaledHeight);
-            break;
-        case 270:
-            DrawRect(color, static_cast<int16_t>(xPos), static_cast<int16_t>(yPos - scaledLength), scaledHeight, scaledLength);
-            break;
-        case 0:
-        default:
-            DrawRect(color, static_cast<int16_t>(xPos), static_cast<int16_t>(yPos), scaledLength, scaledHeight);
-            break;
-        }
-        return;
-    }
 
 
     // Calculate the bounding box of the transformed rectangle

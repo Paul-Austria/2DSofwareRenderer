@@ -77,7 +77,6 @@ namespace Tergos2D
         Coloring colorOverlay;
         BlendFunc blendFunc = BlendFunctions::BlendRow;
         // clipping area
-        uint16_t startX, startY, endX, endY;
         ClippingArea clippingArea;
         bool enableClipping = false;
     };
