@@ -71,7 +71,7 @@ void PixelConverter::ARGB8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t co
     for (; i + 4 <= count; i += 4)
     {
         uint8x16x4_t argb = vld4q_u8(src + i * 4);
-        
+
         uint8x16x3_t rgb;
         rgb.val[0] = argb.val[1];
         rgb.val[1] = argb.val[2];
@@ -95,7 +95,7 @@ void PixelConverter::ARGB8888ToBGR24(const uint8_t *src, uint8_t *dst, size_t co
     for (; i + 4 <= count; i += 4)
     {
         uint8x16x4_t argb = vld4q_u8(src + i * 4);
-        
+
         uint8x16x3_t bgr;
         bgr.val[0] = argb.val[3];
         bgr.val[1] = argb.val[2];
@@ -127,6 +127,13 @@ void PixelConverter::RGB565ToBGR24(const uint8_t *src, uint8_t *dst, size_t coun
 
 void PixelConverter::ARGB8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count)
 {
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint16_t r = (src[i * 4 + 1] >> 3) & 0x1F;
+        uint16_t g = (src[i * 4 + 2] >> 2) & 0x3F;
+        uint16_t b = (src[i * 4 + 3] >> 3) & 0x1F;
+        reinterpret_cast<uint16_t *>(dst)[i] = (r << 11) | (g << 5) | b;
+    }
 }
 
 
@@ -242,8 +249,8 @@ void PixelConverter::ARGB8888ToGrayscale8(const uint8_t *src, uint8_t *dst, size
     {
         uint8x8x4_t argb = vld4_u8(src + i * 4);
 
-        uint8x8_t gray = vadd_u8(vadd_u8(vmul_u8(argb.val[1], vdup_n_u8(77)), 
-                                          vmul_u8(argb.val[2], vdup_n_u8(150))), 
+        uint8x8_t gray = vadd_u8(vadd_u8(vmul_u8(argb.val[1], vdup_n_u8(77)),
+                                          vmul_u8(argb.val[2], vdup_n_u8(150))),
                                  vmul_u8(argb.val[3], vdup_n_u8(29)));
 
         vst1_u8(dst + i, gray);
@@ -265,8 +272,8 @@ void PixelConverter::RGB24ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t 
     {
         uint8x8x3_t rgb = vld3_u8(src + i * 3);
 
-        uint8x8_t gray = vadd_u8(vadd_u8(vmul_u8(rgb.val[0], vdup_n_u8(77)), 
-                                          vmul_u8(rgb.val[1], vdup_n_u8(150))), 
+        uint8x8_t gray = vadd_u8(vadd_u8(vmul_u8(rgb.val[0], vdup_n_u8(77)),
+                                          vmul_u8(rgb.val[1], vdup_n_u8(150))),
                                  vmul_u8(rgb.val[2], vdup_n_u8(29)));
 
         vst1_u8(dst + i, gray);
@@ -494,5 +501,63 @@ void PixelConverter::Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t 
         dst[i * 3 + 0] = gray; // B
         dst[i * 3 + 1] = gray; // G
         dst[i * 3 + 2] = gray; // R
+    }
+}
+
+void Tergos2D::PixelConverter::RGBA8888ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t r = src[i * 4];
+        uint8_t g = src[i * 4 + 1];
+        uint8_t b = src[i * 4 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void Tergos2D::PixelConverter::RGB24ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t r = src[i * 3];
+        uint8_t g = src[i * 3 + 1];
+        uint8_t b = src[i * 3 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void PixelConverter::BGR24ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t b = src[i * 3];
+        uint8_t g = src[i * 3 + 1];
+        uint8_t r = src[i * 3 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void Tergos2D::PixelConverter::Grayscale8ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t gray = src[i];
+
+        uint16_t rgb565 = ((gray & 0xF8) << 8) | ((gray & 0xFC) << 3) | (gray >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
     }
 }

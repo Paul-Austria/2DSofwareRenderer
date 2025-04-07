@@ -465,10 +465,10 @@ void PixelConverter::Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size
 {
     for (size_t i = 0; i < count; ++i)
     {
-        uint8_t gray = src[i];  
+        uint8_t gray = src[i];
 
         dst[i*4]       = gray == 0;
-        dst[i * 4 +1]  = gray;   
+        dst[i * 4 +1]  = gray;
         dst[i * 4 + 2] = gray;
         dst[i * 4 + 3] = gray;
     }
@@ -478,7 +478,7 @@ void PixelConverter::Grayscale8ToRGB24(const uint8_t *src, uint8_t *dst, size_t 
 {
     for (size_t i = 0; i < count; ++i)
     {
-        dst[i * 3] =  src[i];   
+        dst[i * 3] =  src[i];
         dst[i * 3 + 1] =  src[i];
         dst[i * 3 + 2] =  src[i];
     }
@@ -487,8 +487,68 @@ void PixelConverter::Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t 
 {
     for (size_t i = 0; i < count; ++i)
     {
-        dst[i * 3] =  src[i];     
-        dst[i * 3 + 1] =  src[i]; 
-        dst[i * 3 + 2] = src[i]; 
+        dst[i * 3] =  src[i];
+        dst[i * 3 + 1] =  src[i];
+        dst[i * 3 + 2] = src[i];
+    }
+}
+
+
+
+void Tergos2D::PixelConverter::RGBA8888ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t r = src[i * 4];
+        uint8_t g = src[i * 4 + 1];
+        uint8_t b = src[i * 4 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void Tergos2D::PixelConverter::RGB24ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t r = src[i * 3];
+        uint8_t g = src[i * 3 + 1];
+        uint8_t b = src[i * 3 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void PixelConverter::BGR24ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t b = src[i * 3];
+        uint8_t g = src[i * 3 + 1];
+        uint8_t r = src[i * 3 + 2];
+
+        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
+    }
+}
+
+void Tergos2D::PixelConverter::Grayscale8ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        uint8_t gray = src[i];
+
+        uint16_t rgb565 = ((gray & 0xF8) << 8) | ((gray & 0xFC) << 3) | (gray >> 3);
+
+        dst[i * 2] = (rgb565 >> 8) & 0xFF;
+        dst[i * 2 + 1] = rgb565 & 0xFF;
     }
 }

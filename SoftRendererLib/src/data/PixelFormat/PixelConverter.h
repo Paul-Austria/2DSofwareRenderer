@@ -32,15 +32,17 @@ namespace Tergos2D
         static void Move3(const uint8_t *src, uint8_t *dst, size_t count);
         static void Move4(const uint8_t *src, uint8_t *dst, size_t count);
 
-        // GBR24 Conversions
+        // BGR24 Conversions
         static void BGR24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void BGR24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
+        static void BGR24ToRGB565(const uint8_t *src, uint8_t *dst, size_t count);
 
         // RGB24 conversions
         static void RGB24ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToRGBA8888(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGB24ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
         static void BGR24ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
+        static void RGB24ToRGB565(const uint8_t *src, uint8_t *dst, size_t count);
 
         static void RGB24ToGrayscale8(const uint8_t *src, uint8_t *dst, size_t count);
 
@@ -55,6 +57,7 @@ namespace Tergos2D
 
         // RGBA8888 conversions
         static void RGBA8888ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
+        static void RGBA8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA8888ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
         static void RGBA8888ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
 
@@ -79,6 +82,8 @@ namespace Tergos2D
         static void Grayscale8ToBGR24(const uint8_t *src, uint8_t *dst, size_t count);
         static void Grayscale8ToRGB24(const uint8_t *src, uint8_t *dst, size_t count);
         static void Grayscale8ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count);
+        static void Grayscale8ToRGB565(const uint8_t *src, uint8_t *dst, size_t count);
+
 
         // Conversion mappings
         static constexpr Conversion defaultConversions[] = {
@@ -86,12 +91,14 @@ namespace Tergos2D
             {PixelFormat::BGR24, PixelFormat::ARGB8888, BGR24ToARGB8888},
             {PixelFormat::BGR24, PixelFormat::RGBA8888, BGR24ToRGBA8888},
             {PixelFormat::BGR24, PixelFormat::RGB24, BGR24ToRGB24},
+            {PixelFormat::BGR24, PixelFormat::RGB565, BGR24ToRGB565},
 
             // RGB24 conversions
             {PixelFormat::RGB24, PixelFormat::ARGB8888, RGB24ToARGB8888},
             {PixelFormat::RGB24, PixelFormat::RGBA8888, RGB24ToRGBA8888},
             {PixelFormat::RGB24, PixelFormat::GRAYSCALE8, RGB24ToGrayscale8},
             {PixelFormat::RGB24, PixelFormat::BGR24, RGB24ToBGR24},
+            {PixelFormat::RGB24, PixelFormat::RGB565, RGB24ToRGB565},
 
             // ARGB8888 conversions
             {PixelFormat::ARGB8888, PixelFormat::RGB24, ARGB8888ToRGB24},
@@ -130,6 +137,8 @@ namespace Tergos2D
             {PixelFormat::GRAYSCALE8, PixelFormat::BGR24, Grayscale8ToBGR24},
             {PixelFormat::GRAYSCALE8, PixelFormat::RGB24, Grayscale8ToRGB24},
             {PixelFormat::GRAYSCALE8, PixelFormat::ARGB8888,Grayscale8ToARGB8888},
+            {PixelFormat::GRAYSCALE8, PixelFormat::RGB565,Grayscale8ToRGB565},
+
         };
     };
 }

@@ -47,7 +47,6 @@ SamplingMethod Tergos2D::RenderContext2D::GetSamplingMethod()
     return samplingMethod;
 }
 
-#include "iostream"
 
 void RenderContext2D::ClearTarget(Color color)
 {

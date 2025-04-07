@@ -16,7 +16,7 @@ void ScaleTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y,
                                        float scaleX, float scaleY)
 {
     auto targetTexture = context.GetTargetTexture();
-    if (!targetTexture || scaleX <= 0 || scaleY <= 0)
+    if (!targetTexture || !texture.GetData() || scaleX <= 0 || scaleY <= 0)
         return;
 
     if (scaleX == 1 && scaleY == 1)

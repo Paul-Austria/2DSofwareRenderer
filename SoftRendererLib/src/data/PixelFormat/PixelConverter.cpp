@@ -21,6 +21,8 @@ namespace Tergos2D
         std::memcpy(dst, src, count * 4);
     }
 
+
+
     PixelConverter::ConvertFunc PixelConverter::GetConversionFunction(PixelFormat from, PixelFormat to)
     {
 

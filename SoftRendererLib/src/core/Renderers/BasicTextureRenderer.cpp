@@ -15,7 +15,7 @@ BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererB
 void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
 {
     auto targetTexture = context.GetTargetTexture();
-    if (!targetTexture)
+    if (!targetTexture || !texture.GetData())
         return;
 
     // Get target texture information
@@ -74,6 +74,8 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
+
+            
             const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
 
             convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
