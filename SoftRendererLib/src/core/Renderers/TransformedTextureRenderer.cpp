@@ -29,21 +29,172 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
         return;
     }
 
-    // Get source texture information
-    PixelFormat sourceFormat = texture.GetFormat();
-    PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
-    uint8_t *sourceData = texture.GetData();
-    uint16_t sourceWidth = texture.GetWidth();
-    uint16_t sourceHeight = texture.GetHeight();
-    size_t sourcePitch = texture.GetPitch();
+     // Get texture information
+     PixelFormat sourceFormat = texture.GetFormat();
+     PixelFormatInfo sourceInfo = PixelFormatRegistry::GetInfo(sourceFormat);
+     uint8_t *sourceData = texture.GetData();
+     uint16_t sourceWidth = texture.GetWidth();
+     uint16_t sourceHeight = texture.GetHeight();
+     size_t sourcePitch = texture.GetPitch();
 
-    // Get target texture information
-    PixelFormat targetFormat = targetTexture->GetFormat();
-    PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
-    uint8_t *targetData = targetTexture->GetData();
-    uint16_t targetWidth = targetTexture->GetWidth();
-    uint16_t targetHeight = targetTexture->GetHeight();
-    size_t targetPitch = targetTexture->GetPitch();
+     PixelFormat targetFormat = targetTexture->GetFormat();
+     PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(targetFormat);
+     uint8_t *targetData = targetTexture->GetData();
+     uint16_t targetWidth = targetTexture->GetWidth();
+     uint16_t targetHeight = targetTexture->GetHeight();
+     size_t targetPitch = targetTexture->GetPitch();
+
+     BlendContext bc = context.GetBlendContext();
+     bc.mode = context.BlendModeToUse(sourceInfo);
+
+    const float EPSILON = 0.0001f;
+
+    // Extract scale and rotation
+    float scaleX = std::sqrt(transformationMatrix[0][0] * transformationMatrix[0][0] +
+                            transformationMatrix[1][0] * transformationMatrix[1][0]);
+    float scaleY = std::sqrt(transformationMatrix[0][1] * transformationMatrix[0][1] +
+                            transformationMatrix[1][1] * transformationMatrix[1][1]);
+
+    // Check if there's no scaling (approximately 1.0)
+    bool noScaling = std::abs(scaleX - 1.0f) < EPSILON && std::abs(scaleY - 1.0f) < EPSILON;
+
+    // Check for perspective transformation
+    bool noPerspective = std::abs(transformationMatrix[2][0]) < EPSILON &&
+                        std::abs(transformationMatrix[2][1]) < EPSILON &&
+                        std::abs(transformationMatrix[2][2] - 1.0f) < EPSILON;
+
+    if (noScaling && noPerspective)
+    {
+        // Extract rotation
+        float rotateCos = transformationMatrix[0][0];
+        float rotateSin = transformationMatrix[1][0];
+        float angleInRadians = std::atan2(rotateSin, rotateCos);
+        float angleInDegrees = angleInRadians * (180.0f / 3.14159265358979323846f);
+        int angle = ((int)std::round(angleInDegrees) % 360 + 360) % 360;
+
+        if (angle % 90 == 0)
+        {
+
+            PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
+            if (!convertFunc) return;
+
+            // Calculate destination coordinates based on rotation
+            int16_t destX = static_cast<int16_t>(transformationMatrix[0][2]);
+            int16_t destY = static_cast<int16_t>(transformationMatrix[1][2]);
+
+            // Adjust clipping based on rotation
+            int16_t startX = destX;
+            int16_t startY = destY;
+            int16_t width = sourceWidth;
+            int16_t height = sourceHeight;
+
+            switch (angle)
+            {
+                case 0:   // 0 degrees
+                    context.basicTextureRenderer.DrawTexture(texture,destX,destY);
+                    return;
+                    break;
+                case 90:  // 90 degrees
+                    startX = destX - sourceHeight;
+                    std::swap(width, height);
+                    break;
+                case 180: // 180 degrees
+                    startX = destX - sourceWidth;
+                    startY = destY - sourceHeight;
+                    break;
+                case 270: // 270 degrees
+                    startY = destY - sourceWidth;
+                    std::swap(width, height);
+                    break;
+            }
+
+            // Apply clipping
+            if (context.IsClippingEnabled())
+            {
+                auto clippingArea = context.GetClippingArea();
+                startX = std::max(startX, static_cast<int16_t>(clippingArea.startX));
+                startY = std::max(startY, static_cast<int16_t>(clippingArea.startY));
+                width = std::min(width, static_cast<int16_t>(clippingArea.endX - startX));
+                height = std::min(height, static_cast<int16_t>(clippingArea.endY - startY));
+            }
+
+            // Optimized copy for each rotation
+            uint8_t buffer[100*4];  // Reuse the buffer from original code
+            int pos = 0;
+            const int maxPos = 10;
+            uint8_t* targetPixel = nullptr;
+            for (int16_t y = 0; y < height; ++y)
+            {
+                for (int16_t x = 0; x < width; ++x)
+                {
+                    int sourceX, sourceY;
+                    switch (angle)
+                    {
+                        case 0:
+                            sourceX = x;
+                            sourceY = y;
+                            break;
+                        case 270:
+                            sourceX = height - 1 - y;
+                            sourceY = x;
+                            break;
+                        case 180:
+                            sourceX = width - 1 - x;
+                            sourceY = height - 1 - y;
+                            break;
+                        case 90:
+                            sourceX = y;
+                            sourceY = width - 1 - x;
+                            break;
+                    }
+
+                    // Check texture bounds
+                    if (sourceX < tstartX || sourceX > tendX || sourceY < tStartY || sourceY > tendY)
+                        continue;
+
+                    const uint8_t *sourcePixel = sourceData + sourceY * sourcePitch + sourceX * sourceInfo.bytesPerPixel;
+                    if (pos == 0)
+                    {
+                        targetPixel = targetData + (startY + y) * targetPitch + (startX + x) * targetInfo.bytesPerPixel;
+                    }
+
+                    std::memcpy(buffer + sourceInfo.bytesPerPixel * pos, sourcePixel, sourceInfo.bytesPerPixel);
+                    pos++;
+
+                    if (pos == maxPos)
+                    {
+                        if (bc.mode == BlendMode::NOBLEND)
+                        {
+                            convertFunc(buffer, targetPixel, pos);
+                        }
+                        else
+                        {
+                            context.GetBlendFunc()(targetPixel, buffer, pos, targetInfo, sourceInfo, context.GetColoring(), false, bc);
+                        }
+                        pos = 0;
+                    }
+                }
+
+                // Handle remaining pixels in the row
+                if (pos != 0)
+                {
+                    if (bc.mode == BlendMode::NOBLEND)
+                    {
+                        convertFunc(buffer, targetPixel, pos);
+                    }
+                    else
+                    {
+                        context.GetBlendFunc()(targetPixel, buffer, pos, targetInfo, sourceInfo, context.GetColoring(), false, bc);
+                    }
+                    pos = 0;
+                }
+            }
+            return;
+        }
+    }
+
+
+
 
     // Calculate the bounding box of the transformed source texture
     float minX = std::numeric_limits<float>::max();
@@ -107,8 +258,6 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
     invMatrix[2][1] = (transformationMatrix[0][1] * transformationMatrix[2][0] - transformationMatrix[0][0] * transformationMatrix[2][1]) * invDet;
     invMatrix[2][2] = (transformationMatrix[0][0] * transformationMatrix[1][1] - transformationMatrix[0][1] * transformationMatrix[1][0]) * invDet;
 
-    BlendContext bc = context.GetBlendContext();
-    bc.mode = context.BlendModeToUse(sourceInfo);
 
     // Iterate over the bounding box in the target texture
     uint8_t buffer[100*4];
@@ -175,6 +324,43 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
     if (!targetTexture || !texture.GetData())
     {
         return;
+    }
+    //revert to normal method when nearest is used
+    if(context.GetSamplingMethod() == SamplingMethod::NEAREST){
+        DrawTexture(texture,transformationMatrix,context,tstartX,tStartY,tendX,tendY);
+        return;
+    }
+
+    const float EPSILON = 0.0001f;
+
+    // Extract scale and rotation
+    float scaleX = std::sqrt(transformationMatrix[0][0] * transformationMatrix[0][0] +
+                            transformationMatrix[1][0] * transformationMatrix[1][0]);
+    float scaleY = std::sqrt(transformationMatrix[0][1] * transformationMatrix[0][1] +
+                            transformationMatrix[1][1] * transformationMatrix[1][1]);
+
+    // Check if there's no scaling (approximately 1.0)
+    bool noScaling = std::abs(scaleX - 1.0f) < EPSILON && std::abs(scaleY - 1.0f) < EPSILON;
+
+    // Check for perspective transformation
+    bool noPerspective = std::abs(transformationMatrix[2][0]) < EPSILON &&
+                        std::abs(transformationMatrix[2][1]) < EPSILON &&
+                        std::abs(transformationMatrix[2][2] - 1.0f) < EPSILON;
+
+    if (noScaling && noPerspective)
+    {
+        // Extract rotation
+        float rotateCos = transformationMatrix[0][0];
+        float rotateSin = transformationMatrix[1][0];
+        float angleInRadians = std::atan2(rotateSin, rotateCos);
+        float angleInDegrees = angleInRadians * (180.0f / 3.14159265358979323846f);
+        int angle = ((int)std::round(angleInDegrees) % 360 + 360) % 360;
+        // No sampling needed if 90 degrees
+        if (angle % 90 == 0)
+        {
+            DrawTexture(texture,transformationMatrix,context,tstartX,tStartY,tendX,tendY);
+            return;
+        }
     }
 
     // Get source texture information
@@ -356,5 +542,6 @@ DrawTexturePointer Tergos2D::TransformedTextureRenderer::GetDrawTexture()
 
 void Tergos2D::TransformedTextureRenderer::SetDrawTexture(DrawTexturePointer drawTexture)
 {
+    if(drawTexture == nullptr) return;
     this->m_drawTexture = drawTexture;
 }

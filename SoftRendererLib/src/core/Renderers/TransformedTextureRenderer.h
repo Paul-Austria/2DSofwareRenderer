@@ -18,7 +18,13 @@ namespace Tergos2D
         TransformedTextureRenderer(RenderContext2D &context);
         ~TransformedTextureRenderer() = default;
 
-
+        /// @brief draw a texture transformed
+        /// @param texture
+        /// @param transformationMatrix
+        /// @param startX
+        /// @param StartY
+        /// @param endX
+        /// @param endY
         void DrawTexture(Texture &texture,  const float transformationMatrix[3][3],
             int startX = 0,
             int StartY = 0,
@@ -38,7 +44,12 @@ namespace Tergos2D
         /// @param context
         static void DrawTextureSamplingSupp(Texture &texture,  const float transformationMatrix[3][3], RenderContext2D& context, int startX, int StartY, int endX, int endY);
 
+
+        /// @brief Get the function thats used for drawing a texture transformed
+        /// @return
         DrawTexturePointer GetDrawTexture();
+        /// @brief Sets the function that is used to transform a texture
+        /// @param drawTexture
         void SetDrawTexture(DrawTexturePointer drawTexture);
     private:
 

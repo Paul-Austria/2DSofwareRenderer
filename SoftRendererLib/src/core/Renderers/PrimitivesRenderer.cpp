@@ -265,17 +265,59 @@ void PrimitivesRenderer::DrawTransformedRect(Color color, uint16_t length, uint1
     if (!targetTexture)
         return;
 
+    // Identify rotation angle from the transformation matrix
+    float cosAngle = transformationMatrix[0][0];
+    float sinAngle = transformationMatrix[1][0];
+
+
+    float scaleX = std::sqrt(transformationMatrix[0][0] * transformationMatrix[0][0] +
+        transformationMatrix[1][0] * transformationMatrix[1][0]);
+    float scaleY = std::sqrt(transformationMatrix[0][1] * transformationMatrix[0][1] +
+            transformationMatrix[1][1] * transformationMatrix[1][1]);
+
+    // Extract rotation from scaled matrix by normalizing with scale
+    float rotateCos = transformationMatrix[0][0] / scaleX;
+    float rotateSin = transformationMatrix[1][0] / scaleX;
+    
+    // Calculate angle in radians and degrees
+    float angleInRadians = std::atan2(rotateSin, rotateCos);
+    float angleInDegrees = angleInRadians * (180.0f / 3.14159265358979323846f);
+
+    if((int)std::round(angleInDegrees) % 90 == 0)
+    {
+        // Need to handle different angles correctly
+        int angle = ((int)std::round(angleInDegrees) % 360 + 360) % 360; // normalize to 0-359
+        switch(angle) {
+            case 0:   // 0 degrees
+                DrawRect(color, transformationMatrix[0][2], transformationMatrix[1][2],
+                        length * scaleX, height * scaleY);
+                break;
+            case 90:  // 90 degrees
+                DrawRect(color, transformationMatrix[0][2] - height * scaleY, transformationMatrix[1][2],
+                        height * scaleY, length * scaleX);
+                break;
+            case 180: // 180 degrees
+                DrawRect(color, transformationMatrix[0][2] - length * scaleX,
+                        transformationMatrix[1][2] - height * scaleY,
+                        length * scaleX, height * scaleY);
+                break;
+            case 270: // 270 degrees
+                DrawRect(color, transformationMatrix[0][2], transformationMatrix[1][2] - length * scaleX,
+                        height * scaleY, length * scaleX);
+                break;
+        }
+        return;
+    }
+
+
+
     PixelFormat format = targetTexture->GetFormat();
     PixelFormatInfo info = PixelFormatRegistry::GetInfo(format);
 
     uint8_t *textureData = targetTexture->GetData();
     uint16_t textureWidth = targetTexture->GetWidth();
     uint16_t textureHeight = targetTexture->GetHeight();
-    uint32_t pitch = targetTexture->GetPitch(); // Get the pitch (bytes per row)
-
-    // Identify rotation angle from the transformation matrix
-    float cosAngle = transformationMatrix[0][0];
-    float sinAngle = transformationMatrix[1][0];
+    uint32_t pitch = targetTexture->GetPitch();
 
 
     // Calculate the bounding box of the transformed rectangle
