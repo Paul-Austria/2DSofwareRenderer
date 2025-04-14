@@ -1,6 +1,5 @@
 #include "PixelConverter.h"
 #include "PixelFormatInfo.h"
-
 namespace Tergos2D
 {
 
@@ -62,6 +61,7 @@ namespace Tergos2D
     void PixelConverter::Convert(PixelFormat from, PixelFormat to, const uint8_t *src, uint8_t *dst, size_t count)
     {
         ConvertFunc func = GetConversionFunction(from, to);
+        if(!func) return;
         func(src, dst, count);
     }
 

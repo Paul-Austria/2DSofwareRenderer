@@ -119,9 +119,9 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
             }
 
             // Optimized copy for each rotation
-            uint8_t buffer[100*4];  // Reuse the buffer from original code
+            const int maxPos = MAX_BUFFER_SIZE;
+            uint8_t buffer[maxPos*4];  // Reuse the buffer from original code
             int pos = 0;
-            const int maxPos = 10;
             uint8_t* targetPixel = nullptr;
             for (int16_t y = 0; y < height; ++y)
             {
@@ -260,10 +260,10 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
 
 
     // Iterate over the bounding box in the target texture
-    uint8_t buffer[100*4];
+    const int maxPos = MAX_BUFFER_SIZE;
+    uint8_t buffer[maxPos*4];
     int pos = 0;
 
-    const int maxPos = 10;
     uint8_t *targetPixel = nullptr;
     PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
     if(!convertFunc) return;
@@ -445,7 +445,7 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
     bc.mode = context.BlendModeToUse(sourceInfo);
 
     // Iterate over the bounding box in the target texture
-    const int maxPos = 10;
+    const int maxPos = MAX_BUFFER_SIZE;
     uint8_t buffer[maxPos*4];
     int pos = 0;
 
