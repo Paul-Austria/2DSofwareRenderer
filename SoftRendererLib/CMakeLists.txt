@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 project(SoftRendererLib VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_BUILD_TYPE Debug)
+
+message("Using Tergos2D Rendering engine")
 
 # custom options
-set(USE_NEON ON CACHE BOOL "use neon")
+set(USE_NEON oFF CACHE BOOL "use neon")
 
 
 # Include the sources from subdirectories

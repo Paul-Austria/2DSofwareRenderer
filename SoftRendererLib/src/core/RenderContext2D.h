@@ -1,8 +1,7 @@
 #ifndef CONTEXT2D_H
 #define CONTEXT2D_H
 
-#include <functional>
-#include <cstdint>
+#include <stdint.h>
 #include "../data/Texture.h"
 #include "../data/Color.h"
 #include "../data/BlendMode/BlendMode.h"
@@ -13,7 +12,7 @@
 #include "Renderers/ScaleTextureRenderer.h"
 
 
-#define MAXBYTESPERPIXEL 16
+#define MAXBYTESPERPIXEL 4
 #define MAXROWLENGTH 2048
 
 

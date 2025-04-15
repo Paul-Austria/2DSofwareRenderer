@@ -3,9 +3,8 @@
 
 #include "PixelFormat.h"
 #include <unordered_map>
-#include <cstdint>
 #include "../Color.h"
-#include <cstdint>
+#include <stdint.h>
 namespace Tergos2D
 {
 
@@ -30,11 +29,21 @@ namespace Tergos2D
                         uint16_t greenMask, uint8_t greenShift,
                         uint16_t blueMask, uint8_t blueShift,
                         uint16_t alphaMask = 0, uint8_t alphaShift = 0)
-            : format(format), bytesPerPixel(bpp), bitsPerPixel(bitspp), isBitFormat(isBitFormat), numChannels(channels), hasAlpha(alpha), name(name),
-              redMask(redMask), redShift(redShift),
-              greenMask(greenMask), greenShift(greenShift),
-              blueMask(blueMask), blueShift(blueShift),
-              alphaMask(alphaMask), alphaShift(alphaShift)
+            : format(format),
+            bytesPerPixel(bpp),
+            bitsPerPixel(bitspp),
+            isBitFormat(isBitFormat),
+            numChannels(channels),
+            hasAlpha(alpha),
+            name(name),
+            redMask(redMask),
+            greenMask(greenMask),
+            blueMask(blueMask),
+            alphaMask(alphaMask),
+            redShift(redShift),
+            greenShift(greenShift),
+            blueShift(blueShift),
+            alphaShift(alphaShift)
         {
             if (isBitFormat)
             {
@@ -55,7 +64,7 @@ namespace Tergos2D
         static const PixelFormatInfo &GetInfo(PixelFormat format);
 
     private:
-        static const PixelFormatInfo formatInfoArray[]; 
+        static const PixelFormatInfo formatInfoArray[];
     };
 
 }
