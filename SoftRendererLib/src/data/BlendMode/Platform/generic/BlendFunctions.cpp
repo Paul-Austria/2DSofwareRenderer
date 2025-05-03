@@ -61,6 +61,143 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t *dstRow,
     }
 }
 
+
+void BlendFunctions::BlendRGB565(uint8_t *dstRow,
+                                 const uint8_t *srcRow,
+                                 size_t rowLength,
+                                 const PixelFormatInfo &targetInfo,
+                                 const PixelFormatInfo &sourceInfo,
+                                 Coloring coloring,
+                                 bool useSolidColor,
+                                 BlendContext& context)
+{
+    // Conversion function for the source format could be either rgb24 or bgr24
+    PixelConverter::ConvertFunc convertToRGB565 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::RGB565);
+    PixelConverter::ConvertFunc convertColorToRGB565 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, PixelFormat::RGB565);
+
+    // Temporary storage for source pixel in RGB565
+    alignas(16) uint16_t srcRGB565[1024];
+    alignas(16) uint16_t colorDataAsRGB565;
+
+    convertToRGB565(srcRow, reinterpret_cast<uint8_t*>(srcRGB565), rowLength);
+    convertColorToRGB565(coloring.color.data, reinterpret_cast<uint8_t*>(&colorDataAsRGB565), 1);
+
+    const uint8_t *srcPixel = srcRow;
+    uint16_t *dstPixel = (u_int16_t*) dstRow;
+
+    uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
+    uint8_t inverseColorFactor = 255 - colorFactor;
+
+    for (size_t i = 0; i < rowLength; ++i, srcPixel += sourceInfo.bytesPerPixel, dstPixel++)
+    {
+        uint8_t alpha = 255;
+
+        uint16_t srcColor = srcRGB565[i];
+        if (sourceInfo.format == PixelFormat::GRAYSCALE8)
+        {
+            uint8_t grayValue = srcPixel[0];
+            alpha = (grayValue == 0) ? 0 : 255;
+        }
+        else if (context.mode == BlendMode::COLORINGONLY)
+        {
+            alpha = 255;
+        }
+        else
+        {
+            alpha = (*reinterpret_cast<const uint32_t *>(srcPixel) >> sourceInfo.alphaShift) & sourceInfo.alphaMask;
+        }
+
+        if (alpha == 0)
+        {
+            continue;
+        }
+
+        if (colorFactor != 0)
+        {
+            uint8_t srcR = (srcColor >> 11) & 0x1F;
+            uint8_t srcG = (srcColor >> 5) & 0x3F;
+            uint8_t srcB = srcColor & 0x1F;
+
+            uint8_t colorR = (colorDataAsRGB565 >> 11) & 0x1F;
+            uint8_t colorG = (colorDataAsRGB565 >> 5) & 0x3F;
+            uint8_t colorB = colorDataAsRGB565 & 0x1F;
+
+            srcR = (srcR * colorR) >> 5;
+            srcG = (srcG * colorG) >> 6;
+            srcB = (srcB * colorB) >> 5;
+
+            srcColor = (srcR << 11) | (srcG << 5) | srcB;
+
+            alpha = (alpha * coloring.color.data[0]) >> 8;
+        }
+
+        if (alpha == 255)
+        {
+            *dstPixel = srcColor;
+            continue;
+        }
+
+        uint8_t invAlpha = 255 - alpha;
+
+        uint8_t srcR = (srcColor >> 11) & 0x1F;
+        uint8_t srcG = (srcColor >> 5) & 0x3F;
+        uint8_t srcB = srcColor & 0x1F;
+
+        uint8_t dstR = (*dstPixel >> 11) & 0x1F;
+        uint8_t dstG = (*dstPixel >> 5) & 0x3F;
+        uint8_t dstB = *dstPixel & 0x1F;
+
+        uint8_t srcFactorR, dstFactorR;
+        uint8_t srcFactorG, dstFactorG;
+        uint8_t srcFactorB, dstFactorB;
+
+        switch (context.colorBlendFactorSrc)
+        {
+        case BlendFactor::Zero:
+            srcFactorR = srcFactorG = srcFactorB = 0;
+            break;
+        case BlendFactor::One:
+            srcFactorR = srcFactorG = srcFactorB = 255;
+            break;
+        case BlendFactor::SourceAlpha:
+            srcFactorR = srcFactorG = srcFactorB = alpha;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            srcFactorR = srcFactorG = srcFactorB = 255 - alpha;
+            break;
+        default:
+            srcFactorR = srcFactorG = srcFactorB = 255;
+            break;
+        }
+
+        switch (context.colorBlendFactorDst)
+        {
+        case BlendFactor::Zero:
+            dstFactorR = dstFactorG = dstFactorB = 0;
+            break;
+        case BlendFactor::One:
+            dstFactorR = dstFactorG = dstFactorB = 255;
+            break;
+        case BlendFactor::SourceAlpha:
+            dstFactorR = dstFactorG = dstFactorB = alpha;
+            break;
+        case BlendFactor::InverseSourceAlpha:
+            dstFactorR = dstFactorG = dstFactorB = 255 - alpha;
+            break;
+        default:
+            dstFactorR = dstFactorG = dstFactorB = 255;
+            break;
+        }
+
+        uint8_t blendedR = (srcR * srcFactorR + dstR * dstFactorR) >> 8;
+        uint8_t blendedG = (srcG * srcFactorG + dstG * dstFactorG) >> 8;
+        uint8_t blendedB = (srcB * srcFactorB + dstB * dstFactorB) >> 8;
+
+        *dstPixel = (blendedR << 11) | (blendedG << 5) | blendedB;
+    }
+}
+
+
 void BlendFunctions::BlendSolidRowRGB24(uint8_t *dstRow,
                                         const uint8_t *srcRow,
                                         size_t rowLength,

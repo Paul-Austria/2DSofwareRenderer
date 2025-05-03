@@ -6,6 +6,7 @@
 #include "../../data/Texture.h"
 #include <functional>
 
+#define MAX_BUFFER_SIZE 64
 namespace Tergos2D
 {
 

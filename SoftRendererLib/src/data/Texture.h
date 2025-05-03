@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include <cstdint>
+#include <stdint.h>
 #include "PixelFormat/PixelFormat.h"
 
 namespace Tergos2D{

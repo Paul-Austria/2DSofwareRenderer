@@ -59,7 +59,15 @@ namespace Tergos2D
                                bool useSolidColor,
                                BlendContext& context);
 
-
+        static void BlendRGB565(uint8_t *dstRow,
+                                const uint8_t *srcRow,
+                                size_t rowLength,
+                                const PixelFormatInfo &targetInfo,
+                                const PixelFormatInfo &sourceInfo,
+                                Coloring coloring,
+                                bool useSolidColor,
+                                BlendContext& context);
+                                
         // ONLY SOURCEALPHA, INVERSESOURCEALPHA, ADD ONE ZERO ADD
         static void BlendToRGB24Simple(uint8_t *dstRow,
             const uint8_t *srcRow,

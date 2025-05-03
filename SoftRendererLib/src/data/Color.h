@@ -2,8 +2,7 @@
 #define COLOR_H
 
 #include "PixelFormat/PixelFormat.h"
-#include <cstdint>
-#include <cstring>
+#include <stdint.h>
 
 namespace Tergos2D
 {
