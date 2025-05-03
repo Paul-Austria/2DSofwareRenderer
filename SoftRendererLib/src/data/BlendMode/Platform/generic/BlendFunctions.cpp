@@ -83,7 +83,7 @@ void BlendFunctions::BlendRGB565(uint8_t *dstRow,
     convertColorToRGB565(coloring.color.data, reinterpret_cast<uint8_t*>(&colorDataAsRGB565), 1);
 
     const uint8_t *srcPixel = srcRow;
-    uint16_t *dstPixel = (u_int16_t*) dstRow;
+    uint16_t *dstPixel = (uint16_t*) dstRow;
 
     uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
     uint8_t inverseColorFactor = 255 - colorFactor;
