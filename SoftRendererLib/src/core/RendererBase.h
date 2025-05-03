@@ -2,7 +2,7 @@
 #define RENDERERBASE_H
 
 
-#define MAXBYTESPERPIXEL 16
+#define MAXBYTESPERPIXEL 4
 #define MAXROWLENGTH 2048
 
 namespace Tergos2D{

@@ -102,6 +102,49 @@ void handle_touch_events(int touch_fd)
     }
 }
 
+
+void TestTexturePerformance(RenderContext2D& context) {
+    // Texturgrößen von 30 bis 480 in ~50 Pixel Schritten
+    std::vector<size_t> sizes = {30, 80, 130, 180, 230, 280, 330, 380, 430, 480};
+    
+    // Erstelle Testdaten für die größte Textur (480x480 RGBA8888)
+    std::vector<uint8_t> maxTextureData(480 * 480 * 3, 255);
+    
+    std::cout << "Texture Size (WxH) | Time per 100 Draws (ms)" << std::endl;
+    std::cout << "------------------------------------------------" << std::endl;
+    
+    for(size_t size : sizes) {
+        // Erstelle Textur mit aktueller Größe
+        std::vector<uint8_t> textureData(size * size * 4);
+        // Fülle mit Testdaten
+        for(size_t i = 0; i < textureData.size(); i += 4) {
+            textureData[i] = 255;     // R
+            textureData[i+1] = 0;     // G
+            textureData[i+2] = 0;     // B
+            textureData[i+3] = 255;   // A
+        }
+        
+        Texture testTexture(size, size, textureData.data(), PixelFormat::ARGB8888, 0);
+        
+        // Zeitmessung Start
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        // 500 DrawTexture Aufrufe (100 * 5 wie im Original)
+        for (size_t xPos = 0; xPos < 100; xPos++) {
+            for (size_t yPos = 0; yPos < 1; yPos++) {
+                context.basicTextureRenderer.DrawTexture(testTexture, 0, 0);
+            }
+        }
+        
+        // Zeitmessung Ende
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        
+        std::cout << size << "x" << size << "\t\t| " 
+                 << duration.count() << " ms" << std::endl;
+    }
+}
+
 int main()
 {
     int drm_fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
@@ -169,7 +212,7 @@ int main()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
-    data5 = stbi_load("data/images_small.png", &imgwidth, &imgheight, &nrChannels, 3);
+    data5 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 3);
     text5 = Texture(imgwidth, imgheight, data5, PixelFormat::RGB24, 0);
 
     std::ifstream file("data/testrgb565.bin", std::ios::binary | std::ios::ate);
@@ -215,10 +258,15 @@ int main()
         Texture texture = Texture(width, height, framebuffer[next], PixelFormat::BGR24, pitch[next]);
         context.SetTargetTexture(&texture);
 
-        context.ClearTarget(Color(0, 0, 0));
-
-        context.transformedTextureRenderer.DrawTextureAndScale(text5,120,120,1.0f,1.0f,x, text5.GetWidth()/2,text5.GetHeight()/2);
-        context.primitivesRenderer.DrawRect(Color(0,0,255),120,120,5,5);
+        context.ClearTarget(Color(150, 150, 150));
+        context.SetClipping(80, 30, 370, 290);
+        context.EnableClipping(false);
+        Coloring coloring;
+        coloring.color = Color(155,0,255,0);
+        coloring.colorEnabled = false;
+        context.SetColoringSettings(coloring);
+    
+        TestTexturePerformance(context);
 
 
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");

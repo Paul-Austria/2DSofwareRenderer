@@ -71,25 +71,34 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
         if (!convertFunc) // error no conversion found
             return;
 
-        for (uint16_t j = clipStartY; j < clipEndY; ++j)
-        {
-            uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
-
+            size_t targetStartOffset = clipStartX * targetInfo.bytesPerPixel;
+            size_t sourceStartOffset = (clipStartX - x) * sourceInfo.bytesPerPixel;
+            int16_t dy = clipStartY - y;
             
-            const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
-
-            convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
-        }
+            for (uint16_t j = clipStartY; j < clipEndY; ++j)
+            {
+                size_t rowIndex = j - clipStartY;
+                uint8_t *targetRow = targetData + j * targetPitch + targetStartOffset;
+                const uint8_t *sourceRow = sourceData + (rowIndex + dy) * sourcePitch + sourceStartOffset;
+            
+                convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
+            }
         break;
     }
     default:
     {
+        uint8_t *targetRow = targetData + clipStartY * targetPitch + clipStartX * targetInfo.bytesPerPixel;
+        const uint8_t *sourceRow = sourceData + (clipStartY - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
+        
+        auto blendFunc = context.GetBlendFunc();
+        const auto &coloring = context.GetColoring();
+        
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
-            uint8_t *targetRow = targetData + j * targetPitch + clipStartX * targetInfo.bytesPerPixel;
-            const uint8_t *sourceRow = sourceData + (j - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
-            context.GetBlendFunc()(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, context.GetColoring(),false,bc);
-        }
+            blendFunc(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, coloring, false, bc);
+            targetRow += targetPitch;
+            sourceRow += sourcePitch;
+        }        
         break;
     }
     break;

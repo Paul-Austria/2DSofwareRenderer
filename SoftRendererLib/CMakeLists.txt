@@ -6,7 +6,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 
 # custom options
-set(USE_NEON ON CACHE BOOL "use neon")
+set(USE_NEON OFF CACHE BOOL "use neon")
 
 
 # Include the sources from subdirectories

@@ -18,6 +18,11 @@ TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D &context)
 void TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3], int startX, int StartY, int endX, int endY)
 {
     if(m_drawTexture == nullptr) return;
+    if(startX == 0 && StartY == 0 && endX == 0 && endY == 0)
+    {
+        endX = texture.GetWidth();
+        endY = texture.GetHeight();
+    }
     m_drawTexture(texture,transformationMatrix, context,startX,StartY,endX,endY);
 }
 
@@ -452,6 +457,7 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
     uint8_t *targetPixel = nullptr;
     PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
     if(!convertFunc) return;
+    auto sampMethod = context.GetSamplingMethod();
     for (int16_t y = startY; y < endY; ++y)
     {
         for (int16_t x = startX; x < endX; ++x)
@@ -477,7 +483,7 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
                 }
                 const uint8_t *sourcePixel = sourceData + intSrcY * sourcePitch + intSrcX * sourceInfo.bytesPerPixel;
 
-                switch (context.GetSamplingMethod())
+                switch (sampMethod)
                 {
                 case SamplingMethod::LINEAR:
                     {
@@ -534,6 +540,7 @@ void Tergos2D::TransformedTextureRenderer::DrawTextureSamplingSupp(Texture &text
         }
     }
 }
+
 
 DrawTexturePointer Tergos2D::TransformedTextureRenderer::GetDrawTexture()
 {

@@ -347,8 +347,8 @@ void TestingFunction()
 
     context.SetSamplingMethod(SamplingMethod::NEAREST);
     context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTextureSamplingSupp);
-   // context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
+    context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
 
 
-    context.primitivesRenderer.DrawTransformedRect(Color(255,0,0),255,50,transformationMatrix);
+  //  context.primitivesRenderer.DrawTransformedRect(Color(255,0,0),255,50,transformationMatrix);
 }
