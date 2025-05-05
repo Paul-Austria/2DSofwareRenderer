@@ -7,7 +7,7 @@
 #include "../RenderContext2D.h"
 #include <float.h>
 #include <math.h>
-
+#include <cstdio>
 using namespace Tergos2D;
 
 TransformedTextureRenderer::TransformedTextureRenderer(RenderContext2D &context) : RendererBase(context)
@@ -25,7 +25,6 @@ void TransformedTextureRenderer::DrawTexture(Texture &texture, const float trans
     }
     m_drawTexture(texture,transformationMatrix, context,startX,StartY,endX,endY);
 }
-
 void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const float transformationMatrix[3][3], RenderContext2D &context, int tstartX, int tStartY, int tendX, int tendY)
 {
     auto targetTexture = context.GetTargetTexture();
@@ -197,9 +196,6 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
             return;
         }
     }
-
-
-
 
     // Calculate the bounding box of the transformed source texture
     float minX = std::numeric_limits<float>::max();

@@ -113,7 +113,7 @@ namespace Tergos2D
             // RGBA8888 conversions
             {PixelFormat::RGBA8888, PixelFormat::RGB24, RGBA8888ToRGB24},
             {PixelFormat::RGBA8888, PixelFormat::BGR24, RGBA8888ToBGR24},
-
+            {PixelFormat::RGBA8888, PixelFormat::RGB565, RGBA8888ToRGB565},
             {PixelFormat::RGBA8888, PixelFormat::ARGB8888, RGBA8888ToARGB8888},
 
             // RGB565 conversions
