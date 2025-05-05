@@ -111,12 +111,14 @@ void BlendFunctions::BlendRGB565(uint8_t *dstRow,
         {
             continue;
         }
-
+        uint8_t original = *reinterpret_cast<const uint8_t *>(srcPixel);
+        uint8_t r = original & 0xFF;
+        uint8_t srcR = (srcColor >> 11) & 0x1F;
+        uint8_t srcG = (srcColor >> 5) & 0x3F;
+        uint8_t srcB = srcColor & 0x1F;
         if (colorFactor != 0)
         {
-            uint8_t srcR = (srcColor >> 11) & 0x1F;
-            uint8_t srcG = (srcColor >> 5) & 0x3F;
-            uint8_t srcB = srcColor & 0x1F;
+
 
             uint8_t colorR = (colorDataAsRGB565 >> 11) & 0x1F;
             uint8_t colorG = (colorDataAsRGB565 >> 5) & 0x3F;
@@ -126,7 +128,6 @@ void BlendFunctions::BlendRGB565(uint8_t *dstRow,
             srcG = (srcG * colorG) >> 6;
             srcB = (srcB * colorB) >> 5;
 
-            srcColor = (srcR << 11) | (srcG << 5) | srcB;
 
             alpha = (alpha * coloring.color.data[0]) >> 8;
         }
@@ -138,10 +139,6 @@ void BlendFunctions::BlendRGB565(uint8_t *dstRow,
         }
 
         uint8_t invAlpha = 255 - alpha;
-
-        uint8_t srcR = (srcColor >> 11) & 0x1F;
-        uint8_t srcG = (srcColor >> 5) & 0x3F;
-        uint8_t srcB = srcColor & 0x1F;
 
         uint8_t dstR = (*dstPixel >> 11) & 0x1F;
         uint8_t dstG = (*dstPixel >> 5) & 0x3F;

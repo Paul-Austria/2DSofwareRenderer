@@ -27,9 +27,12 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
 
     // Get conversion functions once
     PixelConverter::ConvertFunc convertToARGB8888 = nullptr;
+    PixelConverter::ConvertFunc convertToARGB8888Target = nullptr;
+
     PixelConverter::ConvertFunc convertFromARGB8888 = nullptr;
 
     convertToARGB8888 = PixelConverter::GetConversionFunction(sourceInfo.format, PixelFormat::ARGB8888);
+    convertToARGB8888Target = PixelConverter::GetConversionFunction(targetInfo.format, PixelFormat::ARGB8888);
     convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
     // Temporary storage for source pixel in RGB24
@@ -54,9 +57,9 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
             continue;
         }
 
-        if (convertToARGB8888)
+        if (convertToARGB8888Target)
         {
-            convertToARGB8888(dstPixel, dstARGB8888, 1);
+            convertToARGB8888Target(dstPixel, dstARGB8888, 1);
         }
         uint8_t colorFactor = coloring.colorEnabled ? coloring.color.data[0] : 0;
 

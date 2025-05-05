@@ -105,74 +105,57 @@ void PixelConverter::RGB565ToARGB8888(const uint8_t *src, uint8_t *dst, size_t c
 {
     for (size_t i = 0; i < count; ++i)
     {
-        uint16_t pixel = reinterpret_cast<const uint16_t *>(src)[i];
+        // Read 2 bytes (16-bit RGB565)
+        uint16_t pixel = src[0] | (src[1] << 8);
 
-        // Extract and scale the red channel (5 bits to 8 bits)
-        dst[i * 4 + 1] = (pixel & 0xF800) >> 8;       // R (5 bits -> 8 bits)
-        dst[i * 4 + 1] = (dst[i * 4 + 1] * 255) / 31; // Scale to 0-255
+        // Extract components
+        uint8_t r5 = (pixel >> 11) & 0x1F;
+        uint8_t g6 = (pixel >> 5) & 0x3F;
+        uint8_t b5 = pixel & 0x1F;
 
-        // Extract and scale the green channel (6 bits to 8 bits)
-        dst[i * 4 + 2] = (pixel & 0x07E0) >> 3;       // G (6 bits -> 8 bits)
-        dst[i * 4 + 2] = (dst[i * 4 + 2] * 255) / 63; // Scale to 0-255
+        // Scale up to 8-bit
+        uint8_t r8 = (r5 << 3) | (r5 >> 2);
+        uint8_t g8 = (g6 << 2) | (g6 >> 4);
+        uint8_t b8 = (b5 << 3) | (b5 >> 2);
 
-        // Extract and scale the blue channel (5 bits to 8 bits)
-        dst[i * 4 + 3] = (pixel & 0x001F) << 3;       // B (5 bits -> 8 bits)
-        dst[i * 4 + 3] = (dst[i * 4 + 3] * 255) / 31; // Scale to 0-255
+        // Write ARGB8888 (alpha = 255)
+        dst[0] = 255;   // Alpha
+        dst[1] = r8;    // Red
+        dst[2] = g8;    // Green
+        dst[3] = b8;    // Blue
 
-        // Set the alpha channel to 255 (fully opaque)
-        dst[i * 4 + 0] = 255; // A
+        src += 2;
+        dst += 4;
     }
 }
 
 void PixelConverter::RGB565ToRGB24(const uint8_t *src, uint8_t *dst, size_t count)
 {
-    size_t i = 0;
-    for (; i + 3 <= count; i += 4)
+    for (size_t i = 0; i < count; ++i)
     {
-        // Process 4 pixels at once
-        uint16_t rgb565_0 = (src[2 * i] << 8) | src[2 * i + 1];
-        uint16_t rgb565_1 = (src[2 * (i + 1)] << 8) | src[2 * (i + 1) + 1];
-        uint16_t rgb565_2 = (src[2 * (i + 2)] << 8) | src[2 * (i + 2) + 1];
-        uint16_t rgb565_3 = (src[2 * (i + 3)] << 8) | src[2 * (i + 3) + 1];
+        // Read 2 bytes (16-bit) from source
+        uint16_t pixel = src[0] | (src[1] << 8);
 
-        // Extract and scale components for the first 4 pixels
-        uint8_t r0 = (rgb565_0 >> 11) & 0x1F, g0 = (rgb565_0 >> 5) & 0x3F, b0 = rgb565_0 & 0x1F;
-        uint8_t r1 = (rgb565_1 >> 11) & 0x1F, g1 = (rgb565_1 >> 5) & 0x3F, b1 = rgb565_1 & 0x1F;
-        uint8_t r2 = (rgb565_2 >> 11) & 0x1F, g2 = (rgb565_2 >> 5) & 0x3F, b2 = rgb565_2 & 0x1F;
-        uint8_t r3 = (rgb565_3 >> 11) & 0x1F, g3 = (rgb565_3 >> 5) & 0x3F, b3 = rgb565_3 & 0x1F;
+        // Extract RGB components
+        uint8_t r5 = (pixel >> 11) & 0x1F;
+        uint8_t g6 = (pixel >> 5) & 0x3F;
+        uint8_t b5 = pixel & 0x1F;
 
-        // Scale the components (5-bit red, 6-bit green, 5-bit blue) to 8-bit
-        dst[3 * i] = (r0 << 3) | (r0 >> 2);     // Red (Pixel 0)
-        dst[3 * i + 1] = (g0 << 2) | (g0 >> 4); // Green (Pixel 0)
-        dst[3 * i + 2] = (b0 << 3) | (b0 >> 2); // Blue (Pixel 0)
+        // Scale to 8 bits
+        uint8_t r8 = (r5 << 3) | (r5 >> 2);
+        uint8_t g8 = (g6 << 2) | (g6 >> 4);
+        uint8_t b8 = (b5 << 3) | (b5 >> 2);
 
-        dst[3 * (i + 1)] = (r1 << 3) | (r1 >> 2);     // Red (Pixel 1)
-        dst[3 * (i + 1) + 1] = (g1 << 2) | (g1 >> 4); // Green (Pixel 1)
-        dst[3 * (i + 1) + 2] = (b1 << 3) | (b1 >> 2); // Blue (Pixel 1)
+        // Write to destination (RGB order)
+        dst[0] = r8;
+        dst[1] = g8;
+        dst[2] = b8;
 
-        dst[3 * (i + 2)] = (r2 << 3) | (r2 >> 2);     // Red (Pixel 2)
-        dst[3 * (i + 2) + 1] = (g2 << 2) | (g2 >> 4); // Green (Pixel 2)
-        dst[3 * (i + 2) + 2] = (b2 << 3) | (b2 >> 2); // Blue (Pixel 2)
-
-        dst[3 * (i + 3)] = (r3 << 3) | (r3 >> 2);     // Red (Pixel 3)
-        dst[3 * (i + 3) + 1] = (g3 << 2) | (g3 >> 4); // Green (Pixel 3)
-        dst[3 * (i + 3) + 2] = (b3 << 3) | (b3 >> 2); // Blue (Pixel 3)
-    }
-
-    // Handle any remaining pixels if count isn't a multiple of 4
-    for (; i < count; ++i)
-    {
-        uint16_t rgb565 = (src[2 * i] << 8) | src[2 * i + 1];
-
-        uint32_t r = (rgb565 >> 11) & 0x1F;
-        uint32_t g = (rgb565 >> 5) & 0x3F;
-        uint32_t b = rgb565 & 0x1F;
-
-        dst[3 * i] = static_cast<uint8_t>((r << 3) | (r >> 2));
-        dst[3 * i + 1] = static_cast<uint8_t>((g << 2) | (g >> 4));
-        dst[3 * i + 2] = static_cast<uint8_t>((b << 3) | (b >> 2));
+        src += 2;
+        dst += 3;
     }
 }
+
 
 void PixelConverter::RGB565ToBGR24(const uint8_t *src, uint8_t *dst, size_t count)
 {
@@ -499,14 +482,20 @@ void Tergos2D::PixelConverter::RGBA8888ToRGB565(const uint8_t * src, uint8_t * d
 {
     for (size_t i = 0; i < count; ++i)
     {
-        uint8_t r = src[i * 4];
-        uint8_t g = src[i * 4 + 1];
-        uint8_t b = src[i * 4 + 2];
+        uint8_t r8 = src[0];
+        uint8_t g8 = src[1];
+        uint8_t b8 = src[2];
+        uint16_t r5 = r8 >> 3; 
+        uint16_t g6 = g8 >> 2; 
+        uint16_t b5 = b8 >> 3; 
 
-        uint16_t rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
 
-        dst[i * 2] = (rgb565 >> 8) & 0xFF;
-        dst[i * 2 + 1] = rgb565 & 0xFF;
+        dst[0] = rgb565 & 0xFF;
+        dst[1] = (rgb565 >> 8) & 0xFF;
+
+        src += 4;
+        dst += 2;
     }
 }
 
@@ -542,13 +531,15 @@ void PixelConverter::BGR24ToRGB565(const uint8_t * src, uint8_t * dst, size_t co
 
 void Tergos2D::PixelConverter::Grayscale8ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
 {
+
     for (size_t i = 0; i < count; ++i)
     {
         uint8_t gray = src[i];
-
-        uint16_t rgb565 = ((gray & 0xF8) << 8) | ((gray & 0xFC) << 3) | (gray >> 3);
-
-        dst[i * 2] = (rgb565 >> 8) & 0xFF;
-        dst[i * 2 + 1] = rgb565 & 0xFF;
+        uint16_t r = (gray >> 3) & 0x1F;  // 8-bit → 5-bit
+        uint16_t g = (gray >> 2) & 0x3F;  // 8-bit → 6-bit
+        uint16_t b = (gray >> 3) & 0x1F;  // 8-bit → 5-bit
+        uint16_t rgb565 = (r << 11) | (g << 5) | b;
+        dst[i * 2] = rgb565 & 0xFF;        // low byte
+        dst[i * 2 + 1] = (rgb565 >> 8);    // high byte
     }
 }
