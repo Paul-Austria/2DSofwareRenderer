@@ -485,9 +485,9 @@ void Tergos2D::PixelConverter::RGBA8888ToRGB565(const uint8_t * src, uint8_t * d
         uint8_t r8 = src[0];
         uint8_t g8 = src[1];
         uint8_t b8 = src[2];
-        uint16_t r5 = r8 >> 3; 
-        uint16_t g6 = g8 >> 2; 
-        uint16_t b5 = b8 >> 3; 
+        uint16_t r5 = r8 >> 3;
+        uint16_t g6 = g8 >> 2;
+        uint16_t b5 = b8 >> 3;
 
         uint16_t rgb565 = (r5 << 11) | (g6 << 5) | b5;
 
@@ -529,17 +529,41 @@ void PixelConverter::BGR24ToRGB565(const uint8_t * src, uint8_t * dst, size_t co
     }
 }
 
-void Tergos2D::PixelConverter::Grayscale8ToRGB565(const uint8_t * src, uint8_t * dst, size_t count)
-{
+void Tergos2D::PixelConverter::Grayscale8ToRGB565(const uint8_t* src, uint8_t* dst, size_t count) {
+    // Process 8 pixels at once when possible
+    size_t blocks = count >> 3;  // Divide by 8
+    size_t remainder = count & 7;  // Get remainder for cleanup
 
-    for (size_t i = 0; i < count; ++i)
-    {
-        uint8_t gray = src[i];
-        uint16_t r = (gray >> 3) & 0x1F;  // 8-bit → 5-bit
-        uint16_t g = (gray >> 2) & 0x3F;  // 8-bit → 6-bit
-        uint16_t b = (gray >> 3) & 0x1F;  // 8-bit → 5-bit
-        uint16_t rgb565 = (r << 11) | (g << 5) | b;
-        dst[i * 2] = rgb565 & 0xFF;        // low byte
-        dst[i * 2 + 1] = (rgb565 >> 8);    // high byte
+    // Use 16-bit aligned access for output
+    uint16_t* dst16 = (uint16_t*)dst;
+
+    // Main loop - process 8 pixels at a time
+    while (blocks--) {
+        // Load 8 pixels
+        uint8_t gray0 = *src++;
+        uint8_t gray1 = *src++;
+        uint8_t gray2 = *src++;
+        uint8_t gray3 = *src++;
+        uint8_t gray4 = *src++;
+        uint8_t gray5 = *src++;
+        uint8_t gray6 = *src++;
+        uint8_t gray7 = *src++;
+
+        // Convert and store pixels directly as 16-bit values
+        // Pre-calculate the shifts and masks for better performance
+        *dst16++ = ((gray0 & 0xF8) << 8) | ((gray0 & 0xFC) << 3) | (gray0 >> 3);
+        *dst16++ = ((gray1 & 0xF8) << 8) | ((gray1 & 0xFC) << 3) | (gray1 >> 3);
+        *dst16++ = ((gray2 & 0xF8) << 8) | ((gray2 & 0xFC) << 3) | (gray2 >> 3);
+        *dst16++ = ((gray3 & 0xF8) << 8) | ((gray3 & 0xFC) << 3) | (gray3 >> 3);
+        *dst16++ = ((gray4 & 0xF8) << 8) | ((gray4 & 0xFC) << 3) | (gray4 >> 3);
+        *dst16++ = ((gray5 & 0xF8) << 8) | ((gray5 & 0xFC) << 3) | (gray5 >> 3);
+        *dst16++ = ((gray6 & 0xF8) << 8) | ((gray6 & 0xFC) << 3) | (gray6 >> 3);
+        *dst16++ = ((gray7 & 0xF8) << 8) | ((gray7 & 0xFC) << 3) | (gray7 >> 3);
+    }
+
+    // Handle remaining pixels
+    while (remainder--) {
+        uint8_t gray = *src++;
+        *dst16++ = ((gray & 0xF8) << 8) | ((gray & 0xFC) << 3) | (gray >> 3);
     }
 }

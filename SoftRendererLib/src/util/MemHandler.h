@@ -3,6 +3,9 @@
 
 #include <memory>
 #include <cstring>
+#if ENABLE_ESP_SUPPORT
+#include "esp_attr.h"
+#endif
 
 namespace Tergos2D
 {
@@ -10,10 +13,17 @@ namespace Tergos2D
     {
     private:
     public:
-        static inline void MemCopy(void *_Dst, const void *_Src, size_t _Size)
-        {
-            std::memcpy(_Dst, _Src, _Size);
-        }
+        #if ENABLE_ESP_SUPPORT
+            static IRAM_ATTR inline void MemCopy(void *_Dst, const void *_Src, size_t _Size)
+            {
+                memcpy(_Dst, _Src, _Size);
+            }
+        #else
+            static inline void MemCopy(void *_Dst, const void *_Src, size_t _Size)
+            {
+                std::memcpy(_Dst, _Src, _Size);
+            }
+        #endif
     };
 
 }

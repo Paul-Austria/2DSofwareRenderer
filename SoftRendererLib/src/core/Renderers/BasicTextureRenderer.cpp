@@ -12,7 +12,7 @@ BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererB
 {
 }
 
-void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
+ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
 {
     auto targetTexture = context.GetTargetTexture();
     if (!targetTexture || !texture.GetData())
@@ -74,13 +74,13 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
             size_t targetStartOffset = clipStartX * targetInfo.bytesPerPixel;
             size_t sourceStartOffset = (clipStartX - x) * sourceInfo.bytesPerPixel;
             int16_t dy = clipStartY - y;
-            
+
             for (uint16_t j = clipStartY; j < clipEndY; ++j)
             {
                 size_t rowIndex = j - clipStartY;
                 uint8_t *targetRow = targetData + j * targetPitch + targetStartOffset;
                 const uint8_t *sourceRow = sourceData + (rowIndex + dy) * sourcePitch + sourceStartOffset;
-            
+
                 convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
             }
         break;
@@ -89,16 +89,16 @@ void BasicTextureRenderer::DrawTexture(Texture &texture, int16_t x, int16_t y)
     {
         uint8_t *targetRow = targetData + clipStartY * targetPitch + clipStartX * targetInfo.bytesPerPixel;
         const uint8_t *sourceRow = sourceData + (clipStartY - y) * sourcePitch + (clipStartX - x) * sourceInfo.bytesPerPixel;
-        
+
         auto blendFunc = context.GetBlendFunc();
         const auto &coloring = context.GetColoring();
-        
+
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             blendFunc(targetRow, sourceRow, clipEndX - clipStartX, targetInfo, sourceInfo, coloring, false, bc);
             targetRow += targetPitch;
             sourceRow += sourcePitch;
-        }        
+        }
         break;
     }
     break;

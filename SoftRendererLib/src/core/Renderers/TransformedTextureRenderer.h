@@ -5,7 +5,9 @@
 #include "../../data/Color.h"
 #include "../../data/Texture.h"
 #include <functional>
-
+#if ENABLE_ESP_SUPPORT
+#include "esp_attr.h"
+#endif
 #define MAX_BUFFER_SIZE 64
 namespace Tergos2D
 {
@@ -26,7 +28,7 @@ namespace Tergos2D
         /// @param StartY
         /// @param endX
         /// @param endY
-        void DrawTexture(Texture &texture,  const float transformationMatrix[3][3],
+        void IRAM_ATTR DrawTexture(Texture &texture,  const float transformationMatrix[3][3],
             int startX = 0,
             int StartY = 0,
             int endX = 0,

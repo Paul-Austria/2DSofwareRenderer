@@ -1,23 +1,24 @@
 #include "PixelConverter.h"
 #include "PixelFormatInfo.h"
+#include "../util/MemHandler.h"
 namespace Tergos2D
 {
 
     void PixelConverter::Move(const uint8_t *src, uint8_t *dst, size_t count)
     {
-        std::memcpy(dst, src, count * 1);
+        MemHandler::MemCopy(dst, src, count * 1);
     }
     void PixelConverter::Move2(const uint8_t *src, uint8_t *dst, size_t count)
     {
-        std::memcpy(dst, src, count * 2);
+        MemHandler::MemCopy(dst, src, count * 2);
     }
     void PixelConverter::Move3(const uint8_t *src, uint8_t *dst, size_t count)
     {
-        std::memcpy(dst, src, count * 3);
+        MemHandler::MemCopy(dst, src, count * 3);
     }
     void PixelConverter::Move4(const uint8_t *src, uint8_t *dst, size_t count)
     {
-        std::memcpy(dst, src, count * 4);
+        MemHandler::MemCopy(dst, src, count * 4);
     }
 
 
