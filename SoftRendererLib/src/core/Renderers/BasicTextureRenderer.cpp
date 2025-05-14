@@ -69,20 +69,22 @@ BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererB
     {
         PixelConverter::ConvertFunc convertFunc = PixelConverter::GetConversionFunction(sourceFormat, targetFormat);
         if (!convertFunc) // error no conversion found
+        {
             return;
+        }
 
-            size_t targetStartOffset = clipStartX * targetInfo.bytesPerPixel;
-            size_t sourceStartOffset = (clipStartX - x) * sourceInfo.bytesPerPixel;
-            int16_t dy = clipStartY - y;
+        size_t targetStartOffset = clipStartX * targetInfo.bytesPerPixel;
+        size_t sourceStartOffset = (clipStartX - x) * sourceInfo.bytesPerPixel;
+        int16_t dy = clipStartY - y;
 
-            for (uint16_t j = clipStartY; j < clipEndY; ++j)
-            {
-                size_t rowIndex = j - clipStartY;
-                uint8_t *targetRow = targetData + j * targetPitch + targetStartOffset;
-                const uint8_t *sourceRow = sourceData + (rowIndex + dy) * sourcePitch + sourceStartOffset;
+        for (uint16_t j = clipStartY; j < clipEndY; ++j)
+        {
+            size_t rowIndex = j - clipStartY;
+            uint8_t *targetRow = targetData + j * targetPitch + targetStartOffset;
+            const uint8_t *sourceRow = sourceData + (rowIndex + dy) * sourcePitch + sourceStartOffset;
 
-                convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
-            }
+            convertFunc(sourceRow, targetRow, clipEndX - clipStartX);
+        }
         break;
     }
     default:

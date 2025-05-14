@@ -8,10 +8,10 @@ set(SOURCES
 
 
 if(USE_NEON)
-message("PixelConverter Neon used")
+message("PixelConverter Neon used") # tests have shown that arm neon does not provide a advantage when converting pixels
 set(SOURCES
     ${SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/arm_neon/PixelConverter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Platform/generic/PixelConverter.cpp
 
 )
 else()

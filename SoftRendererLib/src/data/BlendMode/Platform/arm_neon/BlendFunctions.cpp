@@ -10,6 +10,10 @@
 
 using namespace Tergos2D;
 
+
+
+
+
 void BlendFunctions::BlendSolidRowRGB24(uint8_t * dstRow,
     const uint8_t * srcRow,
         size_t rowLength,
@@ -404,7 +408,7 @@ void BlendFunctions::BlendToRGB24Simple(uint8_t * dstRow,
         color_neon.val[0] = vdup_n_u8(colorDataAsRGB[0]);
         color_neon.val[1] = vdup_n_u8(colorDataAsRGB[1]);
         color_neon.val[2] = vdup_n_u8(colorDataAsRGB[2]);
-    } 
+    }
 
     size_t vectorized_length = (rowLength / 8) * 8;
     size_t i;

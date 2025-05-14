@@ -62,7 +62,11 @@ namespace Tergos2D
                                BlendContext& context);
 
 
-        static IRAM_ATTR void BlendGrayscale8ToRGB565(uint8_t *dstRow,
+        static
+#if ENABLE_ESP_SUPPORT
+        IRAM_ATTR
+#endif
+         void BlendGrayscale8ToRGB565(uint8_t *dstRow,
                                 const uint8_t *srcRow,
                                 size_t rowLength,
                                 const PixelFormatInfo &targetInfo,
@@ -72,7 +76,11 @@ namespace Tergos2D
                                 BlendContext& context);
 
 
-        static IRAM_ATTR void BlendRGB565(uint8_t *dstRow,
+        static
+#if ENABLE_ESP_SUPPORT
+        IRAM_ATTR
+#endif
+        void BlendRGB565(uint8_t *dstRow,
                                 const uint8_t *srcRow,
                                 size_t rowLength,
                                 const PixelFormatInfo &targetInfo,

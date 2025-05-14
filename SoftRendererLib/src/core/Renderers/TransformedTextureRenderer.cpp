@@ -131,7 +131,8 @@ void Tergos2D::TransformedTextureRenderer::DrawTexture(Texture &texture, const f
             {
                 for (int16_t x = 0; x < width; ++x)
                 {
-                    int sourceX, sourceY;
+                    uint16_t sourceX = 0;
+                    uint16_t sourceY = 0;
                     switch (angle)
                     {
                         case 0:

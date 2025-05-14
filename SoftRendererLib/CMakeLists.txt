@@ -9,8 +9,6 @@ set(CMAKE_BUILD_TYPE Release)
 message(STATUS "Using Tergos2D Rendering engine")
 
 # Custom options with better documentation
-option(USE_NEON "Enable ARM NEON SIMD instructions" OFF)
-option(ENABLE_ESP_SUPPORT "Enable ESP-IDF support" ON)
 
 # ESP-IDF Integration
 if(ENABLE_ESP_SUPPORT)
@@ -50,27 +48,6 @@ if(ENABLE_ESP_SUPPORT)
             "${ESP_IDF_PATH}/components/heap/include/"
             "${ESP_IDF_PATH}/components/log/include"
             "${ESP_IDF_PATH}/components/esp_rom/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/common/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/add/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/addc/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/mul/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/mulc/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/iir/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/sqrt/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/math/sub/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/fir/include/"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/dotprod/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/hann/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/blackman/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/blackman_harris/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/blackman_nuttall/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/flat_top/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/windows/nuttall/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/conv/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../../managed_components/espressif__esp-dsp/modules/support/include"
-
 
             "${CMAKE_BINARY_DIR}/config"
         )

@@ -7,6 +7,9 @@ project(OpenGLWrapper)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+option(STANDALONE_DEMO "Enable standalone demo" OFF)
+option(USE_NEON "Enable ARM NEON SIMD instructions" OFF)
+option(ENABLE_ESP_SUPPORT "Enable ESP-IDF support" OFF)
 
 
 if(WIN32)
@@ -49,12 +52,12 @@ endif(WIN32)
 
 
 if(UNIX)
-set(USE_NEON ON CACHE BOOL "use neon")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flax-vector-conversions")
 
 if(USE_NEON)
 message("arm NEON is used")
 endif()
+if(STANDALONE_DEMO)
 # Second target for testing SoftRendererLib without OpenGL
 add_executable(SoftRendererLinuxDemo SoftRendererLinuxDemo/main.cpp)
 
@@ -68,39 +71,37 @@ target_include_directories(SoftRendererLinuxDemo PRIVATE
 # Link libraries for SoftRendererTest (no OpenGL)
 target_link_libraries(SoftRendererLinuxDemo SoftRendererLib         ${CMAKE_SYSROOT}/usr/lib/libdrm.so
 )
-
+endif()
 endif(UNIX)
 
+if(STANDALONE_DEMO)
+    # Set build-specific options
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(STATUS "Configuring for Debug build")
+        # Add Debug specific options
+        if(WIN32)
+        target_compile_definitions(OpenGLWrapper PRIVATE DEBUG)
+        endif(WIN32)
+        if(UNIX)
+        target_compile_definitions(SoftRendererLinuxDemo PRIVATE DEBUG)
+        target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        ${CMAKE_SYSROOT}/usr/lib/libdrm.so
+    )
+        endif(UNIX)
+    else()
+        message(STATUS "Configuring for Release build")
+        # Add Release specific options
+        if(WIN32)
+        target_compile_definitions(OpenGLWrapper PRIVATE NDEBUG)
+        endif(WIN32)
+        if(UNIX)
+        target_compile_definitions(SoftRendererLinuxDemo PRIVATE NDEBUG)
+        endif(UNIX)
+    endif()
 
-# Set build-specific options
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Configuring for Debug build")
-    # Add Debug specific options
-    if(WIN32)
-    target_compile_definitions(OpenGLWrapper PRIVATE DEBUG)
-    endif(WIN32)
-    if(UNIX)
-    target_compile_definitions(SoftRendererLinuxDemo PRIVATE DEBUG)
-    target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-    ${CMAKE_SYSROOT}/usr/lib/libdrm.so
-)
-    endif(UNIX)
-else()
-    message(STATUS "Configuring for Release build")
-    # Add Release specific options
-    if(WIN32)
-    target_compile_definitions(OpenGLWrapper PRIVATE NDEBUG)
-    endif(WIN32)
-    if(UNIX)
-    target_compile_definitions(SoftRendererLinuxDemo PRIVATE NDEBUG)
-    endif(UNIX)
+    # Optionally, set default build type if none was specified
+    if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Build type" FORCE)
+    endif()
 endif()
-
-# Optionally, set default build type if none was specified
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Build type" FORCE)
-endif()
-
-
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
