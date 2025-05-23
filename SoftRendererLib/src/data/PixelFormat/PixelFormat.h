@@ -13,7 +13,7 @@ namespace Tergos2D
         ARGB1555, // 16 bits: 5 bits R, 5 bits G, 5 bits B, 1 bit A
         RGB565, // 16 bits: 5 bits R, 6 bits G, 5 bits B
         RGBA4444,
-        GRAYSCALE8, // 8 bits grayscale
+        GRAYSCALE8, // 8 bits grayscale can be interpreted as alpha8
 
     };
 

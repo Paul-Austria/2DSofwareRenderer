@@ -3,7 +3,7 @@
 
 
 #define MAXBYTESPERPIXEL 4
-#define MAXROWLENGTH 500
+#define MAXROWLENGTH 200
 
 namespace Tergos2D{
     class RenderContext2D;
