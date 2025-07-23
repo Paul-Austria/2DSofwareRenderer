@@ -36,7 +36,6 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
     convertFromARGB8888 = PixelConverter::GetConversionFunction(PixelFormat::ARGB8888, targetInfo.format);
 
     // Temporary storage for source pixel in RGB24
-    alignas(16) uint8_t srcRGB24[1024 * 3];
     // Temporary storage for conversion
     alignas(16) uint8_t srcARGB8888[4];
     alignas(16) uint8_t dstARGB8888[4];
@@ -70,7 +69,6 @@ void BlendFunctions::BlendRow(uint8_t *dstRow,
             srcARGB8888[3] = (srcARGB8888[3] * coloring.color.data[3]) >> 8;
             srcAlpha = (srcAlpha * coloring.color.data[0]) >> 8;
         }
-        uint8_t invAlpha = 255 - srcAlpha;
 
         uint8_t srcFactorR, dstFactorR;
         uint8_t srcFactorG, dstFactorG;
@@ -227,10 +225,8 @@ void BlendFunctions::BlendGrayscale8ToRGB565(uint8_t *dstRow,
     const uint8_t *srcPixel = srcRow;
 
     // Process pixels in batches of 8 for better cache utilization
-    size_t i = 0;
     const size_t batchSize = 8;
     const size_t batchCount = rowLength / batchSize;
-    const size_t remainingPixels = rowLength % batchSize;
 
     for (size_t batch = 0; batch < batchCount; ++batch) {
         for (size_t j = 0; j < batchSize; ++j, ++srcPixel, ++dstPixel) {

@@ -16,20 +16,21 @@ Color::Color(uint8_t r, uint8_t g, uint8_t b)
     format = PixelFormat::ARGB8888;
 }
 
-Color::Color(const uint8_t *pixel, PixelFormat format)
+Color::Color(const uint8_t *pixel, PixelFormat inFormat)
 {
+    format = PixelFormat::ARGB8888;
     if (pixel == nullptr)
     {
-        format = PixelFormat::ARGB8888;
+        inFormat = PixelFormat::ARGB8888;
     }
-    if (format == PixelFormat::ARGB8888)
+    if (inFormat == PixelFormat::ARGB8888)
     {
         MemHandler::MemCopy(data, pixel, 4);
     }
     else
     {
         // Convert the internal data to the target format
-        PixelConverter::Convert(format, PixelFormat::ARGB8888, pixel, this->data);
+        PixelConverter::Convert(inFormat, PixelFormat::ARGB8888, pixel, this->data);
     }
 }
 
