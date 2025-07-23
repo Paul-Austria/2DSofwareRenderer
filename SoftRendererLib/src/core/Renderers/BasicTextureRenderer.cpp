@@ -8,7 +8,7 @@
 
 using namespace Tergos2D;
 
-BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &context) : RendererBase(context)
+BasicTextureRenderer::BasicTextureRenderer(RenderContext2D &ctx) : RendererBase(ctx)
 {
 }
 

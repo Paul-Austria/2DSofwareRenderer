@@ -258,60 +258,16 @@ int main()
         Texture texture = Texture(width, height, framebuffer[next], PixelFormat::BGR24, pitch[next]);
         context.SetTargetTexture(&texture);
 
-        x += 0.01f;
         context.ClearTarget(Color(150, 150, 150));
         context.SetClipping(80, 30, 370, 290);
         context.EnableClipping(false);
-
-
-        // Define the scaling factors
-        float scaleX = 1.0f;
-        float scaleY = 1.0f;
-
-        // Define the rotation angle in degrees
-        float radians = 45 * 3.14159265358979f / 180.0f;
-        float shearX = 0.0f;  // Example shear factor along the X-axis
-        float shearY = 0.0f;  // Example shear factor along the Y-axis
-
-        float xPos = 150;
-        float yPos = 20;
-        // Calculate the transformation matrix for scaling and rotation
-        // Calculate cosine and sine for rotation
-        float cosAngle = cos(radians);
-        float sinAngle = sin(radians);
-
-        // Calculate the transformation matrix for scaling, rotation, and shearing
-        float transformationMatrix[3][3] = {
-            {scaleX * cosAngle + shearY * sinAngle, -scaleY * sinAngle + shearX * cosAngle, xPos},
-            {scaleX * sinAngle + shearY * cosAngle, scaleY * cosAngle + shearX * sinAngle, yPos},
-            {0.0f, 0.0f, 1.0f}
-        };
-
-        context.SetSamplingMethod(SamplingMethod::NEAREST);
-        context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTexture);
-        context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTextureSamplingSupp);
-        context.SetBlendFunc(BlendFunctions::BlendRGB24);
-        context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
-
-        context.SetBlendFunc(BlendFunctions::BlendRGB24);
-        context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
-
-        context.SetBlendFunc(BlendFunctions::BlendRow);
-
-        context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
+        Coloring coloring;
+        coloring.color = Color(155,0,255,0);
+        coloring.colorEnabled = false;
+        context.SetColoringSettings(coloring);
     
-        int xWidth = 61;
-        int yWidth = 61;
-    
-        for (size_t xPos = 0; xPos < 10; xPos++)
-        {
-            for (size_t yPos = 0; yPos < 5; yPos++)
-            {
-                context.basicTextureRenderer.DrawTexture(text5,xPos*xWidth, yPos*yWidth);
-            }
-            
-        }
-                
+        TestTexturePerformance(context);
+
 
         CHECK_ERR(drmModePageFlip(drm_fd, crtc->crtc_id, fb_id[next], DRM_MODE_PAGE_FLIP_EVENT, nullptr) < 0, "Failed to page flip");
 

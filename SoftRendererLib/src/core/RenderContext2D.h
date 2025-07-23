@@ -13,7 +13,7 @@
 
 
 #define MAXBYTESPERPIXEL 4
-#define MAXROWLENGTH 200
+#define MAXROWLENGTH 500
 
 
 namespace Tergos2D

@@ -24,26 +24,27 @@ namespace Tergos2D
 
         PixelFormatInfo() = default;
 
-        PixelFormatInfo(PixelFormat format, uint8_t bpp, uint8_t bitspp, bool isBitFormat, uint8_t channels, bool alpha, const char *name,
-                        uint16_t redMask, uint8_t redShift,
-                        uint16_t greenMask, uint8_t greenShift,
-                        uint16_t blueMask, uint8_t blueShift,
-                        uint16_t alphaMask = 0, uint8_t alphaShift = 0)
-            : format(format),
-            bytesPerPixel(bpp),
-            bitsPerPixel(bitspp),
-            isBitFormat(isBitFormat),
-            numChannels(channels),
-            hasAlpha(alpha),
-            name(name),
-            redMask(redMask),
-            greenMask(greenMask),
-            blueMask(blueMask),
-            alphaMask(alphaMask),
-            redShift(redShift),
-            greenShift(greenShift),
-            blueShift(blueShift),
-            alphaShift(alphaShift)
+
+        PixelFormatInfo(PixelFormat fmt, uint8_t bpp, uint8_t bitspp, bool isBitFmt, uint8_t channels, bool alpha, const char *fmtName,
+                uint16_t redMaskParam, uint8_t redShiftParam,
+                uint16_t grnMaskParam, uint8_t greenShiftParam,
+                uint16_t blueMaskParam, uint8_t blueShiftParam,
+                uint16_t alphaMaskParam = 0, uint8_t alphaShiftParam = 0)
+        : format(fmt),
+        bytesPerPixel(bpp),
+        bitsPerPixel(bitspp),
+        isBitFormat(isBitFmt),
+        numChannels(channels),
+        hasAlpha(alpha),
+        name(fmtName),
+        redMask(redMaskParam),
+        greenMask(grnMaskParam),
+        blueMask(blueMaskParam),
+        alphaMask(alphaMaskParam),
+        redShift(redShiftParam),
+        greenShift(greenShiftParam),
+        blueShift(blueShiftParam),
+        alphaShift(alphaShiftParam)
         {
             if (isBitFormat)
             {

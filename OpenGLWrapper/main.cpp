@@ -12,8 +12,8 @@
 #include "lib/stb_image.h"
 
 // Constants
-#define WIDTH 480
-#define HEIGHT 273
+#define WIDTH 800
+#define HEIGHT 400
 const double TARGET_FPS = 6088.0;
 const double TARGET_FRAME_DURATION = 1.0 / TARGET_FPS;
 
@@ -187,7 +187,7 @@ int main()
     // Variables for FPS counting
     double previousTime = 0.0;
     int frameCount = 0;
-    context.SetBlendFunc(BlendFunctions::BlendRGB24);
+
     while (!glfwWindowShouldClose(window))
     {
         // Start frame timer
@@ -303,8 +303,8 @@ void SetupFunc()
     text2 = Texture(imgwidth, imgheight, data2, PixelFormat::RGBA8888, 0);
     data3 = stbi_load("data/logo-de.png", &imgwidth, &imgheight, &nrChannels, 4);
     text3 = Texture(imgwidth, imgheight, data3, PixelFormat::RGBA8888, 0);
-    data4 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 3);
-    text5 = Texture(imgwidth, imgheight, data4, PixelFormat::RGB24, 0);
+    data4 = stbi_load("data/images.png", &imgwidth, &imgheight, &nrChannels, 4);
+    text5 = Texture(imgwidth, imgheight, data4, PixelFormat::RGBA8888, 0);
 
     // Load the binary file
     loadTexture("data/testrgb565.bin", PixelFormat::RGB565, text4, 234, 243);
@@ -312,8 +312,7 @@ void SetupFunc()
 
 }
 static float x = 0;
-uint8_t* Text = nullptr;
-bool first = true;
+
 // Function used for testing, updates the texture data
 void TestingFunction()
 {
@@ -324,16 +323,16 @@ void TestingFunction()
 
 
     // Define the scaling factors
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
+    float scaleX = 0.5f;
+    float scaleY = 0.5f;
 
     // Define the rotation angle in degrees
-    float radians = 90 * 3.14159265358979f / 180.0f;
+    float radians = x * 3.14159265358979f / 180.0f;
     float shearX = 0.0f;  // Example shear factor along the X-axis
     float shearY = 0.0f;  // Example shear factor along the Y-axis
 
-    float xPos = 150;
-    float yPos = 20;
+    float xPos = 120;
+    float yPos = 120;
     // Calculate the transformation matrix for scaling and rotation
     // Calculate cosine and sine for rotation
     float cosAngle = cos(radians);
@@ -347,6 +346,9 @@ void TestingFunction()
     };
 
     context.SetSamplingMethod(SamplingMethod::NEAREST);
-    context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTexture);
+    context.transformedTextureRenderer.SetDrawTexture(TransformedTextureRenderer::DrawTextureSamplingSupp);
     context.transformedTextureRenderer.DrawTexture(text5, transformationMatrix);
+
+
+  //  context.primitivesRenderer.DrawTransformedRect(Color(255,0,0),255,50,transformationMatrix);
 }

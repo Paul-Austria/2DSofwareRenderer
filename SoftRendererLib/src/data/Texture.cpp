@@ -2,19 +2,20 @@
 #include "PixelFormat/PixelFormatInfo.h"
 using namespace Tergos2D;
 
-Texture::Texture(uint16_t width, uint16_t height, PixelFormat format, uint16_t pitch) : pitch(pitch), width(width), height(height), format(format)
+Texture::Texture(uint16_t inWidth, uint16_t inHeight, PixelFormat inFormat, uint16_t inPitch)
+    : pitch(inPitch), width(inWidth), height(inHeight), format(inFormat)
 {
     storedLocally = true;
     uint8_t bytesPerPixel = PixelFormatRegistry::GetInfo(format).bytesPerPixel;
     if (pitch == 0)
     {
-        this->pitch = width * PixelFormatRegistry::GetInfo(format).bytesPerPixel;
+        this->pitch = width * bytesPerPixel;
     }
-    data = new uint8_t[bytesPerPixel * width * height * bytesPerPixel];
+    data = new uint8_t[width * height * bytesPerPixel];
 }
 
-Texture::Texture(uint16_t width, uint16_t height,
-     uint8_t *data, PixelFormat format, uint16_t pitch) : pitch(pitch), width(width), height(height), format(format), data(data)
+Texture::Texture(uint16_t inWidth, uint16_t inHeight,
+     uint8_t *inData, PixelFormat inFormat, uint16_t inPitch) : pitch(inPitch), width(inWidth), height(inHeight), format(inFormat), data(inData)
 {
     if (pitch == 0)
     {
@@ -23,9 +24,9 @@ Texture::Texture(uint16_t width, uint16_t height,
     storedLocally = false;
 }
 
-Texture::Texture(uint16_t orgWidth, uint16_t orgHeight, uint16_t width, uint16_t height,
-    uint16_t startX, uint16_t startY, uint8_t* data, PixelFormat format, uint16_t sourcePitch, bool useOrigSize)
-    : format(format), storedLocally(false)
+Texture::Texture(uint16_t orgWidth, uint16_t orgHeight, uint16_t inWidth, uint16_t inHeight,
+    uint16_t startX, uint16_t startY, uint8_t* inData, PixelFormat inFormat, uint16_t sourcePitch, bool useOrigSize)
+    : format(inFormat), storedLocally(false)
 {
     PixelFormatInfo targetInfo = PixelFormatRegistry::GetInfo(format);
 
@@ -42,13 +43,13 @@ Texture::Texture(uint16_t orgWidth, uint16_t orgHeight, uint16_t width, uint16_t
         this->width = orgWidth;
         this->height = orgHeight;
     }else{
-        this->width =width;
-        this->height = height;
+        this->width =inWidth;
+        this->height = inHeight;
     }
 
     // Calculate the offset for the subtexture
     uint32_t offset = (startY * this->pitch) + (startX * targetInfo.bytesPerPixel);
-    this->data = data + offset;
+    this->data = inData + offset;
 }
 
 Texture::~Texture()
