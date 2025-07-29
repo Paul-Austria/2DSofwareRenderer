@@ -48,12 +48,13 @@ namespace Tergos2D
             default:
                 break;
             }
-        }
-        for (const auto &conversion : defaultConversions)
-        {
-            if (conversion.from == from && conversion.to == to)
+        }else{
+            for (const auto &conversion : defaultConversions)
             {
-                return conversion.func;
+                if (conversion.from == from && conversion.to == to)
+                {
+                    return conversion.func;
+                }
             }
         }
         return nullptr;
