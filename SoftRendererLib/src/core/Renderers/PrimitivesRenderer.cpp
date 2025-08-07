@@ -8,7 +8,6 @@
 #include <math.h>
 
 using namespace Tergos2D;
-
 PrimitivesRenderer::PrimitivesRenderer(RenderContext2D &context) : RendererBase(context)
 {
 }
@@ -68,43 +67,84 @@ void PrimitivesRenderer::DrawRect(Color color, int16_t x, int16_t y, uint16_t le
     {
     case BlendMode::NOBLEND:
     {
-
         color.ConvertTo(format, pixelData);
 
+        // Fill rowPixelData with repeated pixels
         uint8_t singlePixelData[MAXBYTESPERPIXEL];
         MemHandler::MemCopy(singlePixelData, pixelData, info.bytesPerPixel);
 
-        for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += info.bytesPerPixel)
+        const size_t pixelWidth = clipEndX - clipStartX;
+        const size_t bytesPerRow = pixelWidth * info.bytesPerPixel;
+
+        // Fill as much of rowPixelData as needed
+        for (size_t i = 0; i < pixelWidth; ++i)
         {
-            MemHandler::MemCopy(rowPixelData + byteIndex, singlePixelData, info.bytesPerPixel);
+            MemHandler::MemCopy(rowPixelData + i * info.bytesPerPixel, singlePixelData, info.bytesPerPixel);
         }
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
 
-            MemHandler::MemCopy(rowDest, rowPixelData, bytesPerRow);
+            // If rowPixelData is smaller than the full row size, copy in chunks
+            size_t remaining = bytesPerRow;
+            size_t offset = 0;
+
+            while (remaining > 0)
+            {
+                size_t copySize = std::min(remaining, sizeof(rowPixelData));
+                MemHandler::MemCopy(rowDest + offset, rowPixelData, copySize);
+                remaining -= copySize;
+                offset += copySize;
+            }
         }
         break;
     }
     default:
     {
-        //Prepare data set
-        for (size_t byteIndex = 0; byteIndex < bytesPerRow; byteIndex += 4)
+        const size_t pixelWidth = clipEndX - clipStartX;
+        const size_t bytesPerRow = pixelWidth * info.bytesPerPixel;
+
+        // Calculate how many pixels can fit into rowPixelData
+        const size_t maxPixelsInBuffer = sizeof(rowPixelData) / 4; // assuming 4 bytes per ARGB8888 pixel
+
+        // Fill rowPixelData with as many pixels as it can hold
+        for (size_t i = 0; i < maxPixelsInBuffer; ++i)
         {
-            MemHandler::MemCopy(rowPixelData + byteIndex, color.data, 4);
+            MemHandler::MemCopy(rowPixelData + i * 4, color.data, 4);
         }
+
+        PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
 
         for (uint16_t j = clipStartY; j < clipEndY; ++j)
         {
             uint8_t *rowDest = dest + (j - clipStartY) * pitch;
-            size_t rowLength = (clipEndX - clipStartX); // Number of pixels per row
-            PixelFormatInfo infosrcColor = PixelFormatRegistry::GetInfo(PixelFormat::ARGB8888);
-            context.GetBlendFunc()(rowDest, rowPixelData, rowLength, info, infosrcColor, context.GetColoring(),true,context.GetBlendContext());
+            size_t remainingPixels = pixelWidth;
+            size_t offset = 0;
+
+            while (remainingPixels > 0)
+            {
+                size_t chunkPixels = std::min(remainingPixels, maxPixelsInBuffer);
+
+                context.GetBlendFunc()(
+                    rowDest + offset * info.bytesPerPixel,
+                    rowPixelData,
+                    chunkPixels,
+                    info,
+                    infosrcColor,
+                    context.GetColoring(),
+                    true,
+                    context.GetBlendContext()
+                );
+
+                remainingPixels -= chunkPixels;
+                offset += chunkPixels;
+            }
         }
         break;
     }
     }
+
 }
 
 void PrimitivesRenderer::DrawLine(Color color, int16_t x0, int16_t y0, int16_t x1, int16_t y1)
@@ -278,7 +318,7 @@ void PrimitivesRenderer::DrawTransformedRect(Color color, uint16_t length, uint1
     // Extract rotation from scaled matrix by normalizing with scale
     float rotateCos = transformationMatrix[0][0] / scaleX;
     float rotateSin = transformationMatrix[1][0] / scaleX;
-    
+
     // Calculate angle in radians and degrees
     float angleInRadians = std::atan2(rotateSin, rotateCos);
     float angleInDegrees = angleInRadians * (180.0f / 3.14159265358979323846f);
