@@ -209,14 +209,42 @@ void PixelConverter::RGB565ToBGR24(const uint8_t *src, uint8_t *dst, size_t coun
 
 void PixelConverter::ARGB8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count)
 {
-    for (size_t i = 0; i < count; ++i)
-    {
-        uint16_t r = (src[i * 4 + 1] >> 3) & 0x1F;
-        uint16_t g = (src[i * 4 + 2] >> 2) & 0x3F;
-        uint16_t b = (src[i * 4 + 3] >> 3) & 0x1F;
-        reinterpret_cast<uint16_t *>(dst)[i] = (r << 11) | (g << 5) | b;
+    for (size_t i = 0; i < count; ++i) {
+        uint8_t a = src[4 * i + 0]; // Alpha, usually ignored for RGB565
+        uint8_t r = src[4 * i + 1];
+        uint8_t g = src[4 * i + 2];
+        uint8_t b = src[4 * i + 3];
+        // Convert ARGB8888 to RGB565
+        uint16_t rgb565 =
+            ((r & 0xF8) << 8) |   // 5 bits red
+            ((g & 0xFC) << 3) |   // 6 bits green
+            ((b & 0xF8) >> 3);    // 5 bits blue
+
+        dst[2 * i + 0] = rgb565 & 0xFF;         // low byte
+        dst[2 * i + 1] = (rgb565 >> 8) & 0xFF;  // high byte
     }
 }
+
+#include <cstdio>
+void PixelConverter::BGRA8888ToRGB565(const uint8_t *src, uint8_t *dst, size_t count)
+{
+    for (size_t i = 0; i < count; ++i) {
+        uint8_t a = src[4 * i + 3]; // Alpha, usually ignored for RGB565
+        uint8_t r = src[4 * i + 2];
+        uint8_t g = src[4 * i + 1];
+        uint8_t b = src[4 * i + 0];
+
+        // Convert ARGB8888 to RGB565
+        uint16_t rgb565 =
+            ((r & 0xF8) << 8) |   // 5 bits red
+            ((g & 0xFC) << 3) |   // 6 bits green
+            ((b & 0xF8) >> 3);    // 5 bits blue
+
+        dst[2 * i + 0] = rgb565 & 0xFF;         // low byte
+        dst[2 * i + 1] = (rgb565 >> 8) & 0xFF;  // high byte
+    }
+}
+
 
 void PixelConverter::ARGB1555ToARGB8888(const uint8_t *src, uint8_t *dst, size_t count)
 {

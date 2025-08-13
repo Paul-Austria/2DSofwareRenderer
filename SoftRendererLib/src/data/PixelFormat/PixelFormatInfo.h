@@ -10,24 +10,17 @@ namespace Tergos2D
 
     struct alignas(4) PixelFormatInfo
     {
-     PixelFormat format;
+        PixelFormat format;    // The pixel format
+        uint8_t bytesPerPixel; // Number of bytes per pixel
+        uint8_t bitsPerPixel;  // how many bits per pixel
+        bool isBitFormat;      // uses less then one byte per pixel (grayscale 4 or grayscale 1)
+        uint8_t numChannels;   // Number of color channels
+        bool hasAlpha;         // Whether the format includes an alpha channel
+        const char *name;      // A human-readable name for the format
 
-        uint16_t redMask;
-        uint16_t greenMask;
-        uint16_t blueMask;
-        uint16_t alphaMask;
-
-        uint8_t bytesPerPixel;
-        uint8_t bitsPerPixel;
-        uint8_t numChannels;
-        uint8_t redShift;
-
-        uint8_t greenShift;
-        uint8_t blueShift;
-        uint8_t alphaShift;
-
-        bool isBitFormat;
-        bool hasAlpha;
+        // Bit masks and shifts for each channel
+        uint16_t redMask, greenMask, blueMask, alphaMask;
+        uint8_t redShift, greenShift, blueShift, alphaShift;
 
         PixelFormatInfo() = default;
 
@@ -66,8 +59,10 @@ namespace Tergos2D
     class PixelFormatRegistry
     {
     public:
-        static const PixelFormatInfo GetInfo(PixelFormat format);
+        static const PixelFormatInfo &GetInfo(PixelFormat format);
+
     private:
+        static const PixelFormatInfo formatInfoArray[];
     };
 
 }
