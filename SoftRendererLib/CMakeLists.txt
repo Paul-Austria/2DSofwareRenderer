@@ -101,8 +101,10 @@ endif()
 # Additional properties
 set_target_properties(SoftRendererLib PROPERTIES
     LINKER_LANGUAGE CXX
-    POSITION_INDEPENDENT_CODE ON  # Add -fPIC
+    POSITION_INDEPENDENT_CODE OFF  # Add -fPIC
 )
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-pic -fno-pie")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-pic -fno-pie -fno-rtti")
 
 # Export compile commands for tooling
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
